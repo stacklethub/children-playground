@@ -1,56 +1,62 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { reactive } from 'vue';
 
 import { Button, Card, InputNumber, Slider, message } from 'ant-design-vue';
 
-import { useKidStore, type LearnModule } from '#/store';
+import { $t } from '#/locales';
+import { MODULE_KEYS, useKidStore, type LearnModule } from '#/store';
 
 const kidStore = useKidStore();
 
 const goals = reactive<Record<LearnModule, number>>({ ...kidStore.dailyGoals });
 
-const MODULE_NAMES: Record<LearnModule, { emoji: string; name: string }> = {
-  cards: { emoji: '🐘', name: '看图识物（次/天）' },
-  letters: { emoji: '🔤', name: '字母乐园（次/天）' },
-  numbers: { emoji: '🔢', name: '数字小屋（次/天）' },
-  songs: { emoji: '🎵', name: '儿歌点播（首/天）' },
+const MODULE_EMOJI: Record<LearnModule, string> = {
+  cards: '🐘',
+  letters: '🔤',
+  numbers: '🔢',
+  songs: '🎵',
 };
 
 function save() {
   kidStore.dailyGoals = { ...goals };
-  message.success('学习计划已保存');
+  message.success($t('parent.common.saved'));
 }
 </script>
 
 <template>
   <div class="grid gap-5 p-5 lg:grid-cols-2">
-    <Card title="每日学习目标">
+    <Card :title="$t('parent.plan.title')">
       <div class="flex flex-col gap-5">
         <div
-          v-for="key in Object.keys(MODULE_NAMES) as LearnModule[]"
-          :key="key"
+          v-for="module in MODULE_KEYS"
+          :key="module"
           class="flex items-center justify-between"
         >
           <span class="text-base">
-            {{ MODULE_NAMES[key]!.emoji }} {{ MODULE_NAMES[key]!.name }}
+            {{ MODULE_EMOJI[module] }} {{ $t(`kid.modules.${module}`) }}
+            （{{
+              module === 'songs'
+                ? $t('parent.plan.songUnit')
+                : $t('parent.plan.unit')
+            }}）
           </span>
           <InputNumber
-            v-model:value="goals[key]"
+            v-model:value="goals[module]"
             :max="50"
             :min="1"
             style="width: 100px"
           />
         </div>
-        <Button type="primary" @click="save">保存目标</Button>
+        <Button type="primary" @click="save">
+          {{ $t('parent.plan.save') }}
+        </Button>
       </div>
     </Card>
 
-    <Card title="护眼与时长">
+    <Card :title="$t('parent.plan.screenTitle')">
       <div class="flex flex-col gap-6">
         <div>
-          <p class="mb-2 text-base">
-            单次使用时长提醒（分钟），超过后宝宝端会弹出休息提醒
-          </p>
+          <p class="mb-2 text-base">{{ $t('parent.plan.screenLabel') }}</p>
           <Slider
             v-model:value="kidStore.screenLimitMin"
             :marks="{ 10: '10', 20: '20', 30: '30', 45: '45', 60: '60' }"
@@ -60,7 +66,7 @@ function save() {
           />
         </div>
         <p class="text-muted-foreground text-sm">
-          建议 3-6 岁儿童单次使用电子屏幕不超过 20 分钟，每天累计不超过 1 小时。
+          {{ $t('parent.plan.screenAdvice') }}
         </p>
       </div>
     </Card>

@@ -110,4 +110,21 @@ export const requestClient = createRequestClient(apiURL, {
   responseReturn: 'data',
 });
 
+/**
+ * 宝宝端请求客户端：使用「孩子绑定令牌」鉴权，与家长登录态、token 刷新逻辑完全解耦，
+ * 请求失败不弹全局提示（宝宝端界面不出现错误弹窗，由调用方静默降级）。
+ */
+export const kidRequestClient = new RequestClient({
+  baseURL: apiURL,
+  responseReturn: 'data',
+});
+
+kidRequestClient.addResponseInterceptor(
+  defaultResponseInterceptor({
+    codeField: 'code',
+    dataField: 'data',
+    successCode: 0,
+  }),
+);
+
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });

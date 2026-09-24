@@ -3,6 +3,8 @@
  * 宝宝端所有页面通过 speak() 朗读引导语，可在设置中关闭。
  */
 
+import { $t } from '#/locales';
+
 const TTS_ENABLED_KEY = 'child-study-tts-enabled';
 
 /** 是否启用语音（独立于 store，避免循环依赖） */
@@ -65,15 +67,28 @@ export function stopSpeak() {
   }
 }
 
-/** 随机读取一句鼓励语 */
-const PRAISE = ['答对啦，真棒！', '太厉害了！', '你真聪明！', '好厉害呀，继续加油！', '哇，完全正确！'];
+/** 随机读取一句鼓励语（文案走 i18n） */
+const PRAISE_KEYS = [
+  'kid.tts.praise1',
+  'kid.tts.praise2',
+  'kid.tts.praise3',
+  'kid.tts.praise4',
+  'kid.tts.praise5',
+];
 
 export function speakPraise() {
-  speak(PRAISE[Math.floor(Math.random() * PRAISE.length)]!, { rate: 0.95 });
+  const key = PRAISE_KEYS[Math.floor(Math.random() * PRAISE_KEYS.length)]!;
+  speak($t(key), { rate: 0.95 });
 }
 
-const ENCOURAGE = ['没关系，再试一次！', '差一点点哦，再来！', '加油，你可以的！'];
+const ENCOURAGE_KEYS = [
+  'kid.tts.encourage1',
+  'kid.tts.encourage2',
+  'kid.tts.encourage3',
+];
 
 export function speakEncourage() {
-  speak(ENCOURAGE[Math.floor(Math.random() * ENCOURAGE.length)]!, { rate: 0.95 });
+  const key =
+    ENCOURAGE_KEYS[Math.floor(Math.random() * ENCOURAGE_KEYS.length)]!;
+  speak($t(key), { rate: 0.95 });
 }

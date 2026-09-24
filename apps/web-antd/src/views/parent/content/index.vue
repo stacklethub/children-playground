@@ -1,12 +1,8 @@
-<script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+<script lang="ts" setup>
+import { computed, ref } from 'vue';
 
 import {
   Button,
-  Form,
-  FormItem,
-  Input,
-  Modal,
   Popconfirm,
   Select,
   Table,
@@ -14,20 +10,15 @@ import {
 } from 'ant-design-vue';
 
 import { useContent, type CardDraft } from '#/data/use-content';
+import { $t } from '#/locales';
 
-const { cards, categories, addCard, updateCard, deleteCard } = useContent();
+import CardFormModal from '../components/card-form-modal.vue';
 
-const showForm = ref(false);
+const { addCard, cards, categories, deleteCard, updateCard } = useContent();
+
+const formOpen = ref(false);
 const editingId = ref<string>();
 const filterCategory = ref<string>();
-
-const form = reactive<CardDraft>({
-  categoryId: 'animals',
-  emoji: '🙂',
-  fact: '',
-  name: '',
-  pinyin: '',
-});
 
 const list = computed(() =>
   filterCategory.value
@@ -35,77 +26,75 @@ const list = computed(() =>
     : cards.value,
 );
 
+const editingCard = computed(() => {
+  if (!editingId.value) return undefined;
+  const card = cards.value.find((c) => c.id === editingId.value);
+  return card ? { ...card } : undefined;
+});
+
+const columns = computed(() => [
+  { dataIndex: 'emoji', key: 'emoji', title: $t('parent.content.emoji'), width: 80 },
+  { dataIndex: 'name', key: 'name', title: $t('parent.content.name') },
+  { dataIndex: 'pinyin', key: 'pinyin', title: $t('parent.content.pinyin') },
+  { dataIndex: 'categoryId', key: 'categoryId', title: $t('parent.content.category') },
+  { key: 'actions', title: $t('parent.content.actions'), width: 160 },
+]);
+
 const categoryName = (id: string) =>
   categories.value.find((c) => c.id === id)?.name ?? id;
 
 function openAdd() {
   editingId.value = undefined;
-  Object.assign(form, {
-    categoryId: 'animals',
-    emoji: '🙂',
-    fact: '',
-    name: '',
-    pinyin: '',
-  });
-  showForm.value = true;
+  formOpen.value = true;
 }
 
 function openEdit(id: string) {
-  const card = cards.value.find((c) => c.id === id);
-  if (!card) return;
   editingId.value = id;
-  Object.assign(form, {
-    categoryId: card.categoryId,
-    emoji: card.emoji,
-    fact: card.fact ?? '',
-    name: card.name,
-    pinyin: card.pinyin,
-  });
-  showForm.value = true;
+  formOpen.value = true;
 }
 
-function save() {
-  if (!form.name.trim()) {
-    message.warning('请填写名称');
-    return;
-  }
+function submit(draft: CardDraft) {
   if (editingId.value) {
-    updateCard(editingId.value, { ...form });
-    message.success('已保存');
+    updateCard(editingId.value, draft);
+    message.success($t('parent.content.saved'));
   } else {
-    addCard({ ...form });
-    message.success('已添加');
+    addCard(draft);
+    message.success($t('parent.content.added'));
   }
-  showForm.value = false;
 }
 
-const columns = [
-  { dataIndex: 'emoji', key: 'emoji', title: '图标', width: 80 },
-  { dataIndex: 'name', key: 'name', title: '名称' },
-  { dataIndex: 'pinyin', key: 'pinyin', title: '拼音' },
-  { dataIndex: 'categoryId', key: 'categoryId', title: '分类' },
-  { key: 'actions', title: '操作', width: 160 },
-];
+function remove(id: string) {
+  deleteCard(id);
+  message.success($t('parent.content.deleted'));
+}
 </script>
 
 <template>
   <div class="p-5">
-    <div class="mb-4 flex items-center justify-between gap-4">
-      <Select
-        v-model:value="filterCategory"
-        allow-clear
-        class="w-48"
-        placeholder="全部分类"
-      >
-        <Select.Option
-          v-for="c in categories"
-          :key="c.id"
-          :value="c.id"
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-bold">{{ $t('parent.content.title') }}</h2>
+        <p class="text-muted-foreground text-sm">{{ $t('parent.content.tip') }}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <Select
+          v-model:value="filterCategory"
+          :placeholder="$t('parent.content.allCategories')"
+          allow-clear
+          class="w-48"
         >
-          {{ c.emoji }} {{ c.name }}
-        </Select.Option>
-      </Select>
-      <Button type="primary" @click="openAdd">新增卡片</Button>
+          <Select.Option
+            v-for="category in categories"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.emoji }} {{ category.name }}
+          </Select.Option>
+        </Select>
+        <Button type="primary" @click="openAdd">
+          {{ $t('parent.content.add') }}
+        </Button>
+      </div>
     </div>
 
     <Table
@@ -124,52 +113,25 @@ const columns = [
         </template>
         <template v-else-if="column.key === 'actions'">
           <Button size="small" type="link" @click="openEdit(record.id)">
-            编辑
+            {{ $t('parent.common.edit') }}
           </Button>
           <Popconfirm
-            title="确定删除这张卡片吗？"
-            @confirm="deleteCard(record.id); message.success('已删除')"
+            :title="$t('parent.content.deleteConfirm')"
+            @confirm="remove(record.id)"
           >
-            <Button danger size="small" type="link">删除</Button>
+            <Button danger size="small" type="link">
+              {{ $t('parent.common.delete') }}
+            </Button>
           </Popconfirm>
         </template>
       </template>
     </Table>
 
-    <Modal
-      v-model:open="showForm"
-      :title="editingId ? '编辑卡片' : '新增卡片'"
-      @ok="save"
-    >
-      <Form layout="vertical">
-        <FormItem label="名称" required>
-          <Input v-model:value="form.name" placeholder="如：大象" />
-        </FormItem>
-        <FormItem label="拼音">
-          <Input v-model:value="form.pinyin" placeholder="如：dà xiàng" />
-        </FormItem>
-        <FormItem label="图标（emoji）">
-          <Input v-model:value="form.emoji" placeholder="如：🐘" />
-        </FormItem>
-        <FormItem label="分类">
-          <Select v-model:value="form.categoryId">
-            <Select.Option
-              v-for="c in categories"
-              :key="c.id"
-              :value="c.id"
-            >
-              {{ c.emoji }} {{ c.name }}
-            </Select.Option>
-          </Select>
-        </FormItem>
-        <FormItem label="小知识（朗读时念给孩子听）">
-          <Input.TextArea
-            v-model:value="form.fact"
-            :rows="2"
-            placeholder="如：大象的鼻子长长的，会喷水哦"
-          />
-        </FormItem>
-      </Form>
-    </Modal>
+    <CardFormModal
+      v-model:open="formOpen"
+      :card="editingCard"
+      :categories="categories"
+      @submit="submit"
+    />
   </div>
 </template>

@@ -1,99 +1,125 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
-import { BADGES, useKidStore, type LearnModule } from '#/store';
+import { $t } from '#/locales';
+import { MODULE_KEYS, useKidStore, type LearnModule } from '#/store';
 import { speak } from '#/utils/tts';
 
+import BindGuard from '../components/bind-guard.vue';
+import KidPage from '../components/kid-page.vue';
 import StarToast from '../components/star-toast.vue';
+import { useCurrentChild } from '../hooks/use-current-child';
 import { useReward } from '../hooks/use-reward';
 
 const kidStore = useKidStore();
-const { rewardShow, rewardText, rewardBadges } = useReward();
+const { bound, childId, childName } = useCurrentChild();
+const { rewardBadges, rewardShow, rewardText } = useReward();
 
-const MODULE_META: Record<LearnModule, { emoji: string; name: string; path: string }> = {
-  cards: { emoji: '🐘', name: '看图识物', path: '/kid/cards' },
-  letters: { emoji: '🔤', name: '字母乐园', path: '/kid/letters' },
-  numbers: { emoji: '🔢', name: '数字小屋', path: '/kid/numbers' },
-  songs: { emoji: '🎵', name: '儿歌点播', path: '/kid/songs' },
+const MODULE_EMOJI: Record<LearnModule, string> = {
+  cards: '🐘',
+  letters: '🔤',
+  numbers: '🔢',
+  songs: '🎵',
 };
 
-const badges = computed(() =>
-  BADGES.map((b) => ({
-    ...b,
-    earned: kidStore.earnedBadges.includes(b.id),
-  })),
-);
+const stars = computed(() => kidStore.starsOf(childId.value));
+const streak = computed(() => kidStore.streakOf(childId.value));
+const todayCounts = computed(() => kidStore.todayCountsOf(childId.value));
+const badges = computed(() => kidStore.badgesOf(childId.value));
 
 const tasks = computed(() =>
-  (Object.keys(MODULE_META) as LearnModule[]).map((module) => ({
-    count: kidStore.todayCounts[module] ?? 0,
-    done: (kidStore.todayCounts[module] ?? 0) >= kidStore.dailyGoals[module]!,
-    goal: kidStore.dailyGoals[module]!,
-    ...MODULE_META[module],
+  MODULE_KEYS.map((module) => ({
+    count: todayCounts.value[module] ?? 0,
+    done: (todayCounts.value[module] ?? 0) >= kidStore.dailyGoals[module],
+    emoji: MODULE_EMOJI[module],
+    goal: kidStore.dailyGoals[module],
+    module,
   })),
 );
 
 const allDone = computed(() => tasks.value.every((t) => t.done));
 
 onMounted(() => {
+  if (!bound.value) return;
   speak(
     allDone.value
-      ? `哇，今天的任务全部完成啦！${kidStore.childName}已经拥有${kidStore.stars}颗星星！`
-      : `你现在有${kidStore.stars}颗星星，继续加油哦！`,
+      ? $t('kid.tts.rewardsAllDone', { name: childName.value, stars: stars.value })
+      : $t('kid.tts.rewardsProgress', { stars: stars.value }),
   );
 });
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col items-center px-6 pb-28 pt-10">
+  <BindGuard v-if="!bound" />
+
+  <KidPage v-else emoji="⭐" title-key="kid.modules.rewards">
     <!-- 星星总数 -->
     <div class="mb-8 flex flex-col items-center">
       <span class="text-[7rem] leading-none">⭐</span>
-      <span class="text-6xl font-black text-amber-500">{{ kidStore.stars }}</span>
+      <span class="text-6xl font-black text-amber-500">{{ stars }}</span>
       <span class="mt-1 text-xl text-slate-500">
-        连续学习 {{ kidStore.streakDays }} 天 🎯
+        {{ $t('kid.rewards.streak', { days: streak }) }} 🎯
       </span>
     </div>
 
     <!-- 今日任务 -->
-    <h2 class="mb-4 text-3xl font-bold text-slate-700">今日任务</h2>
+    <h2 class="mb-4 text-3xl font-bold text-slate-700">
+      {{ $t('kid.rewards.tasks') }}
+    </h2>
     <div class="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
       <div
         v-for="task in tasks"
-        :key="task.path"
+        :key="task.module"
         class="flex flex-col items-center gap-1 rounded-3xl bg-white/95 p-5 shadow-md"
         :class="task.done ? 'ring-4 ring-emerald-300' : ''"
       >
         <span class="text-4xl">{{ task.emoji }}</span>
-        <span class="text-xl font-bold text-slate-600">{{ task.name }}</span>
+        <span class="text-xl font-bold text-slate-600">
+          {{ $t(`kid.modules.${task.module}`) }}
+        </span>
         <span
           class="text-lg font-bold"
           :class="task.done ? 'text-emerald-500' : 'text-amber-500'"
         >
-          {{ task.done ? '✓ 完成' : `${task.count}/${task.goal}` }}
+          {{
+            task.done
+              ? `✓ ${$t('kid.rewards.done')}`
+              : $t('kid.rewards.progress', {
+                  count: task.count,
+                  goal: task.goal,
+                })
+          }}
         </span>
       </div>
     </div>
 
     <!-- 徽章墙 -->
-    <h2 class="mb-4 mt-10 text-3xl font-bold text-slate-700">我的徽章</h2>
+    <h2 class="mb-4 mt-10 text-3xl font-bold text-slate-700">
+      {{ $t('kid.rewards.badges') }}
+    </h2>
     <div class="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
       <div
         v-for="badge in badges"
         :key="badge.id"
         class="flex items-center gap-4 rounded-3xl p-5 shadow-md transition"
-        :class="badge.earned ? 'bg-amber-50 ring-2 ring-amber-300' : 'bg-white/50 opacity-60'"
+        :class="
+          badge.earned ? 'bg-amber-50 ring-2 ring-amber-300' : 'bg-white/50 opacity-60'
+        "
       >
         <span class="text-5xl" :class="badge.earned ? '' : 'grayscale'">
           {{ badge.emoji }}
         </span>
         <div>
-          <p class="text-xl font-bold text-slate-700">{{ badge.name }}</p>
-          <p class="text-sm text-slate-400">{{ badge.desc }}</p>
+          <p class="text-xl font-bold text-slate-700">
+            {{ $t(`kid.badges.${badge.key}.name`) }}
+          </p>
+          <p class="text-sm text-slate-400">
+            {{ $t(`kid.badges.${badge.key}.desc`) }}
+          </p>
         </div>
       </div>
     </div>
 
-    <StarToast :show="rewardShow" :text="rewardText" :badges="rewardBadges" />
-  </div>
+    <StarToast :badges="rewardBadges" :show="rewardShow" :text="rewardText" />
+  </KidPage>
 </template>

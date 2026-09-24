@@ -1,0 +1,100 @@
+{
+  "parent": {
+    "nav": {
+      "dashboard": "Learning Report",
+      "children": "Children",
+      "content": "Content",
+      "plan": "Daily Plan",
+      "settings": "Settings"
+    },
+    "common": {
+      "save": "Save",
+      "saved": "Saved",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "ok": "OK",
+      "noChild": "Please add a child first",
+      "loading": "Loading...",
+      "syncFailed": "Sync failed, data is kept locally"
+    },
+    "children": {
+      "title": "Children",
+      "tip": "Each child has independent records, stars and badges",
+      "add": "Add child",
+      "edit": "Edit child",
+      "name": "Nickname",
+      "namePlaceholder": "e.g. Little Star",
+      "avatar": "Avatar",
+      "birthday": "Birthday",
+      "createdAt": "Created at",
+      "setCurrent": "Set as current learner",
+      "current": "Current learner",
+      "empty": "No child yet, let's add one",
+      "nameRequired": "Please enter the child nickname",
+      "added": "Child added",
+      "deleteConfirm": "All learning records of this child will be removed. Delete it?",
+      "deleted": "Deleted",
+      "switchSuccess": "Current learner switched"
+    },
+    "dashboard": {
+      "scope": "Scope",
+      "allChildren": "All children",
+      "statStars": "Total stars",
+      "statRecords": "Learning count",
+      "statStreak": "Streak days",
+      "statAccuracy": "Positive rate",
+      "days": "days",
+      "trend": "Last 7 days trend",
+      "dist": "Module distribution",
+      "recent": "Recent records",
+      "empty": "No records yet, let the kid play on the learning island",
+      "serverRecords": "{count} cloud records",
+      "localPending": "{count} pending sync"
+    },
+    "content": {
+      "title": "Content",
+      "tip": "Manage picture cards for the kid side, changes take effect immediately",
+      "allCategories": "All categories",
+      "add": "Add card",
+      "edit": "Edit card",
+      "emoji": "Icon",
+      "name": "Name",
+      "pinyin": "Pinyin",
+      "category": "Category",
+      "fact": "Fun fact (read to the kid)",
+      "actions": "Actions",
+      "nameRequired": "Please enter a name",
+      "added": "Added",
+      "saved": "Saved",
+      "deleted": "Deleted",
+      "deleteConfirm": "Delete this card?"
+    },
+    "plan": {
+      "title": "Daily goals",
+      "tip": "Suggested times per module each day",
+      "unit": "times/day",
+      "songUnit": "songs/day",
+      "save": "Save goals",
+      "screenTitle": "Screen time",
+      "screenLabel": "Rest reminder after (minutes) of continuous use",
+      "screenAdvice": "Recommended: kids aged 3-6 should not use a screen more than 20 minutes at a time, and 1 hour a day in total."
+    },
+    "settings": {
+      "childTitle": "Profile",
+      "childName": "Current learner",
+      "tts": "Voice guidance (TTS)",
+      "on": "On",
+      "off": "Off",
+      "ttsOn": "Voice guidance enabled",
+      "ttsOff": "Voice guidance disabled",
+      "dataTitle": "Data",
+      "dataTip": "Records and stars are stored in this browser and synced to the cloud for the current child. Reset clears all local data and cannot be undone.",
+      "dataStat": "Local data: {records} records · {stars} stars",
+      "reset": "Reset local data",
+      "resetConfirm": "Reset all local learning data? This cannot be undone!",
+      "resetDone": "Local data has been reset"
+    }
+  }
+}

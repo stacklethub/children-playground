@@ -2,108 +2,76 @@
 import { onMounted, ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
-import { speak } from '#/utils/tts';
+import { $t } from '#/locales';
 
+import BindGuard from '../components/bind-guard.vue';
+import KidPage from '../components/kid-page.vue';
+import ModeTabs from '../components/mode-tabs.vue';
+import OptionGrid from '../components/option-grid.vue';
 import StarToast from '../components/star-toast.vue';
+import { useCurrentChild } from '../hooks/use-current-child';
+import { useNumberPractice, useQuiz } from '../hooks/use-quiz';
 import { useReward } from '../hooks/use-reward';
 
+const { bound } = useCurrentChild();
 const { numbers } = useContent();
-const { guide, reward, rewardShow, rewardText, rewardBadges, wrong } =
-  useReward();
+const { rewardBadges, rewardShow, rewardText, guide, reward } = useReward();
+const { askQuiz, createQuiz, sayNumber } = useNumberPractice();
+const { next, pick, quiz, quizCount } = useQuiz<number>({
+  ask: askQuiz,
+  create: () => {
+    const created = createQuiz();
+    quizEmoji.value = created.emoji;
+    return { answer: created.answer, options: created.options };
+  },
+  module: 'numbers',
+});
 
-/** learn 数一数 | quiz 考一考 */
 const mode = ref<'learn' | 'quiz'>('learn');
+const quizEmoji = ref('⭐');
+const learned = ref<number[]>([]);
 
-// ---------- 学一学 ----------
-const learnedNums = new Set<number>();
+function onModeChange(value: 'learn' | 'quiz') {
+  if (value === 'learn') {
+    guide('kid.tts.numbersIntro');
+  } else {
+    next();
+  }
+}
 
-function tapNumber(item: { emoji: string; num: number; word: string }) {
-  // 朗读数字、汉字并带着孩子数数
-  speak(
-    `这是数字 ${item.word}，跟着我数：${Array.from({ length: item.num }, () => item.word).join('，')}`,
-  );
-  if (!learnedNums.has(item.num)) {
-    learnedNums.add(item.num);
+function tapNumber(item: { num: number; word: string }) {
+  sayNumber(item);
+  if (!learned.value.includes(item.num)) {
+    learned.value = [...learned.value, item.num];
     reward({
       detail: `${item.num}`,
       itemId: `${item.num}`,
       module: 'numbers',
       praise: false,
-      stars: 1,
     });
-  }
-}
-
-// ---------- 考一考：数一数有几个 ----------
-interface QuizItem {
-  answer: number;
-  emoji: string;
-  options: number[];
-}
-
-const quiz = ref<QuizItem>();
-const quizCount = ref(0);
-
-function newQuiz() {
-  const pool = numbers.value;
-  const item = pool[Math.floor(Math.random() * pool.length)]!;
-  const options = new Set<number>([item.count]);
-  while (options.size < 3) {
-    options.add(1 + Math.floor(Math.random() * 10));
-  }
-  quiz.value = {
-    answer: item.count,
-    emoji: item.emoji,
-    options: [...options].sort(() => Math.random() - 0.5),
-  };
-  quizCount.value += 1;
-  speak(`数一数，有几个呀？`);
-}
-
-function pick(option: number) {
-  if (!quiz.value) return;
-  if (option === quiz.value.answer) {
-    reward({
-      detail: `${quiz.value.answer}`,
-      itemId: `${quiz.value.answer}`,
-      module: 'numbers',
-      stars: 2,
-    });
-    setTimeout(newQuiz, 1400);
-  } else {
-    wrong();
   }
 }
 
 onMounted(() => {
-  guide('点一点数字，一起数一数吧！');
-  newQuiz();
+  guide('kid.tts.numbersIntro');
 });
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col items-center px-6 pb-28 pt-10">
-    <h1 class="mb-4 text-4xl font-black text-slate-700">数字小屋 🔢</h1>
+  <BindGuard v-if="!bound" />
 
-    <!-- 模式切换 -->
-    <div class="mb-8 flex gap-4 rounded-full bg-white/70 p-2">
-      <button
-        class="rounded-full px-10 py-3 text-2xl font-bold transition"
-        :class="mode === 'learn' ? 'bg-emerald-400 text-white shadow' : 'text-slate-500'"
-        @click="mode = 'learn'; guide('点一点数字，一起数一数吧！')"
-      >
-        学一学
-      </button>
-      <button
-        class="rounded-full px-10 py-3 text-2xl font-bold transition"
-        :class="mode === 'quiz' ? 'bg-orange-400 text-white shadow' : 'text-slate-500'"
-        @click="mode = 'quiz'; newQuiz()"
-      >
-        考一考
-      </button>
-    </div>
+  <KidPage v-else emoji="🔢" title-key="kid.modules.numbers">
+    <ModeTabs
+      v-model:mode="mode"
+      active-class="bg-emerald-400"
+      :labels="{
+        learn: $t('kid.numbers.learn'),
+        quiz: $t('kid.numbers.quiz'),
+      }"
+      @change="onModeChange"
+    />
 
-    <!-- 学一学：数字 1-10 -->
+    <!-- 学一学 -->
     <div
       v-if="mode === 'learn'"
       class="grid w-full max-w-4xl grid-cols-3 gap-4 sm:grid-cols-5"
@@ -122,31 +90,28 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- 考一考：数一数 -->
+    <!-- 考一考 -->
     <template v-else-if="quiz">
-      <p class="mb-6 text-3xl font-bold text-slate-600">数一数，有几个？</p>
-      <div class="mb-8 flex max-w-xl flex-wrap items-center justify-center gap-3 rounded-3xl bg-white/95 p-8 shadow-xl">
-        <span
-          v-for="n in quiz.answer"
-          :key="n"
-          class="text-7xl"
-        >
-          {{ quiz.emoji }}
+      <p class="mb-6 text-3xl font-bold text-slate-600">
+        {{ $t('kid.numbers.quizPrompt') }}
+      </p>
+      <div
+        class="mb-8 flex max-w-xl flex-wrap items-center justify-center gap-3 rounded-3xl bg-white/95 p-8 shadow-xl"
+      >
+        <span v-for="n in quiz.answer" :key="n" class="text-7xl">
+          {{ quizEmoji }}
         </span>
       </div>
-      <div class="grid w-full max-w-2xl grid-cols-3 gap-6">
-        <button
-          v-for="option in quiz.options"
-          :key="option"
-          class="rounded-3xl bg-white/95 py-8 text-6xl font-black text-emerald-500 shadow-xl transition active:scale-90"
-          @click="pick(option)"
-        >
-          {{ option }}
-        </button>
-      </div>
-      <p class="mt-8 text-xl text-slate-400">第 {{ quizCount }} 题</p>
+      <OptionGrid
+        active-class="text-emerald-500"
+        :options="quiz.options"
+        @pick="pick"
+      />
+      <p class="mt-8 text-xl text-slate-400">
+        {{ $t('kid.numbers.questionNo', { n: quizCount }) }}
+      </p>
     </template>
 
-    <StarToast :show="rewardShow" :text="rewardText" :badges="rewardBadges" />
-  </div>
+    <StarToast :badges="rewardBadges" :show="rewardShow" :text="rewardText" />
+  </KidPage>
 </template>

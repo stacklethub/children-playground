@@ -1,68 +1,76 @@
-<script setup lang="ts">
-import { ref } from 'vue';
+<script lang="ts" setup>
+import { computed, ref } from 'vue';
 
-import { Button, Card, Input, Popconfirm, Switch, message } from 'ant-design-vue';
+import { Button, Card, Popconfirm, Switch, message } from 'ant-design-vue';
 
-import { useKidStore } from '#/store';
+import { $t } from '#/locales';
+import { useFamilyStore, useKidStore } from '#/store';
 import { isTtsEnabled, setTtsEnabled } from '#/utils/tts';
 
+const familyStore = useFamilyStore();
 const kidStore = useKidStore();
+
 const ttsEnabled = ref(isTtsEnabled());
 
-function onNameChange() {
-  message.success('昵称已保存');
-}
+const currentChildName = computed(
+  () => familyStore.currentChild?.name ?? $t('parent.common.noChild'),
+);
+const localStats = computed(() => ({
+  records: kidStore.recordsOf(familyStore.currentChildId).length,
+  stars: kidStore.starsOf(familyStore.currentChildId),
+}));
 
 function onTtsChange(checked: boolean | number | string) {
   setTtsEnabled(Boolean(checked));
-  message.success(checked ? '语音引导已开启' : '语音引导已关闭');
+  message.success(
+    checked ? $t('parent.settings.ttsOn') : $t('parent.settings.ttsOff'),
+  );
 }
 
-function resetAll() {
-  kidStore.$reset();
-  message.success('已重置全部学习数据');
+function resetLocal() {
+  kidStore.clearRecords(familyStore.currentChildId);
+  message.success($t('parent.settings.resetDone'));
 }
 </script>
 
 <template>
   <div class="grid gap-5 p-5 lg:grid-cols-2">
-    <Card title="孩子信息">
+    <Card :title="$t('parent.settings.childTitle')">
       <div class="flex flex-col gap-4">
         <div class="flex items-center justify-between">
-          <span class="text-base">孩子昵称</span>
-          <Input
-            v-model:value="kidStore.childName"
-            class="w-48"
-            placeholder="宝宝"
-            @change="onNameChange"
-          />
+          <span class="text-base">{{ $t('parent.settings.childName') }}</span>
+          <span class="font-bold">🧒 {{ currentChildName }}</span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-base">语音引导（TTS）</span>
+          <span class="text-base">{{ $t('parent.settings.tts') }}</span>
           <Switch
             v-model:checked="ttsEnabled"
-            checked-children="开"
-            un-checked-children="关"
+            :checked-children="$t('parent.settings.on')"
+            :un-checked-children="$t('parent.settings.off')"
             @change="onTtsChange"
           />
         </div>
       </div>
     </Card>
 
-    <Card title="数据管理">
+    <Card :title="$t('parent.settings.dataTitle')">
       <div class="flex flex-col gap-4">
         <p class="text-muted-foreground text-sm">
-          学习记录、星星与徽章保存在本机浏览器中。重置后将清空全部数据，且无法恢复。
+          {{ $t('parent.settings.dataTip') }}
         </p>
         <div class="text-muted-foreground text-sm">
-          当前数据：{{ kidStore.records.length }} 条学习记录 ·
-          {{ kidStore.stars }} 颗星星
+          {{
+            $t('parent.settings.dataStat', {
+              records: localStats.records,
+              stars: localStats.stars,
+            })
+          }}
         </div>
         <Popconfirm
-          title="确定重置全部学习数据吗？此操作无法恢复！"
-          @confirm="resetAll"
+          :title="$t('parent.settings.resetConfirm')"
+          @confirm="resetLocal"
         >
-          <Button danger>重置全部数据</Button>
+          <Button danger>{{ $t('parent.settings.reset') }}</Button>
         </Popconfirm>
       </div>
     </Card>

@@ -1,35 +1,44 @@
-import type { EventHandlerRequest, H3Event } from 'h3';
-
 import { defineEventHandler, readBody } from 'h3';
 
-import { useResponseSuccess } from '../../utils/response';
+import { verifyBindToken } from '../../utils/bind-token';
+import {
+  loadChildrenMap,
+  upsertRecords,
+  type LearnRecord,
+} from '../../utils/kid-store';
+import {
+  forbiddenResponse,
+  useResponseError,
+  useResponseSuccess,
+} from '../../utils/response';
 
-interface LearnRecordPayload {
-  childName: string;
-  createdAt: number;
-  detail?: string;
-  itemId: string;
-  module: string;
-  recordId: string;
-  result: string;
-}
-
-const RECORDS_KEY = 'kid-learn-records';
-
-/** 幂等写入学习记录（useStorage 跨 handler 共享，data 驱动持久化到 .data/kv） */
-export default defineEventHandler(async (event: H3Event<EventHandlerRequest>) => {
-  const body = (await readBody(event)) as LearnRecordPayload;
-  if (!body?.recordId || !body?.module) {
-    return useResponseSuccess({ accepted: false, reason: 'invalid payload' });
+/**
+ * 上报学习记录（宝宝端）
+ * 鉴权：设备绑定令牌（家长在家长中心绑定孩子时签发），令牌授权范围必须与记录归属一致
+ * 幂等：按记录 id 去重
+ */
+export default defineEventHandler(async (event) => {
+  const bind = verifyBindToken(event);
+  if (!bind) {
+    return forbiddenResponse(event, 'invalid bind token');
   }
-  const storage = useStorage<Record<string, LearnRecordPayload>>('data');
-  const records = (await storage.getItem(RECORDS_KEY)) ?? {};
-  if (!records[body.recordId]) {
-    records[body.recordId] = body;
-    await storage.setItem(RECORDS_KEY, records);
+
+  const body = (await readBody(event)) as Partial<LearnRecord>;
+  if (!body?.id || !body?.childId || !body?.module) {
+    return useResponseError('invalid payload', 'invalid payload');
   }
-  return useResponseSuccess({
-    accepted: true,
-    total: Object.keys(records).length,
-  });
+
+  // 令牌只能写自己绑定的那个孩子的数据
+  if (body.childId !== bind.childId || body.parentId !== bind.parentId) {
+    return forbiddenResponse(event, 'bind token scope mismatch');
+  }
+
+  const children = await loadChildrenMap();
+  const child = children[body.childId];
+  if (!child || child.parentId !== bind.parentId) {
+    return forbiddenResponse(event, 'child not found');
+  }
+
+  const added = await upsertRecords([body as LearnRecord]);
+  return useResponseSuccess({ accepted: true, added });
 });

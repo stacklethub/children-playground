@@ -1,0 +1,100 @@
+{
+  "parent": {
+    "nav": {
+      "dashboard": "学习报告",
+      "children": "孩子管理",
+      "content": "内容管理",
+      "plan": "学习计划",
+      "settings": "通用设置"
+    },
+    "common": {
+      "save": "保存",
+      "saved": "已保存",
+      "cancel": "取消",
+      "delete": "删除",
+      "edit": "编辑",
+      "add": "新增",
+      "ok": "确定",
+      "noChild": "请先添加孩子",
+      "loading": "加载中...",
+      "syncFailed": "同步失败，数据已在本机保存"
+    },
+    "children": {
+      "title": "孩子管理",
+      "tip": "每个孩子拥有独立的学习记录、星星与徽章",
+      "add": "添加孩子",
+      "edit": "编辑孩子",
+      "name": "昵称",
+      "namePlaceholder": "如：小星星",
+      "avatar": "头像",
+      "birthday": "生日",
+      "createdAt": "创建时间",
+      "setCurrent": "设为当前学习的孩子",
+      "current": "当前学习的孩子",
+      "empty": "还没有添加孩子，先添加一个吧",
+      "nameRequired": "请填写孩子昵称",
+      "added": "孩子已添加",
+      "deleteConfirm": "删除后将同时删除该孩子的全部学习记录，确定删除吗？",
+      "deleted": "已删除",
+      "switchSuccess": "已切换当前学习孩子"
+    },
+    "dashboard": {
+      "scope": "数据范围",
+      "allChildren": "全部孩子",
+      "statStars": "累计星星",
+      "statRecords": "学习次数",
+      "statStreak": "连续天数",
+      "statAccuracy": "正向反馈率",
+      "days": "天",
+      "trend": "最近 7 天学习趋势",
+      "dist": "模块学习分布",
+      "recent": "最近学习明细",
+      "empty": "还没有学习记录，让宝宝去学习岛玩一玩吧",
+      "serverRecords": "云端记录 {count} 条",
+      "localPending": "待同步 {count} 条"
+    },
+    "content": {
+      "title": "内容管理",
+      "tip": "维护宝宝端「看图识物」的卡片内容，修改后立即生效",
+      "allCategories": "全部分类",
+      "add": "新增卡片",
+      "edit": "编辑卡片",
+      "emoji": "图标",
+      "name": "名称",
+      "pinyin": "拼音",
+      "category": "分类",
+      "fact": "小知识（朗读时念给孩子听）",
+      "actions": "操作",
+      "nameRequired": "请填写名称",
+      "added": "已添加",
+      "saved": "已保存",
+      "deleted": "已删除",
+      "deleteConfirm": "确定删除这张卡片吗？"
+    },
+    "plan": {
+      "title": "每日学习目标",
+      "tip": "各模块每天建议完成的次数",
+      "unit": "次/天",
+      "songUnit": "首/天",
+      "save": "保存目标",
+      "screenTitle": "护眼与时长",
+      "screenLabel": "单次使用时长提醒（分钟），超过后宝宝端会弹出休息提醒",
+      "screenAdvice": "建议 3-6 岁儿童单次使用电子屏幕不超过 20 分钟，每天累计不超过 1 小时。"
+    },
+    "settings": {
+      "childTitle": "个人信息",
+      "childName": "当前学习的孩子",
+      "tts": "语音引导（TTS）",
+      "on": "开",
+      "off": "关",
+      "ttsOn": "语音引导已开启",
+      "ttsOff": "语音引导已关闭",
+      "dataTitle": "数据管理",
+      "dataTip": "学习记录与星星保存在本机浏览器，并会同步到云端的当前孩子名下。重置后将清空本机全部数据，且无法恢复。",
+      "dataStat": "本机数据：{records} 条学习记录 · {stars} 颗星星",
+      "reset": "重置本机数据",
+      "resetConfirm": "确定重置本机全部学习数据吗？此操作无法恢复！",
+      "resetDone": "已重置本机学习数据"
+    }
+  }
+}

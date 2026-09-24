@@ -16,6 +16,13 @@ export namespace AuthApi {
     data: string;
     status: number;
   }
+
+  /** 家长账号注册参数 */
+  export interface RegisterParams {
+    password: string;
+    realName?: string;
+    username: string;
+  }
 }
 
 /**
@@ -23,6 +30,13 @@ export namespace AuthApi {
  */
 export async function loginApi(data: AuthApi.LoginParams) {
   return requestClient.post<AuthApi.LoginResult>('/auth/login', data);
+}
+
+/**
+ * 家长账号注册
+ */
+export async function registerApi(data: AuthApi.RegisterParams) {
+  return requestClient.post<AuthApi.LoginResult>('/auth/register', data);
 }
 
 /**

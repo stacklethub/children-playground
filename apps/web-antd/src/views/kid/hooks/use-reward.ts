@@ -1,21 +1,30 @@
 import { ref } from 'vue';
 
-import { useKidStore, type LearnModule } from '#/store';
+import { $t } from '#/locales';
+import { useKidStore, type KidBadge, type LearnModule } from '#/store';
 import { speak, speakEncourage, speakPraise } from '#/utils/tts';
 
+import { useCurrentChild } from './use-current-child';
+
 /**
- * 宝宝端奖励反馈：加星星 + 记录 + 星星动画 + 语音鼓励
+ * 宝宝端奖励反馈：写入学习记录（星星随之累计）+ 星星动画 + 语音鼓励。
+ * 未绑定孩子时不做任何记录（由页面引导家长绑定）。
  */
 export function useReward() {
   const kidStore = useKidStore();
+  const { childId, parentId } = useCurrentChild();
+
   const rewardShow = ref(false);
   const rewardText = ref('');
   const rewardBadges = ref<{ emoji: string; name: string }[]>([]);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  function showReward(n: number, badges: { emoji: string; name: string }[]) {
-    rewardText.value = `+${n}`;
-    rewardBadges.value = badges;
+  function showReward(stars: number, badges: KidBadge[]) {
+    rewardText.value = `+${stars}`;
+    rewardBadges.value = badges.map((b) => ({
+      emoji: b.emoji,
+      name: $t(`kid.badges.${b.key}.name`),
+    }));
     rewardShow.value = true;
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
@@ -24,7 +33,7 @@ export function useReward() {
     }, badges.length > 0 ? 2600 : 1300);
   }
 
-  /** 答对/学会：加星星、写记录、朗读表扬 */
+  /** 学会/答对：记录 + 星星动画 +（可选）朗读表扬 */
   function reward(options: {
     detail?: string;
     itemId: string;
@@ -33,14 +42,20 @@ export function useReward() {
     result?: 'learn' | 'right' | 'wrong';
     stars?: number;
   }) {
-    const badges = kidStore.addStars(options.stars ?? 1);
-    kidStore.addRecord({
-      detail: options.detail,
-      itemId: options.itemId,
-      module: options.module,
-      result: options.result ?? 'right',
-    });
-    showReward(options.stars ?? 1, badges);
+    const stars = options.stars ?? 1;
+    let badges: KidBadge[] = [];
+    if (childId.value && parentId.value) {
+      badges = kidStore.addRecord({
+        childId: childId.value,
+        detail: options.detail,
+        itemId: options.itemId,
+        module: options.module,
+        parentId: parentId.value,
+        result: options.result ?? 'right',
+        stars,
+      });
+    }
+    showReward(stars, badges);
     if (options.praise !== false) {
       speakPraise();
     }
@@ -51,10 +66,10 @@ export function useReward() {
     speakEncourage();
   }
 
-  /** 普通语音引导 */
-  function guide(text: string) {
-    speak(text);
+  /** 语音引导（文案走 i18n） */
+  function guide(key: string, params?: Record<string, unknown>) {
+    speak($t(key, params ?? {}));
   }
 
-  return { guide, reward, rewardShow, rewardText, rewardBadges, wrong };
+  return { guide, reward, rewardBadges, rewardShow, rewardText, wrong };
 }

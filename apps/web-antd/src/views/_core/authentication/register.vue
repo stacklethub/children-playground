@@ -3,12 +3,20 @@ import type { VbenFormSchema } from '@vben/common-ui';
 import type { Recordable } from '@vben/types';
 
 import { computed, h, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { AuthenticationRegister, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
+import { notification } from 'ant-design-vue';
+
+import { registerApi } from '#/api';
+import { useAuthStore } from '#/store';
+
 defineOptions({ name: 'Register' });
 
+const router = useRouter();
+const authStore = useAuthStore();
 const loading = ref(false);
 
 const formSchema = computed((): VbenFormSchema[] => {
@@ -81,8 +89,27 @@ const formSchema = computed((): VbenFormSchema[] => {
   ];
 });
 
-function handleSubmit(value: Recordable<any>) {
-  void value;
+/**
+ * 家长账号注册：注册成功后直接登录并进入「孩子管理」。
+ */
+async function handleSubmit(value: Recordable<any>) {
+  const { username, password } = value;
+  if (!username || !password) return;
+  try {
+    loading.value = true;
+    await registerApi({ password, username });
+    await authStore.authLogin({ password, username });
+    notification.success({
+      description: $t('authentication.loginSuccessDesc'),
+      duration: 3,
+      message: $t('authentication.loginSuccess'),
+    });
+    await router.push('/parent/children');
+  } catch {
+    // 错误提示由请求层统一处理
+  } finally {
+    loading.value = false;
+  }
 }
 </script>
 
