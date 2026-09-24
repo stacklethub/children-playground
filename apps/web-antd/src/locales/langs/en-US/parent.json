@@ -28,14 +28,20 @@
     "avatar": "Avatar",
     "birthday": "Birthday",
     "createdAt": "Created at",
-    "setCurrent": "Set as current learner",
-    "current": "Current learner",
+    "deviceLabel": "Learner of this device",
+    "deviceNone": "Not selected yet",
+    "deviceInUse": "Used by the kids app",
+    "deviceTip": "The kids app learns as this child. Signing in to a parent account never changes it — choose explicitly below.",
+    "bindToDevice": "Use in the kids app",
+    "bindConfirmTitle": "Set as the learner of this device?",
+    "bindConfirmContent": "The kids app on this device will learn and record as {name}",
+    "bindConfirmOk": "Confirm",
+    "bindSuccess": "{name} is now the learner of this device",
     "empty": "No child yet, let's add one",
     "nameRequired": "Please enter the child name",
     "added": "Child added",
     "deleteConfirm": "All learning records of this child will be removed. Delete it?",
-    "deleted": "Deleted",
-    "switchSuccess": "Current learner switched"
+    "deleted": "Deleted"
   },
   "dashboard": {
     "scope": "Scope",
@@ -85,17 +91,19 @@
   },
   "settings": {
     "childTitle": "Profile",
-    "childName": "Current learner",
+    "deviceLearner": "Learner of this device",
+    "deviceLearnerTip": "The child currently used by the kids app. It belongs to this device, not to your account. Change it in Children.",
     "tts": "Voice guidance (TTS)",
     "on": "On",
     "off": "Off",
     "ttsOn": "Voice guidance enabled",
     "ttsOff": "Voice guidance disabled",
     "dataTitle": "Data",
-    "dataTip": "Records and stars are stored in this browser and synced to the cloud for the current child. Reset clears all local data and cannot be undone.",
+    "dataTip": "Records and stars are stored in this browser and synced to the cloud. You can clear local records per child.",
     "dataStat": "Local data: {records} records · {stars} stars",
-    "reset": "Reset local data",
-    "resetConfirm": "Reset all local learning data? This cannot be undone!",
-    "resetDone": "Local data has been reset"
+    "reset": "Clear local records",
+    "resetConfirmScope": "Clear local learning records of {scope}? This cannot be undone!",
+    "scopeAll": "all children",
+    "resetDone": "Local learning records cleared"
   }
 }

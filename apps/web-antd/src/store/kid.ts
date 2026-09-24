@@ -240,12 +240,11 @@ export const useKidStore = defineStore(
         : [];
     }
 
-    function $reset() {
-      records.value = [];
-      dailyGoals.value = { cards: 10, letters: 6, numbers: 6, songs: 2 };
-      screenLimitMin.value = 20;
-      contentOverrides.value = {};
-    }
+    /**
+     * 学习记录与每日设置都是「设备 + 孩子」级数据，不随家长退出登录清空。
+     * 显式覆盖 pinia 默认的 state 重置行为；需要清理时用 clearRecords。
+     */
+    function $reset() {}
 
     return {
       $reset,

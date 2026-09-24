@@ -2,22 +2,32 @@ import type { ChildApi } from '#/api';
 
 import { computed } from 'vue';
 
-import { useFamilyStore } from '#/store';
+import { useDeviceStore } from '#/store';
 
 /**
- * 宝宝端读取「当前学习的孩子」绑定信息。
- * 未绑定时宝宝端显示引导页，由家长在家长中心完成绑定。
+ * 宝宝端读取「这台设备的学习者」。
+ *
+ * 该状态只来自家长在家长中心的显式绑定（见 `store/device.ts`），
+ * 不受家长登录态、孩子列表顺序、新建/删除孩子的影响；
+ * 未绑定时宝宝端统一显示引导页，不会默认归属任何孩子。
  */
 export function useCurrentChild() {
-  const familyStore = useFamilyStore();
+  const deviceStore = useDeviceStore();
 
   const child = computed<ChildApi.ChildProfile | undefined>(
-    () => familyStore.currentChild,
+    () => deviceStore.boundChild,
   );
   const childId = computed(() => child.value?.id);
   const parentId = computed(() => child.value?.parentId);
   const childName = computed(() => child.value?.name ?? '');
   const bound = computed(() => Boolean(childId.value && parentId.value));
 
-  return { bound, child, childId, childName, parentId };
+  return {
+    bound,
+    canSwitch: deviceStore.canSwitch,
+    child,
+    childId,
+    childName,
+    parentId,
+  };
 }

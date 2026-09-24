@@ -64,9 +64,23 @@
     "got": "Badge unlocked: {name}"
   },
   "guard": {
-    "needBind": "No child selected yet",
-    "bindTip": "Please ask a parent to add a child and set it as the current learner",
-    "openParent": "Open Parent Center"
+    "needBind": "No learner selected on this device",
+    "bindTip": "Ask a parent to add a child and choose who learns on this device",
+    "openParent": "I am a parent"
+  },
+  "switch": {
+    "title": "Who learns on this device?",
+    "tip": "The kids app on this device will learn and record as the child you choose",
+    "current": "In use",
+    "switched": "Learner switched",
+    "failed": "Switch failed, please ask a parent to bind again",
+    "unbind": "Unbind this device",
+    "unbindConfirm": "Unbind the learner of this device?",
+    "unbindTip": "The kids app will go back to the no-learner screen until a parent chooses again",
+    "unbindOk": "Unbind",
+    "unbindCancel": "Cancel",
+    "unbound": "This device is unbound",
+    "toParent": "Parent Center"
   },
   "gate": {
     "title": "Parent Verification",

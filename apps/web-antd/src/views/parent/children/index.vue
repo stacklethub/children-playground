@@ -3,15 +3,23 @@ import type { ChildApi } from '#/api';
 
 import { onMounted, ref } from 'vue';
 
-import { Button, Card, message, Popconfirm, Spin, Tag } from 'ant-design-vue';
+import {
+  Button,
+  Card,
+  message,
+  Modal,
+  Popconfirm,
+  Spin,
+  Tag,
+} from 'ant-design-vue';
 
 import { $t } from '#/locales';
-import { useFamilyStore, useKidStore } from '#/store';
+import { useDeviceStore, useFamilyStore } from '#/store';
 
 import ChildFormModal from '../components/child-form-modal.vue';
 
 const familyStore = useFamilyStore();
-const kidStore = useKidStore();
+const deviceStore = useDeviceStore();
 
 const formOpen = ref(false);
 const editing = ref<ChildApi.ChildProfile>();
@@ -44,16 +52,32 @@ async function submit(draft: ChildApi.ChildDraft) {
   }
 }
 
-async function setCurrent(child: ChildApi.ChildProfile) {
-  await familyStore.setCurrentChild(child.id);
-  message.success($t('parent.children.switchSuccess'));
+/**
+ * 把某个孩子设为「这台设备的学习者」。
+ * 这是唯一会改变宝宝端归属的操作（设备级），因此二次确认后再执行。
+ */
+function bindToDevice(child: ChildApi.ChildProfile) {
+  Modal.confirm({
+    cancelText: $t('parent.common.cancel'),
+    content: $t('parent.children.bindConfirmContent', { name: child.name }),
+    okText: $t('parent.children.bindConfirmOk'),
+    title: $t('parent.children.bindConfirmTitle'),
+    onOk: async () => {
+      try {
+        await deviceStore.bindChild(child);
+        message.success(
+          $t('parent.children.bindSuccess', { name: child.name }),
+        );
+      } catch {
+        message.error($t('parent.common.syncFailed'));
+      }
+    },
+  });
 }
 
 async function remove(child: ChildApi.ChildProfile) {
   try {
     await familyStore.removeChild(child.id);
-    // 同步清理该孩子的本机记录
-    kidStore.clearRecords(child.id);
     message.success($t('parent.children.deleted'));
   } catch {
     message.error($t('parent.common.syncFailed'));
@@ -63,6 +87,35 @@ async function remove(child: ChildApi.ChildProfile) {
 
 <template>
   <div class="p-5">
+    <!-- 这台设备的学习者：与登录账号无关，只由家长显式绑定决定 -->
+    <div
+      class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3"
+      :class="
+        deviceStore.bound
+          ? 'border-slate-200 bg-slate-50'
+          : 'border-amber-300 bg-amber-50'
+      "
+    >
+      <div class="flex items-center gap-3">
+        <span class="text-3xl">{{
+          deviceStore.boundChild?.avatar ?? '🧸'
+        }}</span>
+        <div>
+          <div class="text-muted-foreground text-xs">
+            {{ $t('parent.children.deviceLabel') }}
+          </div>
+          <div class="text-lg font-bold">
+            {{
+              deviceStore.boundChild?.name ?? $t('parent.children.deviceNone')
+            }}
+          </div>
+        </div>
+      </div>
+      <p class="text-muted-foreground max-w-md text-xs">
+        {{ $t('parent.children.deviceTip') }}
+      </p>
+    </div>
+
     <div class="mb-4 flex items-center justify-between">
       <div>
         <h2 class="text-lg font-bold">{{ $t('parent.children.title') }}</h2>
@@ -90,33 +143,26 @@ async function remove(child: ChildApi.ChildProfile) {
             <div class="flex-1">
               <div class="flex items-center gap-2">
                 <span class="text-lg font-bold">{{ child.name }}</span>
-                <Tag
-                  v-if="familyStore.currentChildId === child.id"
-                  color="gold"
-                >
-                  {{ $t('parent.children.current') }}
+                <Tag v-if="deviceStore.boundChildId === child.id" color="gold">
+                  {{ $t('parent.children.deviceInUse') }}
                 </Tag>
               </div>
               <p class="text-muted-foreground mt-1 text-sm">
                 {{ $t('parent.children.birthday') }}:
                 {{ child.birthday || '—' }}
               </p>
-              <p class="text-muted-foreground text-sm">
-                {{ $t('parent.dashboard.statStars') }}:
-                {{ kidStore.starsOf(child.id) }}
-              </p>
             </div>
           </div>
 
           <div class="mt-4 flex flex-wrap gap-2">
             <Button
-              :disabled="familyStore.currentChildId === child.id"
+              :disabled="deviceStore.boundChildId === child.id"
               size="small"
               type="primary"
               ghost
-              @click="setCurrent(child)"
+              @click="bindToDevice(child)"
             >
-              {{ $t('parent.children.setCurrent') }}
+              {{ $t('parent.children.bindToDevice') }}
             </Button>
             <Button size="small" @click="openEdit(child)">
               {{ $t('parent.common.edit') }}

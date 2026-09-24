@@ -28,14 +28,20 @@
     "avatar": "头像",
     "birthday": "生日",
     "createdAt": "创建时间",
-    "setCurrent": "设为当前学习的孩子",
-    "current": "当前学习的孩子",
+    "deviceLabel": "这台设备的学习者",
+    "deviceNone": "还没有选择",
+    "deviceInUse": "宝宝端正在使用",
+    "deviceTip": "宝宝端以这个孩子的身份学习。登录家长账号不会自动改变它，需要在下方显式选择。",
+    "bindToDevice": "在宝宝端使用",
+    "bindConfirmTitle": "设为这台设备的学习者？",
+    "bindConfirmContent": "确认后，这台设备上的宝宝端将以「{name}」的身份学习和记录",
+    "bindConfirmOk": "确认设置",
+    "bindSuccess": "已把「{name}」设为这台设备的学习者",
     "empty": "还没有添加孩子，先添加一个吧",
     "nameRequired": "请填写孩子昵称",
     "added": "孩子已添加",
     "deleteConfirm": "删除后将同时删除该孩子的全部学习记录，确定删除吗？",
-    "deleted": "已删除",
-    "switchSuccess": "已切换当前学习孩子"
+    "deleted": "已删除"
   },
   "dashboard": {
     "scope": "数据范围",
@@ -85,17 +91,19 @@
   },
   "settings": {
     "childTitle": "个人信息",
-    "childName": "当前学习的孩子",
+    "deviceLearner": "本机学习者",
+    "deviceLearnerTip": "宝宝端当前使用的孩子。它属于这台设备，与登录账号无关，可在「孩子管理」里修改。",
     "tts": "语音引导（TTS）",
     "on": "开",
     "off": "关",
     "ttsOn": "语音引导已开启",
     "ttsOff": "语音引导已关闭",
     "dataTitle": "数据管理",
-    "dataTip": "学习记录与星星保存在本机浏览器，并会同步到云端的当前孩子名下。重置后将清空本机全部数据，且无法恢复。",
+    "dataTip": "学习记录与星星保存在本机浏览器，并会同步到云端。这里可以按孩子清空本机记录。",
     "dataStat": "本机数据：{records} 条学习记录 · {stars} 颗星星",
-    "reset": "重置本机数据",
-    "resetConfirm": "确定重置本机全部学习数据吗？此操作无法恢复！",
-    "resetDone": "已重置本机学习数据"
+    "reset": "清空本机记录",
+    "resetConfirmScope": "确定清空「{scope}」的本机学习记录吗？此操作无法恢复！",
+    "scopeAll": "全部孩子",
+    "resetDone": "已清空本机学习记录"
   }
 }

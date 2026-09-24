@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { Input, message, Modal } from 'ant-design-vue';
 
 import { $t } from '#/locales';
 import { stopSpeak } from '#/utils/tts';
 
-/** 家长中心入口（需成人验证，防止宝宝误入） */
-const PARENT_HOME = '/parent/dashboard';
-
+/**
+ * 成人验证（乘法题），防止宝宝误入家长区。
+ * 通过后只发事件，去向由调用方决定（切换本机学习者 / 进入家长中心）。
+ */
+const emit = defineEmits<{ passed: [] }>();
 const open = defineModel<boolean>('open', { default: false });
 
-const router = useRouter();
 const answer = ref('');
 const question = ref({ a: 0, b: 0 });
 
@@ -30,7 +30,7 @@ function confirm() {
   const { a, b } = question.value;
   if (Number(answer.value) === a * b) {
     open.value = false;
-    router.push(PARENT_HOME);
+    emit('passed');
   } else {
     message.error($t('kid.gate.wrong'));
   }

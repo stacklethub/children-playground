@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-
+import LearnerSwitchModal from '#/layouts/components/kid/learner-switch-modal.vue';
 import ParentGateModal from '#/layouts/components/kid/parent-gate-modal.vue';
+import { useParentEntry } from '#/layouts/composables/use-parent-entry';
 import { $t } from '#/locales';
 
 /**
- * 未绑定孩子时的引导页：宝宝端所有学习页在无绑定孩子时展示。
+ * 未选择学习者时的引导页：宝宝端所有学习页在「本设备无学习者」时展示。
+ * 设备的学习者只能由家长显式选择，这里不会默认归属任何孩子。
  */
-const gateOpen = ref(false);
+const {
+  enterParentCenter,
+  gateOpen,
+  onGatePassed,
+  openParentEntry,
+  switchOpen,
+} = useParentEntry();
 </script>
 
 <template>
@@ -23,10 +30,15 @@ const gateOpen = ref(false);
     </p>
     <button
       class="rounded-full bg-slate-700 px-10 py-4 text-2xl font-bold text-white shadow-lg active:scale-95"
-      @click="gateOpen = true"
+      @click="openParentEntry"
     >
       {{ $t('kid.guard.openParent') }}
     </button>
-    <ParentGateModal v-model:open="gateOpen" />
+
+    <ParentGateModal v-model:open="gateOpen" @passed="onGatePassed" />
+    <LearnerSwitchModal
+      v-model:open="switchOpen"
+      @enter-parent="enterParentCenter"
+    />
   </div>
 </template>

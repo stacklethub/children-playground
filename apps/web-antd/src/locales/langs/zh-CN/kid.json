@@ -58,9 +58,23 @@
     "got": "获得徽章「{name}」"
   },
   "guard": {
-    "needBind": "还没有选择学习的孩子",
-    "bindTip": "请家长进入家长中心，添加孩子并设为「当前学习的孩子」",
-    "openParent": "进入家长中心"
+    "needBind": "这台设备还没有选择学习者",
+    "bindTip": "请家长在家长中心添加孩子，并选择这台设备的学习者",
+    "openParent": "我是家长"
+  },
+  "switch": {
+    "title": "选择这台设备的学习者",
+    "tip": "选择后，这台设备上的宝宝端将以该孩子的身份学习和记录",
+    "current": "正在使用",
+    "switched": "已切换学习者",
+    "failed": "切换失败，请让家长重新绑定",
+    "unbind": "解除本机绑定",
+    "unbindConfirm": "解除这台设备的学习者？",
+    "unbindTip": "解除后宝宝端会回到「未选择学习者」页面，需要家长重新选择才能继续学习",
+    "unbindOk": "解除",
+    "unbindCancel": "取消",
+    "unbound": "已解除本机绑定",
+    "toParent": "进入家长中心"
   },
   "gate": {
     "title": "家长验证",

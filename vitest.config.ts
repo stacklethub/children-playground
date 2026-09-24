@@ -1,9 +1,17 @@
+import { fileURLToPath } from 'node:url';
+
 import Vue from '@vitejs/plugin-vue';
 import VueJsx from '@vitejs/plugin-vue-jsx';
 import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [Vue(), VueJsx()],
+  resolve: {
+    alias: {
+      // 各应用的 `#/` 源码别名（见 @vben/vite-config）
+      '#': fileURLToPath(new URL('./apps/web-antd/src', import.meta.url)),
+    },
+  },
   test: {
     environment: 'happy-dom',
     environmentOptions: {

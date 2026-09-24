@@ -1,15 +1,23 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
 
+import { useParentEntry } from '#/layouts/composables/use-parent-entry';
 import { $t } from '#/locales';
 import { speak } from '#/utils/tts';
 
+import LearnerSwitchModal from './learner-switch-modal.vue';
 import ParentGateModal from './parent-gate-modal.vue';
 
 defineProps<{ showHome?: boolean }>();
 
 const router = useRouter();
-const gateOpen = defineModel<boolean>('gateOpen', { default: false });
+const {
+  enterParentCenter,
+  gateOpen,
+  onGatePassed,
+  openParentEntry,
+  switchOpen,
+} = useParentEntry();
 
 function goHome() {
   speak($t('kid.tts.backHome'));
@@ -29,15 +37,19 @@ function goHome() {
       🏠
     </button>
 
-    <!-- 家长中心入口 -->
+    <!-- 家长入口 -->
     <button
       :title="$t('kid.gate.entry')"
       class="fixed bottom-6 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-slate-700/60 text-xl text-white shadow-lg transition active:scale-90"
-      @click="gateOpen = true"
+      @click="openParentEntry"
     >
       🔒
     </button>
 
-    <ParentGateModal v-model:open="gateOpen" />
+    <ParentGateModal v-model:open="gateOpen" @passed="onGatePassed" />
+    <LearnerSwitchModal
+      v-model:open="switchOpen"
+      @enter-parent="enterParentCenter"
+    />
   </div>
 </template>

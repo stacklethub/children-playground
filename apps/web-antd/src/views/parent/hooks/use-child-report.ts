@@ -3,7 +3,12 @@ import type { LearnRecordPayload } from '#/api';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { getLearnReportApi } from '#/api';
-import { type LearnModule, useFamilyStore, useKidStore } from '#/store';
+import {
+  type LearnModule,
+  useDeviceStore,
+  useFamilyStore,
+  useKidStore,
+} from '#/store';
 
 export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
   {
@@ -19,6 +24,7 @@ export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
  */
 export function useChildReport() {
   const familyStore = useFamilyStore();
+  const deviceStore = useDeviceStore();
   const kidStore = useKidStore();
 
   /** 数据范围：'' 表示全部孩子 */
@@ -120,7 +126,8 @@ export function useChildReport() {
   /** 进入家长中心时：拉孩子列表 + 补传离线记录 + 拉报告 */
   async function init() {
     await familyStore.fetchChildren();
-    selectedChildId.value = familyStore.currentChildId ?? '';
+    // 默认关注本机学习者（查看范围可随时切换，不影响宝宝端归属）
+    selectedChildId.value = deviceStore.boundChildId ?? '';
     await kidStore.syncPending();
     await load();
   }
