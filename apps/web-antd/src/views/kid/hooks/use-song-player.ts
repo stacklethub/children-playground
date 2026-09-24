@@ -1,7 +1,7 @@
 import { computed, onMounted, ref } from 'vue';
 
 import { $t } from '#/locales';
-import { speak, stopSpeak } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak, stopSpeak } from '#/utils/tts';
 
 import { useReward } from './use-reward';
 
@@ -48,7 +48,9 @@ export function useSongPlayer(
         return;
       }
       activeLine.value = i;
+      // 歌词属于内容层中文素材（不参与 i18n），固定中文语音朗读
       speak(current.lines[i]!, {
+        lang: CONTENT_TTS_LANG,
         onEnd: () => {
           i += 1;
           speakLine();
@@ -63,7 +65,7 @@ export function useSongPlayer(
     const line = song()?.lines[index];
     if (!line) return;
     activeLine.value = index;
-    speak(line);
+    speak(line, { lang: CONTENT_TTS_LANG });
   }
 
   onMounted(() => {

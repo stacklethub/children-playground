@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { speak } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
 import KidPage from '../components/kid-page.vue';
@@ -27,6 +27,12 @@ const { cards, current, inCategoryView, index, next, tapCard } = useCardSession(
   () => categoryId.value,
 );
 
+/** 进入分类；分类名是内容层中文素材，固定中文语音朗读 */
+function openCategory(id: string, name: string) {
+  router.push(`/kid/cards/${id}`);
+  speak(name, { lang: CONTENT_TTS_LANG });
+}
+
 function backToCategories() {
   router.push('/kid/cards');
 }
@@ -45,10 +51,7 @@ function backToCategories() {
         v-for="cat in categories"
         :key="cat.id"
         class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
-        @click="
-          router.push(`/kid/cards/${cat.id}`);
-          speak(cat.name);
-        "
+        @click="openCategory(cat.id, cat.name)"
       >
         <span
           class="flex h-24 w-24 items-center justify-center rounded-full text-6xl"

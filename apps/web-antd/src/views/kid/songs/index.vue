@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { speak } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
 import KidPage from '../components/kid-page.vue';
@@ -22,6 +22,12 @@ const { rewardBadges, rewardShow, rewardText } = useReward();
 const songId = computed(() => route.params.songId as string | undefined);
 const song = computed(() => songs.value.find((s) => s.id === songId.value));
 const { activeLine, play, speakLine, stop } = useSongPlayer(() => song.value);
+
+/** 打开儿歌；标题是内容层中文素材，固定中文语音朗读 */
+function openSong(id: string, title: string) {
+  router.push(`/kid/songs/${id}`);
+  speak(title, { lang: CONTENT_TTS_LANG });
+}
 </script>
 
 <template>
@@ -37,7 +43,7 @@ const { activeLine, play, speakLine, stop } = useSongPlayer(() => song.value);
         v-for="item in songs"
         :key="item.id"
         class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
-        @click="router.push(`/kid/songs/${item.id}`); speak(item.title)"
+        @click="openSong(item.id, item.title)"
       >
         <span
           class="flex h-24 w-24 items-center justify-center rounded-full bg-violet-100 text-6xl"
@@ -58,7 +64,9 @@ const { activeLine, play, speakLine, stop } = useSongPlayer(() => song.value);
           :key="i"
           class="cursor-pointer rounded-2xl py-2 text-center text-3xl font-bold transition"
           :class="
-            i === activeLine ? 'bg-violet-100 text-violet-600' : 'text-slate-600'
+            i === activeLine
+              ? 'bg-violet-100 text-violet-600'
+              : 'text-slate-600'
           "
           @click="speakLine(i)"
         >
@@ -69,13 +77,19 @@ const { activeLine, play, speakLine, stop } = useSongPlayer(() => song.value);
       <div class="mt-8 flex gap-6">
         <button
           class="rounded-full bg-violet-400 px-14 py-4 text-3xl font-bold text-white shadow-lg transition active:scale-95"
-          @click="stop(); play()"
+          @click="
+            stop();
+            play();
+          "
         >
           ▶️ {{ $t('kid.songs.play') }}
         </button>
         <button
           class="rounded-full bg-slate-300 px-10 py-4 text-3xl font-bold text-slate-600 shadow-lg transition active:scale-95"
-          @click="stop(); router.push('/kid/songs')"
+          @click="
+            stop();
+            router.push('/kid/songs');
+          "
         >
           {{ $t('kid.songs.switch') }}
         </button>

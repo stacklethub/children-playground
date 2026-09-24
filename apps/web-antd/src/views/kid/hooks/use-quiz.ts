@@ -2,7 +2,7 @@ import { ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { speak } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import { useReward } from './use-reward';
 
@@ -80,12 +80,14 @@ export function useLetterPractice() {
   }
 
   function sayLetter(item: { letter: string; word: string; zh: string }) {
+    // 字母释义属于内容层中文素材，固定中文语音
     speak(
       $t('kid.tts.lettersSay', {
         letter: item.letter,
         word: item.word,
         zh: item.zh,
       }),
+      { lang: CONTENT_TTS_LANG },
     );
   }
 
@@ -121,8 +123,11 @@ export function useNumberPractice() {
   }
 
   function sayNumber(item: { num: number; word: string }) {
+    // 数字汉字属于内容层中文素材，固定中文语音
     const list = Array.from({ length: item.num }, () => item.word).join('，');
-    speak($t('kid.tts.numbersSay', { word: item.word, list }));
+    speak($t('kid.tts.numbersSay', { word: item.word, list }), {
+      lang: CONTENT_TTS_LANG,
+    });
   }
 
   return { askQuiz, createQuiz, sayNumber };

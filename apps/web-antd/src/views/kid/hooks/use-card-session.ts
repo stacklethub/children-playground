@@ -2,7 +2,7 @@ import { computed, ref, watch } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { speak } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import { useReward } from './use-reward';
 
@@ -30,7 +30,10 @@ export function useCardSession(categoryId: () => string | undefined) {
   function tapCard() {
     const card = current.value;
     if (!card) return;
-    speak(`${card.name}，${card.pinyin}。${card.fact ?? ''}`);
+    // 名称、拼音、小知识属于内容层的中文素材（不参与 i18n），固定中文语音朗读
+    speak(`${card.name}，${card.pinyin}。${card.fact ?? ''}`, {
+      lang: CONTENT_TTS_LANG,
+    });
     if (!learnedIds.has(card.id)) {
       learnedIds.add(card.id);
       reward({

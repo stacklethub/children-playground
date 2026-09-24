@@ -1,12 +1,22 @@
 /**
  * 语音引导工具（Web Speech API）
  * 宝宝端所有页面通过 speak() 朗读引导语，可在设置中关闭。
- * 朗读语言跟随界面语言（i18n locale）切换。
+ *
+ * 朗读语言默认跟随界面语言（i18n locale）。学习内容是中文启蒙素材、
+ * 不随界面语言切换，朗读这类内容时用 CONTENT_TTS_LANG 固定中文语音。
  */
 
 import { $t, i18n } from '#/locales';
 
 const TTS_ENABLED_KEY = 'child-study-tts-enabled';
+
+/**
+ * 学习内容的朗读语言。
+ *
+ * 内容层是中文单语（看图识物的名称与拼音、数字汉字、中文儿歌），不参与 i18n；
+ * 因此无论界面切到哪种语言，内容朗读都应使用中文语音。
+ */
+export const CONTENT_TTS_LANG = 'zh-CN';
 
 /** 是否启用语音（独立于 store，避免循环依赖） */
 export function isTtsEnabled(): boolean {
@@ -56,10 +66,13 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
 
 /**
  * 朗读文本。语音未启用或浏览器不支持时静默降级。
+ *
+ * @param options.lang 显式指定朗读语言，省略时跟随界面语言。
+ *   朗读内容层中文素材时传 CONTENT_TTS_LANG。
  */
 export function speak(
   text: string,
-  options: { onEnd?: () => void; rate?: number } = {},
+  options: { lang?: string; onEnd?: () => void; rate?: number } = {},
 ) {
   if (!isTtsEnabled()) {
     options.onEnd?.();
@@ -72,7 +85,7 @@ export function speak(
   }
   try {
     synth.cancel();
-    const lang = resolveTtsLang();
+    const lang = options.lang ?? resolveTtsLang();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
     // 英文按词连读，语速略快于中文更自然
