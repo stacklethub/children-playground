@@ -1,7 +1,8 @@
 <script lang="ts" setup>
+import type { LearnRecordPayload } from '#/api';
+
 import { Card } from 'ant-design-vue';
 
-import type { LearnRecordPayload } from '#/api';
 import { $t } from '#/locales';
 
 import { MODULE_META } from '../hooks/use-child-report';
@@ -18,7 +19,10 @@ function formatTime(timestamp: number) {
 
 <template>
   <Card :title="$t('parent.dashboard.recent')">
-    <div v-if="records.length === 0" class="text-muted-foreground py-8 text-center">
+    <div
+      v-if="records.length === 0"
+      class="text-muted-foreground py-8 text-center"
+    >
       {{ $t('parent.dashboard.empty') }}
     </div>
     <ul v-else class="divide-y">
@@ -30,7 +34,9 @@ function formatTime(timestamp: number) {
         <span class="flex items-center gap-2">
           <span
             class="inline-block h-2 w-2 rounded-full"
-            :style="{ backgroundColor: MODULE_META[record.module as 'cards']?.color }"
+            :style="{
+              backgroundColor: MODULE_META[record.module as 'cards']?.color,
+            }"
           ></span>
           {{ $t(`kid.modules.${record.module}`) }}
           <span class="text-muted-foreground">{{ record.detail }}</span>

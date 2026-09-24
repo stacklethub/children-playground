@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 
 import { $t } from '#/locales';
-import { MODULE_KEYS, useKidStore, type LearnModule } from '#/store';
+import { type LearnModule, MODULE_KEYS, useKidStore } from '#/store';
 import { speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
@@ -43,7 +43,10 @@ onMounted(() => {
   if (!bound.value) return;
   speak(
     allDone.value
-      ? $t('kid.tts.rewardsAllDone', { name: childName.value, stars: stars.value })
+      ? $t('kid.tts.rewardsAllDone', {
+          name: childName.value,
+          stars: stars.value,
+        })
       : $t('kid.tts.rewardsProgress', { stars: stars.value }),
   );
 });
@@ -103,7 +106,9 @@ onMounted(() => {
         :key="badge.id"
         class="flex items-center gap-4 rounded-3xl p-5 shadow-md transition"
         :class="
-          badge.earned ? 'bg-amber-50 ring-2 ring-amber-300' : 'bg-white/50 opacity-60'
+          badge.earned
+            ? 'bg-amber-50 ring-2 ring-amber-300'
+            : 'bg-white/50 opacity-60'
         "
       >
         <span class="text-5xl" :class="badge.earned ? '' : 'grayscale'">

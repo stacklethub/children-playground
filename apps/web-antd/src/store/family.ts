@@ -1,3 +1,5 @@
+import type { ChildApi } from '#/api';
+
 import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
@@ -9,7 +11,6 @@ import {
   getChildrenApi,
   updateChildApi,
 } from '#/api';
-import type { ChildApi } from '#/api';
 import { clearBindToken, getBindToken, setBindToken } from '#/utils/bind-token';
 
 /**

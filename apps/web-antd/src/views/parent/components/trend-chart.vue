@@ -4,6 +4,7 @@ import type { EchartsUIType } from '@vben/plugins/echarts';
 import { onMounted, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+
 import { Card } from 'ant-design-vue';
 
 import { $t } from '#/locales';
@@ -16,7 +17,13 @@ const { renderEcharts } = useEcharts(chartRef);
 
 function render() {
   renderEcharts({
-    grid: { bottom: 0, containLabel: true, left: '1%', right: '1%', top: '10%' },
+    grid: {
+      bottom: 0,
+      containLabel: true,
+      left: '1%',
+      right: '1%',
+      top: '10%',
+    },
     series: [
       {
         areaStyle: { opacity: 0.15 },

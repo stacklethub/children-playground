@@ -1,15 +1,17 @@
+import type { LearnRecordPayload } from '#/api';
+
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { getLearnReportApi } from '#/api';
-import type { LearnRecordPayload } from '#/api';
-import { useFamilyStore, useKidStore, type LearnModule } from '#/store';
+import { type LearnModule, useFamilyStore, useKidStore } from '#/store';
 
-export const MODULE_META: Record<LearnModule, { color: string; key: string }> = {
-  cards: { color: '#F97316', key: 'cards' },
-  letters: { color: '#3B82F6', key: 'letters' },
-  numbers: { color: '#10B981', key: 'numbers' },
-  songs: { color: '#8B5CF6', key: 'songs' },
-};
+export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
+  {
+    cards: { color: '#F97316', key: 'cards' },
+    letters: { color: '#3B82F6', key: 'letters' },
+    numbers: { color: '#10B981', key: 'numbers' },
+    songs: { color: '#8B5CF6', key: 'songs' },
+  };
 
 /**
  * 家长端学习报告数据：
@@ -64,7 +66,9 @@ export function useChildReport() {
 
   const accuracy = computed(() => {
     if (allRecords.value.length === 0) return 0;
-    const positive = allRecords.value.filter((r) => r.result !== 'wrong').length;
+    const positive = allRecords.value.filter(
+      (r) => r.result !== 'wrong',
+    ).length;
     return Math.round((positive / allRecords.value.length) * 100);
   });
 

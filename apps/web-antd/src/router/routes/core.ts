@@ -47,7 +47,7 @@ const coreRoutes: RouteRecordRaw[] = [
     meta: {
       hideInBreadcrumb: true,
       hideInTab: true,
-      title: '宝宝学堂',
+      title: $t('kid.app.name'),
     },
     name: 'Kid',
     path: '/kid',
@@ -55,37 +55,37 @@ const coreRoutes: RouteRecordRaw[] = [
     children: [
       {
         component: () => import('#/views/kid/home/index.vue'),
-        meta: { title: '学习岛' },
+        meta: { title: $t('kid.modules.home') },
         name: 'KidHome',
         path: 'home',
       },
       {
         component: () => import('#/views/kid/cards/index.vue'),
-        meta: { title: '看图识物' },
+        meta: { title: $t('kid.modules.cards') },
         name: 'KidCards',
         path: 'cards/:categoryId?',
       },
       {
         component: () => import('#/views/kid/letters/index.vue'),
-        meta: { title: '字母乐园' },
+        meta: { title: $t('kid.modules.letters') },
         name: 'KidLetters',
         path: 'letters',
       },
       {
         component: () => import('#/views/kid/numbers/index.vue'),
-        meta: { title: '数字小屋' },
+        meta: { title: $t('kid.modules.numbers') },
         name: 'KidNumbers',
         path: 'numbers',
       },
       {
         component: () => import('#/views/kid/songs/index.vue'),
-        meta: { title: '儿歌点播' },
+        meta: { title: $t('kid.modules.songs') },
         name: 'KidSongs',
         path: 'songs/:songId?',
       },
       {
         component: () => import('#/views/kid/rewards/index.vue'),
-        meta: { title: '我的星星' },
+        meta: { title: $t('kid.modules.rewards') },
         name: 'KidRewards',
         path: 'rewards',
       },

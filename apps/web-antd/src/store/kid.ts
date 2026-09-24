@@ -1,9 +1,10 @@
+import type { LearnRecordPayload } from '#/api';
+
 import { ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
 import { submitLearnRecordApi, syncLearnRecordsApi } from '#/api';
-import type { LearnRecordPayload } from '#/api';
 import { getBindToken } from '#/utils/bind-token';
 
 export type LearnModule = 'cards' | 'letters' | 'numbers' | 'songs';
@@ -26,7 +27,12 @@ export const BADGES: KidBadge[] = [
   { check: (c) => c.stars >= 10, emoji: '🌟', id: 'star-10', key: 'star10' },
   { check: (c) => c.stars >= 50, emoji: '✨', id: 'star-50', key: 'star50' },
   { check: (c) => c.stars >= 100, emoji: '💫', id: 'star-100', key: 'star100' },
-  { check: (c) => c.records >= 20, emoji: '📚', id: 'learn-20', key: 'learn20' },
+  {
+    check: (c) => c.records >= 20,
+    emoji: '📚',
+    id: 'learn-20',
+    key: 'learn20',
+  },
   {
     check: (c) => c.records >= 100,
     emoji: '🎓',
@@ -113,7 +119,9 @@ export const useKidStore = defineStore(
     function streakOf(childId?: string) {
       const list = recordsOf(childId);
       if (list.length === 0) return 0;
-      const days = new Set(list.map((r) => new Date(r.createdAt).toDateString()));
+      const days = new Set(
+        list.map((r) => new Date(r.createdAt).toDateString()),
+      );
       const cursor = new Date();
       if (!days.has(cursor.toDateString())) {
         cursor.setDate(cursor.getDate() - 1);
@@ -128,7 +136,10 @@ export const useKidStore = defineStore(
 
     /** 徽章（含是否已获得） */
     function badgesOf(childId?: string) {
-      const ctx = { records: recordsOf(childId).length, stars: starsOf(childId) };
+      const ctx = {
+        records: recordsOf(childId).length,
+        stars: starsOf(childId),
+      };
       return BADGES.map((b) => ({ ...b, earned: b.check(ctx) }));
     }
 

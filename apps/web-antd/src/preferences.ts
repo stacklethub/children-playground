@@ -24,6 +24,12 @@ export const overridesPreferences = defineOverridesPreferences({
     defaultHomePath: '/parent/dashboard',
   },
   copyright: appCopyrightPreferences,
+  // 家长端只保留账号相关操作，隐藏与幼儿学习无关的模板组件
+  widget: {
+    globalSearch: false,
+    notification: false,
+    timezone: false,
+  },
 });
 
 export const preferencesExtension =

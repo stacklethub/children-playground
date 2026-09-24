@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-/**
- * 学一学 / 考一考 模式切换。
- */
-const mode = defineModel<'learn' | 'quiz'>('mode', { default: 'learn' });
-
 const props = withDefaults(
   defineProps<{
     activeClass?: string;
@@ -15,6 +10,11 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{ change: [mode: 'learn' | 'quiz'] }>();
+
+/**
+ * 学一学 / 考一考 模式切换。
+ */
+const mode = defineModel<'learn' | 'quiz'>('mode', { default: 'learn' });
 
 const options = computed(() => [
   { label: props.labels.learn, value: 'learn' as const },

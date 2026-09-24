@@ -8,7 +8,9 @@ import { useReward } from './use-reward';
 /**
  * 儿歌播放器：逐行朗读歌词并高亮当前行，整首听完计星（按天去重）。
  */
-export function useSongPlayer(song: () => { id: string; lines: string[]; title: string } | undefined) {
+export function useSongPlayer(
+  song: () => undefined | { id: string; lines: string[]; title: string },
+) {
   const { reward } = useReward();
 
   const activeLine = ref(-1);

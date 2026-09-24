@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 
 import { $t } from '#/locales';
-import { useKidStore, type KidBadge, type LearnModule } from '#/store';
+import { type KidBadge, type LearnModule, useKidStore } from '#/store';
 import { speak, speakEncourage, speakPraise } from '#/utils/tts';
 
 import { useCurrentChild } from './use-current-child';
@@ -27,10 +27,13 @@ export function useReward() {
     }));
     rewardShow.value = true;
     if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      rewardShow.value = false;
-      rewardBadges.value = [];
-    }, badges.length > 0 ? 2600 : 1300);
+    timer = setTimeout(
+      () => {
+        rewardShow.value = false;
+        rewardBadges.value = [];
+      },
+      badges.length > 0 ? 2600 : 1300,
+    );
   }
 
   /** 学会/答对：记录 + 星星动画 +（可选）朗读表扬 */

@@ -1,9 +1,10 @@
 <script lang="ts" setup>
+import type { ChildApi } from '#/api';
+
 import { onMounted, ref } from 'vue';
 
-import { Button, Card, Popconfirm, Spin, Tag, message } from 'ant-design-vue';
+import { Button, Card, message, Popconfirm, Spin, Tag } from 'ant-design-vue';
 
-import type { ChildApi } from '#/api';
 import { $t } from '#/locales';
 import { useFamilyStore, useKidStore } from '#/store';
 
@@ -133,10 +134,6 @@ async function remove(child: ChildApi.ChildProfile) {
       </div>
     </Spin>
 
-    <ChildFormModal
-      v-model:open="formOpen"
-      :child="editing"
-      @submit="submit"
-    />
+    <ChildFormModal v-model:open="formOpen" :child="editing" @submit="submit" />
   </div>
 </template>

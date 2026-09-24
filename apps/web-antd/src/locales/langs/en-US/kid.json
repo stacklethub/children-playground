@@ -1,108 +1,113 @@
 {
-  "kid": {
-    "app": {
-      "name": "Kids Academy"
+  "app": {
+    "name": "Kids Academy"
+  },
+  "modules": {
+    "home": "Learning Island",
+    "cards": "Picture Cards",
+    "letters": "Letter Land",
+    "numbers": "Number House",
+    "songs": "Nursery Songs",
+    "rewards": "My Stars"
+  },
+  "tiles": {
+    "cardsDesc": "Know things around you",
+    "lettersDesc": "Make friends with letters",
+    "numbersDesc": "Count and learn",
+    "songsDesc": "Sing along",
+    "rewardsDesc": "See my rewards"
+  },
+  "home": {
+    "greeting": "Hello, {name}!",
+    "question": "What shall we play today?"
+  },
+  "cards": {
+    "tapHint": "Tap to listen",
+    "next": "Next",
+    "count": "{count} cards"
+  },
+  "letters": {
+    "learn": "Learn",
+    "quiz": "Quiz",
+    "quizPrompt": "Where is letter {letter}?",
+    "questionNo": "Question {n}"
+  },
+  "numbers": {
+    "learn": "Learn",
+    "quiz": "Quiz",
+    "quizPrompt": "How many are there?",
+    "questionNo": "Question {n}"
+  },
+  "songs": {
+    "play": "Sing along",
+    "switch": "Another one"
+  },
+  "rewards": {
+    "streak": "{days}-day streak",
+    "tasks": "Today's tasks",
+    "badges": "My badges",
+    "done": "Done",
+    "progress": "{count}/{goal}"
+  },
+  "badges": {
+    "star10": { "name": "Little Star", "desc": "Collect 10 stars" },
+    "star50": { "name": "Shining Star", "desc": "Collect 50 stars" },
+    "star100": { "name": "Super Star", "desc": "Collect 100 stars" },
+    "learn20": {
+      "name": "Learning Expert",
+      "desc": "Finish 20 learning activities"
     },
-    "modules": {
-      "cards": "Picture Cards",
-      "letters": "Letter Land",
-      "numbers": "Number House",
-      "songs": "Nursery Songs",
-      "rewards": "My Stars"
+    "learn100": {
+      "name": "Learning Master",
+      "desc": "Finish 100 learning activities"
     },
-    "tiles": {
-      "cardsDesc": "Know things around you",
-      "lettersDesc": "Make friends with letters",
-      "numbersDesc": "Count and learn",
-      "songsDesc": "Sing along",
-      "rewardsDesc": "See my rewards"
-    },
-    "home": {
-      "greeting": "Hello, {name}!",
-      "question": "What shall we play today?"
-    },
-    "cards": {
-      "tapHint": "Tap to listen",
-      "next": "Next",
-      "count": "{count} cards"
-    },
-    "letters": {
-      "learn": "Learn",
-      "quiz": "Quiz",
-      "quizPrompt": "Where is letter {letter}?",
-      "questionNo": "Question {n}"
-    },
-    "numbers": {
-      "learn": "Learn",
-      "quiz": "Quiz",
-      "quizPrompt": "How many are there?",
-      "questionNo": "Question {n}"
-    },
-    "songs": {
-      "play": "Sing along",
-      "switch": "Another one"
-    },
-    "rewards": {
-      "streak": "{days}-day streak",
-      "tasks": "Today's tasks",
-      "badges": "My badges",
-      "done": "Done",
-      "progress": "{count}/{goal}"
-    },
-    "badges": {
-      "star10": { "name": "Little Star", "desc": "Collect 10 stars" },
-      "star50": { "name": "Shining Star", "desc": "Collect 50 stars" },
-      "star100": { "name": "Super Star", "desc": "Collect 100 stars" },
-      "learn20": { "name": "Learning Expert", "desc": "Finish 20 learning activities" },
-      "learn100": { "name": "Learning Master", "desc": "Finish 100 learning activities" },
-      "got": "Badge unlocked: {name}"
-    },
-    "guard": {
-      "needBind": "No child selected yet",
-      "bindTip": "Please ask a parent to add a child and set it as the current learner",
-      "openParent": "Open Parent Center"
-    },
-    "gate": {
-      "title": "Parent Verification",
-      "tip": "Please answer the question to prove you are a parent:",
-      "placeholder": "Your answer",
-      "wrong": "Wrong answer, please try again",
-      "entry": "Parent Center"
-    },
-    "rest": {
-      "title": "Time to rest your eyes!",
-      "tip": "Look at something green far away and blink~",
-      "done": "I am rested"
-    },
-    "action": {
-      "backHome": "Back to home"
-    },
-    "tts": {
-      "welcome": "Welcome to the Kids Academy, {name}! What shall we play today?",
-      "cardsIntro": "Tap a card and listen to what it is.",
-      "cardsCategory": "Let us learn about {name}!",
-      "cardsNext": "Look, what is this?",
-      "cardsDone": "You finished this category, great job!",
-      "lettersIntro": "Tap a letter and say hello to it!",
-      "lettersQuiz": "Find the letter {letter}!",
-      "lettersSay": "{letter}, {zh}, {word}",
-      "numbersIntro": "Tap a number and let us count together!",
-      "numbersQuiz": "Let us count, how many are there?",
-      "numbersSay": "This is {word}, count with me: {list}",
-      "songsIntro": "Pick a song you like!",
-      "songRetry": "All done, want to sing it again?",
-      "backHome": "Back to home",
-      "rest": "You have been watching for a while, let your eyes rest.",
-      "rewardsProgress": "You have {stars} stars now, keep going!",
-      "rewardsAllDone": "Wow, all tasks are done! {name} has {stars} stars!",
-      "praise1": "Correct, well done!",
-      "praise2": "Awesome!",
-      "praise3": "You are so smart!",
-      "praise4": "Great job, keep going!",
-      "praise5": "Wow, perfectly right!",
-      "encourage1": "Never mind, try again!",
-      "encourage2": "So close, one more time!",
-      "encourage3": "Come on, you can do it!"
-    }
+    "got": "Badge unlocked: {name}"
+  },
+  "guard": {
+    "needBind": "No child selected yet",
+    "bindTip": "Please ask a parent to add a child and set it as the current learner",
+    "openParent": "Open Parent Center"
+  },
+  "gate": {
+    "title": "Parent Verification",
+    "tip": "Please answer the question to prove you are a parent:",
+    "placeholder": "Your answer",
+    "wrong": "Wrong answer, please try again",
+    "entry": "Parent Center"
+  },
+  "rest": {
+    "title": "Time to rest your eyes!",
+    "tip": "Look at something green far away and blink~",
+    "done": "I am rested"
+  },
+  "action": {
+    "backHome": "Back to home"
+  },
+  "tts": {
+    "welcome": "Welcome to the Kids Academy, {name}! What shall we play today?",
+    "cardsIntro": "Tap a card and listen to what it is.",
+    "cardsCategory": "Let us learn about {name}!",
+    "cardsNext": "Look, what is this?",
+    "cardsDone": "You finished this category, great job!",
+    "lettersIntro": "Tap a letter and say hello to it!",
+    "lettersQuiz": "Find the letter {letter}!",
+    "lettersSay": "{letter}, {zh}, {word}",
+    "numbersIntro": "Tap a number and let us count together!",
+    "numbersQuiz": "Let us count, how many are there?",
+    "numbersSay": "This is {word}, count with me: {list}",
+    "songsIntro": "Pick a song you like!",
+    "songRetry": "All done, want to sing it again?",
+    "backHome": "Back to home",
+    "rest": "You have been watching for a while, let your eyes rest.",
+    "rewardsProgress": "You have {stars} stars now, keep going!",
+    "rewardsAllDone": "Wow, all tasks are done! {name} has {stars} stars!",
+    "praise1": "Correct, well done!",
+    "praise2": "Awesome!",
+    "praise3": "You are so smart!",
+    "praise4": "Great job, keep going!",
+    "praise5": "Wow, perfectly right!",
+    "encourage1": "Never mind, try again!",
+    "encourage2": "So close, one more time!",
+    "encourage3": "Come on, you can do it!"
   }
 }

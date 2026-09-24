@@ -1,9 +1,10 @@
 /**
  * 语音引导工具（Web Speech API）
  * 宝宝端所有页面通过 speak() 朗读引导语，可在设置中关闭。
+ * 朗读语言跟随界面语言（i18n locale）切换。
  */
 
-import { $t } from '#/locales';
+import { $t, i18n } from '#/locales';
 
 const TTS_ENABLED_KEY = 'child-study-tts-enabled';
 
@@ -19,10 +20,38 @@ export function setTtsEnabled(enabled: boolean) {
   }
 }
 
-/** 优先挑选中文语音 */
-function pickChineseVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis?.getVoices?.() ?? [];
-  return voices.find((v) => v.lang === 'zh-CN') ?? voices.find((v) => v.lang.startsWith('zh'));
+/** 当前界面语言对应的朗读语言 */
+function resolveTtsLang(): string {
+  const locale = i18n.global.locale.value;
+  return locale?.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
+}
+
+/**
+ * 系统语音列表在部分浏览器中是异步就绪的，这里做一次预热缓存，
+ * 避免首次朗读时 getVoices() 返回空数组而退化成默认语音。
+ */
+let cachedVoices: SpeechSynthesisVoice[] = [];
+
+function loadVoices() {
+  cachedVoices = window.speechSynthesis?.getVoices?.() ?? [];
+}
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  loadVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+}
+
+/** 挑选与朗读语言匹配的系统语音，缺失时回退到同语系语音 */
+function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
+  const voices =
+    cachedVoices.length > 0
+      ? cachedVoices
+      : (window.speechSynthesis?.getVoices?.() ?? []);
+  const prefix = lang.slice(0, 2).toLowerCase();
+  return (
+    voices.find((v) => v.lang === lang) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith(prefix))
+  );
 }
 
 /**
@@ -43,10 +72,12 @@ export function speak(
   }
   try {
     synth.cancel();
+    const lang = resolveTtsLang();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = options.rate ?? 0.85;
-    const voice = pickChineseVoice();
+    utterance.lang = lang;
+    // 英文按词连读，语速略快于中文更自然
+    utterance.rate = options.rate ?? (lang === 'en-US' ? 0.9 : 0.85);
+    const voice = pickVoice(lang);
     if (voice) {
       utterance.voice = voice;
     }

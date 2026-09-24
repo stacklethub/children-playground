@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { $t } from '#/locales';
+
 defineProps<{
   show: boolean;
   text?: string;
@@ -20,12 +22,11 @@ defineProps<{
         <div
           v-for="(badge, i) in badges ?? []"
           :key="badge.name"
-          class="mt-4 flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-2xl font-bold text-amber-600 shadow-lg"
+          class="mt-4 flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-2xl font-bold text-amber-600 shadow-lg star-pop"
           :style="{ animationDelay: `${i * 0.3}s` }"
-          :class="['star-pop']"
         >
           <span class="text-3xl">{{ badge.emoji }}</span>
-          获得徽章「{{ badge.name }}」
+          {{ $t('kid.badges.got', { name: badge.name }) }}
         </div>
       </div>
     </Transition>

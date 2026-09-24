@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
 import { speak } from '#/utils/tts';
 
@@ -9,10 +10,9 @@ import BindGuard from '../components/bind-guard.vue';
 import KidPage from '../components/kid-page.vue';
 import ProgressDots from '../components/progress-dots.vue';
 import StarToast from '../components/star-toast.vue';
-import { useCurrentChild } from '../hooks/use-current-child';
 import { useCardSession } from '../hooks/use-card-session';
+import { useCurrentChild } from '../hooks/use-current-child';
 import { useReward } from '../hooks/use-reward';
-import { useContent } from '#/data/use-content';
 
 const route = useRoute();
 const router = useRouter();
@@ -20,9 +20,12 @@ const { bound } = useCurrentChild();
 const { rewardBadges, rewardShow, rewardText } = useReward();
 const { cardsByCategory, categories } = useContent();
 
-const categoryId = computed(() => route.params.categoryId as string | undefined);
-const { cards, current, inCategoryView, index, next, tapCard } =
-  useCardSession(() => categoryId.value);
+const categoryId = computed(
+  () => route.params.categoryId as string | undefined,
+);
+const { cards, current, inCategoryView, index, next, tapCard } = useCardSession(
+  () => categoryId.value,
+);
 
 function backToCategories() {
   router.push('/kid/cards');
@@ -42,7 +45,10 @@ function backToCategories() {
         v-for="cat in categories"
         :key="cat.id"
         class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
-        @click="router.push(`/kid/cards/${cat.id}`); speak(cat.name)"
+        @click="
+          router.push(`/kid/cards/${cat.id}`);
+          speak(cat.name);
+        "
       >
         <span
           class="flex h-24 w-24 items-center justify-center rounded-full text-6xl"
@@ -66,7 +72,9 @@ function backToCategories() {
         @click="tapCard"
       >
         <span class="text-[9rem] leading-none">{{ current.emoji }}</span>
-        <span class="text-5xl font-black text-slate-700">{{ current.name }}</span>
+        <span class="text-5xl font-black text-slate-700">{{
+          current.name
+        }}</span>
         <span class="text-2xl text-amber-500">{{ current.pinyin }}</span>
         <span class="text-xl text-slate-400">
           {{ $t('kid.cards.tapHint') }} 👆

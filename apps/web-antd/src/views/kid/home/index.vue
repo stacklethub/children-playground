@@ -6,8 +6,8 @@ import { $t } from '#/locales';
 import { useKidStore } from '#/store';
 import { speak } from '#/utils/tts';
 
-import TileButton from '../components/tile-button.vue';
 import BindGuard from '../components/bind-guard.vue';
+import TileButton from '../components/tile-button.vue';
 import { useCurrentChild } from '../hooks/use-current-child';
 
 const router = useRouter();

@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { Input, Modal, message } from 'ant-design-vue';
+import { Input, message, Modal } from 'ant-design-vue';
 
 import { $t } from '#/locales';
 import { stopSpeak } from '#/utils/tts';

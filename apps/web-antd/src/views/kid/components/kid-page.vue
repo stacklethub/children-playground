@@ -13,6 +13,6 @@ defineProps<{ emoji?: string; titleKey: string }>();
       <span v-if="emoji" class="text-5xl">{{ emoji }}</span>
       {{ $t(titleKey) }}
     </h1>
-    <slot />
+    <slot></slot>
   </section>
 </template>

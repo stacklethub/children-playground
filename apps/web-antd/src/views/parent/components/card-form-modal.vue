@@ -1,20 +1,11 @@
 <script lang="ts" setup>
+import type { CardDraft, KidCategory } from '#/data/use-content';
+
 import { reactive, watch } from 'vue';
 
-import {
-  Form,
-  FormItem,
-  Input,
-  Modal,
-  Select,
-  message,
-} from 'ant-design-vue';
+import { Form, FormItem, Input, message, Modal, Select } from 'ant-design-vue';
 
-import type { CardDraft, KidCategory } from '#/data/use-content';
 import { $t } from '#/locales';
-
-/** 新增/编辑「看图识物」卡片 */
-const open = defineModel<boolean>('open', { default: false });
 
 const props = defineProps<{
   categories: KidCategory[];
@@ -22,6 +13,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ submit: [draft: CardDraft] }>();
+
+/** 新增/编辑「看图识物」卡片 */
+const open = defineModel<boolean>('open', { default: false });
 
 const form = reactive<CardDraft>({
   categoryId: 'animals',
@@ -60,10 +54,16 @@ function submit() {
   >
     <Form layout="vertical">
       <FormItem :label="$t('parent.content.name')" required>
-        <Input v-model:value="form.name" placeholder="大象" />
+        <Input
+          v-model:value="form.name"
+          :placeholder="$t('parent.content.namePlaceholder')"
+        />
       </FormItem>
       <FormItem :label="$t('parent.content.pinyin')">
-        <Input v-model:value="form.pinyin" placeholder="dà xiàng" />
+        <Input
+          v-model:value="form.pinyin"
+          :placeholder="$t('parent.content.pinyinPlaceholder')"
+        />
       </FormItem>
       <FormItem :label="$t('parent.content.emoji')">
         <Input v-model:value="form.emoji" placeholder="🐘" />
@@ -82,8 +82,8 @@ function submit() {
       <FormItem :label="$t('parent.content.fact')">
         <Input.TextArea
           v-model:value="form.fact"
+          :placeholder="$t('parent.content.factPlaceholder')"
           :rows="2"
-          placeholder="大象的鼻子长长的，会喷水哦"
         />
       </FormItem>
     </Form>

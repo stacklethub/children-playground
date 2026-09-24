@@ -1,19 +1,20 @@
 <script lang="ts" setup>
+import type { ChildApi } from '#/api';
+
 import { reactive, watch } from 'vue';
 
-import { Form, FormItem, Input, Modal, Select, message } from 'ant-design-vue';
+import { Form, FormItem, Input, message, Modal, Select } from 'ant-design-vue';
 
-import type { ChildApi } from '#/api';
 import { $t } from '#/locales';
-
-/** 新增/编辑孩子档案弹窗 */
-const open = defineModel<boolean>('open', { default: false });
 
 const props = defineProps<{ child?: ChildApi.ChildProfile }>();
 
 const emit = defineEmits<{
   submit: [draft: ChildApi.ChildDraft];
 }>();
+
+/** 新增/编辑孩子档案弹窗 */
+const open = defineModel<boolean>('open', { default: false });
 
 const AVATARS = ['🧒', '👦', '👧', '🧸', '🐣', '🦊', '🐼', '⭐'];
 
@@ -57,7 +58,11 @@ function submit() {
       </FormItem>
       <FormItem :label="$t('parent.children.avatar')">
         <Select v-model:value="form.avatar">
-          <Select.Option v-for="avatar in AVATARS" :key="avatar" :value="avatar">
+          <Select.Option
+            v-for="avatar in AVATARS"
+            :key="avatar"
+            :value="avatar"
+          >
             {{ avatar }}
           </Select.Option>
         </Select>

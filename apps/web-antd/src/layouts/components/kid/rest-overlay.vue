@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { $t } from '#/locales';
 
+const emit = defineEmits<{ finish: [] }>();
+
 /** 护眼休息全屏提醒 */
 const open = defineModel<boolean>('open', { default: false });
-
-const emit = defineEmits<{ finish: [] }>();
 </script>
 
 <template>

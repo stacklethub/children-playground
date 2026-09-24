@@ -1,15 +1,9 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
-import {
-  Button,
-  Popconfirm,
-  Select,
-  Table,
-  message,
-} from 'ant-design-vue';
+import { Button, message, Popconfirm, Select, Table } from 'ant-design-vue';
 
-import { useContent, type CardDraft } from '#/data/use-content';
+import { type CardDraft, useContent } from '#/data/use-content';
 import { $t } from '#/locales';
 
 import CardFormModal from '../components/card-form-modal.vue';
@@ -33,10 +27,19 @@ const editingCard = computed(() => {
 });
 
 const columns = computed(() => [
-  { dataIndex: 'emoji', key: 'emoji', title: $t('parent.content.emoji'), width: 80 },
+  {
+    dataIndex: 'emoji',
+    key: 'emoji',
+    title: $t('parent.content.emoji'),
+    width: 80,
+  },
   { dataIndex: 'name', key: 'name', title: $t('parent.content.name') },
   { dataIndex: 'pinyin', key: 'pinyin', title: $t('parent.content.pinyin') },
-  { dataIndex: 'categoryId', key: 'categoryId', title: $t('parent.content.category') },
+  {
+    dataIndex: 'categoryId',
+    key: 'categoryId',
+    title: $t('parent.content.category'),
+  },
   { key: 'actions', title: $t('parent.content.actions'), width: 160 },
 ]);
 
@@ -74,7 +77,9 @@ function remove(id: string) {
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="text-lg font-bold">{{ $t('parent.content.title') }}</h2>
-        <p class="text-muted-foreground text-sm">{{ $t('parent.content.tip') }}</p>
+        <p class="text-muted-foreground text-sm">
+          {{ $t('parent.content.tip') }}
+        </p>
       </div>
       <div class="flex items-center gap-3">
         <Select

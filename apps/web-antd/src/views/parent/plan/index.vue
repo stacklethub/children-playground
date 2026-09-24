@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { reactive } from 'vue';
 
-import { Button, Card, InputNumber, Slider, message } from 'ant-design-vue';
+import { Button, Card, InputNumber, message, Slider } from 'ant-design-vue';
 
 import { $t } from '#/locales';
-import { MODULE_KEYS, useKidStore, type LearnModule } from '#/store';
+import { type LearnModule, MODULE_KEYS, useKidStore } from '#/store';
 
 const kidStore = useKidStore();
 
@@ -33,8 +33,7 @@ function save() {
           class="flex items-center justify-between"
         >
           <span class="text-base">
-            {{ MODULE_EMOJI[module] }} {{ $t(`kid.modules.${module}`) }}
-            （{{
+            {{ MODULE_EMOJI[module] }} {{ $t(`kid.modules.${module}`) }} （{{
               module === 'songs'
                 ? $t('parent.plan.songUnit')
                 : $t('parent.plan.unit')

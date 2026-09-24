@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
-import { Button, Card, Popconfirm, Switch, message } from 'ant-design-vue';
+import { Button, Card, message, Popconfirm, Switch } from 'ant-design-vue';
 
 import { $t } from '#/locales';
 import { useFamilyStore, useKidStore } from '#/store';
