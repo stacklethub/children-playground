@@ -20,6 +20,8 @@ export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
     name: import.meta.env.VITE_APP_TITLE,
+    // 登录成功后家长进入家长中心；宝宝端默认从 /kid/home 进入
+    defaultHomePath: '/parent/dashboard',
   },
   copyright: appCopyrightPreferences,
 });

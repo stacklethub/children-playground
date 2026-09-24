@@ -1,12 +1,13 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
-import { preferences } from '@vben/preferences';
 
 import { $t } from '#/locales';
 
 const BasicLayout = () => import('#/layouts/basic.vue');
 const AuthPageLayout = () => import('#/layouts/auth.vue');
+/** 宝宝端布局：全屏、无菜单，带回家按钮与家长门禁 */
+const KidLayout = () => import('#/layouts/kid.vue');
 /** 全局404页面 */
 const fallbackNotFoundRoute: RouteRecordRaw = {
   component: () => import('#/views/_core/fallback/not-found.vue'),
@@ -35,8 +36,60 @@ const coreRoutes: RouteRecordRaw[] = [
     },
     name: 'Root',
     path: '/',
-    redirect: preferences.app.defaultHomePath,
+    redirect: '/kid/home',
     children: [],
+  },
+  /**
+   * 宝宝端路由：作为核心路由注册，无需登录即可游玩
+   */
+  {
+    component: KidLayout,
+    meta: {
+      hideInBreadcrumb: true,
+      hideInTab: true,
+      title: '宝宝学堂',
+    },
+    name: 'Kid',
+    path: '/kid',
+    redirect: '/kid/home',
+    children: [
+      {
+        component: () => import('#/views/kid/home/index.vue'),
+        meta: { title: '学习岛' },
+        name: 'KidHome',
+        path: 'home',
+      },
+      {
+        component: () => import('#/views/kid/cards/index.vue'),
+        meta: { title: '看图识物' },
+        name: 'KidCards',
+        path: 'cards/:categoryId?',
+      },
+      {
+        component: () => import('#/views/kid/letters/index.vue'),
+        meta: { title: '字母乐园' },
+        name: 'KidLetters',
+        path: 'letters',
+      },
+      {
+        component: () => import('#/views/kid/numbers/index.vue'),
+        meta: { title: '数字小屋' },
+        name: 'KidNumbers',
+        path: 'numbers',
+      },
+      {
+        component: () => import('#/views/kid/songs/index.vue'),
+        meta: { title: '儿歌点播' },
+        name: 'KidSongs',
+        path: 'songs/:songId?',
+      },
+      {
+        component: () => import('#/views/kid/rewards/index.vue'),
+        meta: { title: '我的星星' },
+        name: 'KidRewards',
+        path: 'rewards',
+      },
+    ],
   },
   {
     component: AuthPageLayout,
