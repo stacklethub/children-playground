@@ -12,6 +12,7 @@ import {
 } from '#/api';
 
 import { useDeviceStore } from './device';
+import { useKidStore } from './kid';
 
 /**
  * 家长账号下的孩子档案（家长端数据，随登录态存在）。
@@ -22,6 +23,7 @@ import { useDeviceStore } from './device';
  */
 export const useFamilyStore = defineStore('family', () => {
   const deviceStore = useDeviceStore();
+  const kidStore = useKidStore();
 
   /** 服务端返回的孩子列表 */
   const children = ref<ChildApi.ChildProfile[]>([]);
@@ -59,8 +61,9 @@ export const useFamilyStore = defineStore('family', () => {
   async function removeChild(id: string) {
     await deleteChildApi(id);
     children.value = children.value.filter((c) => c.id !== id);
-    // 删除的孩子若正是本机学习者，一并解除设备绑定
+    // 删除的孩子若正是本机学习者则解除设备绑定，并清理其本机缓存的记录
     deviceStore.forgetChild(id);
+    kidStore.clearRecords(id);
   }
 
   /** 家长退出登录时清空（仅家长数据；设备侧状态见 device store） */

@@ -151,6 +151,31 @@ describe('家长账号 与 设备学习者 的关系', () => {
     expect(device.boundChildId).toBe(childA.id);
   });
 
+  it('删除孩子会一并清理其本机学习记录，且不影响其他孩子的记录', async () => {
+    const family = useFamilyStore();
+    const kid = useKidStore();
+
+    api.getChildrenApi.mockResolvedValue([childA, childB]);
+    api.deleteChildApi.mockResolvedValue(undefined);
+
+    await family.fetchChildren();
+    for (const child of [childA, childB]) {
+      kid.addRecord({
+        childId: child.id,
+        itemId: 'a1',
+        module: 'cards',
+        parentId: child.parentId,
+        stars: 1,
+      });
+    }
+    expect(kid.records).toHaveLength(2);
+
+    await family.removeChild(childA.id);
+
+    expect(kid.recordsOf(childA.id)).toHaveLength(0);
+    expect(kid.recordsOf(childB.id)).toHaveLength(1);
+  });
+
   it('多孩子时可在本机切换，且不能切到未绑定过的孩子', async () => {
     const device = useDeviceStore();
 
