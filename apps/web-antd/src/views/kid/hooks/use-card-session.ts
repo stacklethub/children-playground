@@ -30,8 +30,9 @@ export function useCardSession(categoryId: () => string | undefined) {
   function tapCard() {
     const card = current.value;
     if (!card) return;
-    // 名称、拼音、小知识属于内容层的中文素材（不参与 i18n），固定中文语音朗读
-    speak(`${card.name}，${card.pinyin}。${card.fact ?? ''}`, {
+    // 名称、小知识属于内容层的中文素材（不参与 i18n），固定中文语音朗读。
+    // 拼音只作屏幕视觉展示：拼音是拉丁字母串，交给中文 TTS 会念出怪音。
+    speak(`${card.name}。${card.fact ?? ''}`, {
       lang: CONTENT_TTS_LANG,
     });
     if (!learnedIds.has(card.id)) {
