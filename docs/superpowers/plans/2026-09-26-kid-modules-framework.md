@@ -177,7 +177,7 @@ export interface FieldDef {
   key: string;
   /** i18n key，取值挂在 parent.content 下 */
   labelKey: string;
-  type: 'emoji' | 'number' | 'select' | 'stringList' | 'text' | 'textarea';
+  type: 'emoji' | 'number' | 'select' | 'text' | 'textarea';
   required?: boolean;
   maxLength?: number;
   /** type === 'select' 时的选项来源 */
@@ -591,7 +591,7 @@ git commit -m "refactor(store): contentOverrides 改为按模块分组并迁移�
 - Produces:
   - `interface ContentItemBase { id: string }`
   - `type ContentPatch<T> = Partial<T> & { added?: boolean; deleted?: boolean }`
-  - `interface CollectionConfig<T> { key: TileKey; defaults: T[]; validate?: (draft: Partial<T>) => string | undefined }`
+  - `interface CollectionConfig<T> { key: TileKey; defaults: T[] }`
   - `useCollection<T extends ContentItemBase>(config): { items: ComputedRef<T[]>; add(draft: Omit<T,'id'>): void; update(id, patch): void; remove(id): void }`
 
 - [ ] **Step 1: 写失败测试**
@@ -726,8 +726,6 @@ export interface CollectionConfig<T extends ContentItemBase> {
   key: TileKey;
   /** 内置默认条目 */
   defaults: T[];
-  /** 校验草稿；返回错误文案的 i18n 参数，通过则返回 undefined */
-  validate?: (draft: Partial<T>) => string | undefined;
 }
 
 /**
@@ -1503,7 +1501,6 @@ const form = reactive<Record<string, any>>({});
 function defaultValueOf(field: FieldDef) {
   if (field.type === 'number') return 0;
   if (field.type === 'select') return field.options?.()[0]?.value ?? '';
-  if (field.type === 'stringList') return [];
   return '';
 }
 
@@ -1584,7 +1581,7 @@ function submit() {
 </template>
 ```
 
-> `stringList` 类型本计划用不到（留给子项目 #2 的拼音字表），因此这里不渲染 —— 遇到未知类型会落到最后的 `<Input>`，不会空白。
+> 表单只渲染 `FieldDef.type` 里的 5 种类型。子项目 #2 若需要新的字段类型（如多行字表），届时在这里补分支。
 
 - [ ] **Step 3: 内容管理页改为模块 Tab**
 
