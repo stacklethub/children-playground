@@ -16,6 +16,7 @@ import {
   type TtsSettings,
   type TtsSource,
 } from './tts-settings';
+import { speakYoudao, stopYoudao } from './tts-youdao';
 
 /**
  * 学习内容的朗读语言。
@@ -147,32 +148,97 @@ function speakSystem(
  */
 let speakGeneration = 0;
 
-type TtsChannel = 'azure' | 'system';
+type TtsChannel = 'azure' | 'system' | 'youdao';
 
 /**
- * 选定这一句走哪条通道：选定源优先，该源对该语言不可用时切到另一个源，
- * 两个都不行返回 null（静默，但仍回调 onEnd）。
+ * 挑选一条能读这门语言的通道。
+ *
+ * 选定源优先，其余按固定顺序兜底（Azure -> 有道 -> 系统语音）；给 source 时把它
+ * 排在最前。exclude 用于运行时失败后重挑 —— 排除掉刚失败的那条，避免来回打转。
  *
  * 判定必须等音色就绪：Edge 在页面加载瞬间 getVoices() 返回空，约 300ms 后才到。
  * 同步判定会把「系统音色其实能用」误判成不可用，而那正好是首次点击静默的原因。
- * 选定 azure 且代理已配置时不必等，省掉一次 voiceschanged 的延迟。
  *
  * 注意「该语言不可用」不等于「没声音」：系统语音若没有 en-US 音色，
  * 用它读英文会退化成中文音素念英文，那正是最初的 bug，必须判定为不可用。
+ * 有道同理 —— 它读中文句子实测 8/8 返回 500，所以中文不认它。
  */
 async function pickChannel(
-  source: TtsSource,
   lang: TtsLang,
+  source?: TtsSource,
+  exclude: TtsChannel[] = [],
 ): Promise<null | TtsChannel> {
-  const azureUsable = isAzureConfigured();
-  if (source === 'azure' && azureUsable) return 'azure';
+  const usable: Record<TtsChannel, boolean> = {
+    azure: isAzureConfigured(),
+    // 有道只读英文，且只对字母/单词可靠，中文必须交给别的通道
+    youdao: lang === 'en-US',
+    system: await isSystemUsable(lang),
+  };
+  const order: TtsChannel[] = source
+    ? [source, 'azure', 'youdao', 'system']
+    : ['azure', 'youdao', 'system'];
+  return order.find((channel) => usable[channel] && !exclude.includes(channel)) ?? null;
+}
 
-  const systemUsable = await isSystemUsable(lang);
-  if (source === 'system') {
-    if (systemUsable) return 'system';
-    return azureUsable ? 'azure' : null;
+export interface SpeakOptions {
+  lang?: TtsLang;
+  onEnd?: () => void;
+  rate?: number;
+}
+
+/**
+ * 在选定的通道上播放一次。失败时不直接认输：换一条能读这门语言的通道再试
+ * （把刚失败的那条排除掉，避免来回打转），都不行才回调 onEnd —— 否则
+ * worker 挂掉时整个应用连中文都会哑掉。
+ */
+function runChannel(
+  channel: TtsChannel,
+  text: string,
+  options: SpeakOptions,
+  lang: TtsLang,
+  settings: TtsSettings,
+  myGen: number,
+  tried: TtsChannel[] = [],
+) {
+  const onError = () => {
+    if (myGen !== speakGeneration) return;
+    const attempted = [...tried, channel];
+    void pickChannel(lang, undefined, attempted).then((next) => {
+      if (myGen !== speakGeneration) return;
+      if (next) {
+        runChannel(next, text, options, lang, settings, myGen, attempted);
+      } else {
+        options.onEnd?.();
+      }
+    });
+  };
+
+  if (channel === 'azure') {
+    speakAzure(text, {
+      lang,
+      onEnd: options.onEnd,
+      onError,
+      pitch: settings.pitch,
+      // 调用点显式传的 rate 优先，否则用家长设置
+      rate: options.rate ?? settings.rate,
+      voice: settings.voices.azure[lang],
+    });
+    return;
   }
-  return systemUsable ? 'system' : null;
+
+  if (channel === 'youdao') {
+    speakYoudao(text, {
+      accent: settings.voices.youdao[lang],
+      lang,
+      onEnd: options.onEnd,
+      onError,
+      rate: options.rate ?? settings.rate,
+    });
+    return;
+  }
+
+  // 系统语音是最后的兜底，它自己没有失败降级（Web Speech 的 error 也走 onEnd）
+  speakSystem(text, { ...options, lang, settings });
 }
 
 /**
@@ -188,10 +254,7 @@ async function pickChannel(
  *   cancel()，Chrome 的语音引擎会卡死且不报错，整个页面要刷新才恢复。
  *   需要连读多句时，改用单句或另行设计排队逻辑。
  */
-export function speak(
-  text: string,
-  options: { lang?: TtsLang; onEnd?: () => void; rate?: number } = {},
-) {
+export function speak(text: string, options: SpeakOptions = {}) {
   const settings = getTtsSettings();
   const lang: TtsLang = options.lang ?? resolveContentLang();
 
@@ -202,47 +265,22 @@ export function speak(
   }
 
   // 先同步掐断所有通道再谈选路：新的一次点击必须立刻让旧声音停下来，
-  // 不能拖到 await 之后 —— 只停自己那条通道也不行，中文会压在 Azure 音频底下继续念。
+  // 不能拖到 await 之后 —— 只停自己那条通道也不行，中文会压在别的音频底下继续念。
   stopSpeak();
 
   const myGen = ++speakGeneration;
-  void pickChannel(settings.source, lang).then((preferred) => {
+  void pickChannel(lang, settings.source).then((channel) => {
     // 选路期间用户又点了别的：这次已经作废，不播，也不回调 onEnd
     if (myGen !== speakGeneration) return;
-
-    if (preferred === 'system') {
-      speakSystem(text, { ...options, lang, settings });
-      return;
-    }
-    if (preferred === 'azure') {
-      speakAzure(text, {
-        lang,
-        onEnd: options.onEnd,
-        onError: () => {
-          // Azure 运行时失败（worker 502、超长文本被拒、超时）不能让整个应用哑掉：
-          // 系统语音能读这门语言就降级过去，否则才认输回调 onEnd。
-          // 不能降到读不了这门语言的通道，那会退化成用中文音色念英文。
-          void isSystemUsable(lang).then((usable) => {
-            if (myGen !== speakGeneration) return;
-            if (usable) speakSystem(text, { ...options, lang, settings });
-            else options.onEnd?.();
-          });
-        },
-        pitch: settings.pitch,
-        // 调用点显式传的 rate 优先，否则用家长设置
-        rate: options.rate ?? settings.rate,
-        voice: settings.voices.azure[lang],
-      });
-      return;
-    }
-
-    options.onEnd?.();
+    if (channel) runChannel(channel, text, options, lang, settings, myGen);
+    else options.onEnd?.();
   });
 }
 
-/** 停止当前朗读（Azure 与系统语音两个通道都停） */
+/** 停止当前朗读（Azure、有道与系统语音三条通道都停） */
 export function stopSpeak() {
   stopAzure();
+  stopYoudao();
   try {
     window.speechSynthesis?.cancel();
   } catch {

@@ -172,6 +172,7 @@ describe('speak 路由与降级', () => {
       voices: {
         azure: { 'en-US': '', 'zh-CN': '' },
         system: { 'en-US': '', 'zh-CN': 'Xiaoxiao' },
+        youdao: { 'en-US': '', 'zh-CN': '' },
       },
     });
     const synth = stubSynth([
@@ -188,18 +189,60 @@ describe('speak 路由与降级', () => {
     expect(synth.spoken[0]!.rate).toBeCloseTo(1.1);
   });
 
-  it('源为 system 但该语言无音色、且 azure 不可用时静默，绝不用中文音色念英文', async () => {
+  it('源为 system 但该语言无音色时改用有道读英文，绝不用中文音色念英文', async () => {
     stubLocalStorage();
     saveTtsSettings({ ...DEFAULT_SETTINGS, source: 'system' });
     // 只有中文音色，模拟本机 Chrome
     const synth = stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
     vi.stubEnv('VITE_TTS_PROXY_URL', '');
-    const onEnd = vi.fn();
+    FakeAudio.instances = [];
+    vi.stubGlobal('Audio', FakeAudio);
 
-    speak('apple', { lang: 'en-US', onEnd });
+    speak('apple', { lang: 'en-US', onEnd: vi.fn() });
 
-    await vi.waitFor(() => expect(onEnd).toHaveBeenCalledTimes(1));
+    // 有道不需要任何配置，所以英文不再静默，而是落到有道
+    await vi.waitFor(() => expect(FakeAudio.instances).toHaveLength(1));
+    expect(FakeAudio.instances[0]!.src).toContain('dict.youdao.com');
+    // 绝不能用中文音色念英文 —— 那正是最初的 bug
     expect(synth.spoken).toHaveLength(0);
+  });
+
+  it('中文不走有道：它读不了中文，必须落到系统语音', async () => {
+    stubLocalStorage();
+    saveTtsSettings({ ...DEFAULT_SETTINGS, source: 'youdao' });
+    const synth = stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    vi.stubEnv('VITE_TTS_PROXY_URL', '');
+    FakeAudio.instances = [];
+    vi.stubGlobal('Audio', FakeAudio);
+
+    speak('你好', { onEnd: vi.fn() });
+
+    await vi.waitFor(() => expect(synth.spoken).toHaveLength(1));
+    expect(FakeAudio.instances).toHaveLength(0);
+  });
+
+  it('有道通道按设置的口音拼 URL，并套用设置的语速', async () => {
+    stubLocalStorage();
+    saveTtsSettings({
+      ...DEFAULT_SETTINGS,
+      rate: 1.2,
+      source: 'youdao',
+      voices: {
+        ...DEFAULT_SETTINGS.voices,
+        youdao: { 'en-US': '2', 'zh-CN': '' },
+      },
+    });
+    stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    vi.stubEnv('VITE_TTS_PROXY_URL', '');
+    FakeAudio.instances = [];
+    vi.stubGlobal('Audio', FakeAudio);
+
+    speak('apple', { lang: 'en-US', onEnd: vi.fn() });
+
+    await vi.waitFor(() => expect(FakeAudio.instances).toHaveLength(1));
+    const audio = FakeAudio.instances[0]!;
+    expect(new URL(audio.src).searchParams.get('type')).toBe('2');
+    expect(audio.playbackRate).toBeCloseTo(1.2);
   });
 
   it('音色晚到时也照常朗读：首屏 getVoices() 为空不再导致首次点击静默（F2）', async () => {

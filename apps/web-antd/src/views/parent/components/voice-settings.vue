@@ -36,15 +36,32 @@ const langItems: { key: TtsLang; label: string }[] = [
 
 /** 当前源是否能读这门语言 —— 不能读就该给家长提示，而不是等播出问题 */
 function sourceCovers(lang: TtsLang): boolean {
-  if (settings.value.source === 'system') return hasVoiceFor(lang);
+  const source = settings.value.source;
+  if (source === 'system') return hasVoiceFor(lang);
+  // 有道读不了中文（实测中文句子 8/8 返回 500），只能覆盖英文
+  if (source === 'youdao') return lang === 'en-US';
   return azureReady.value;
 }
 
+/** 有道没有多音色可选，只有美音与英音两种口音 */
+const ACCENTS = [
+  { labelKey: 'accentUs', value: '1' },
+  { labelKey: 'accentUk', value: '2' },
+];
+
 function voiceOptions(lang: TtsLang) {
-  if (settings.value.source === 'system') {
+  const source = settings.value.source;
+  if (source === 'system') {
     return systemVoices.value
       .filter((voice) => voice.lang.toLowerCase().startsWith(lang.slice(0, 2)))
       .map((voice) => ({ label: voice.name, value: voice.name }));
+  }
+  if (source === 'youdao') {
+    if (lang !== 'en-US') return [];
+    return ACCENTS.map((accent) => ({
+      label: $t(`parent.settings.${accent.labelKey}`),
+      value: accent.value,
+    }));
   }
   return azureVoices.value
     .filter((voice) => voice.lang === lang)
@@ -154,6 +171,7 @@ watch(() => settings.value.source, loadVoices);
           class="w-44"
           :options="[
             { label: $t('parent.settings.sourceAzure'), value: 'azure' },
+            { label: $t('parent.settings.sourceYoudao'), value: 'youdao' },
             { label: $t('parent.settings.sourceSystem'), value: 'system' },
           ]"
           :value="settings.source"

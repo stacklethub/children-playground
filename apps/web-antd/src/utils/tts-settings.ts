@@ -6,7 +6,7 @@
  * 走 store 会形成循环依赖。
  */
 
-export type TtsSource = 'azure' | 'system';
+export type TtsSource = 'azure' | 'system' | 'youdao';
 export type TtsLang = 'en-US' | 'zh-CN';
 
 export const SUPPORTED_LANGS: TtsLang[] = ['zh-CN', 'en-US'];
@@ -22,6 +22,12 @@ export interface TtsVoices {
   azure: Record<TtsLang, string>;
   /** 系统语音名称；空串表示用该源的默认音色 */
   system: Record<TtsLang, string>;
+  /**
+   * 有道口音：'1' 美音 / '2' 英音；空串表示美音。
+   * 有道没有多音色可选，只有这两种口音，所以这里存的不是音色 id。
+   * 它只读英文，中文条目留着但不会被用到。
+   */
+  youdao: Record<TtsLang, string>;
 }
 
 export interface TtsSettings {
@@ -43,6 +49,7 @@ export const DEFAULT_SETTINGS: TtsSettings = {
   voices: {
     azure: { 'en-US': '', 'zh-CN': '' },
     system: { 'en-US': '', 'zh-CN': '' },
+    youdao: { 'en-US': '', 'zh-CN': '' },
   },
 };
 
@@ -70,7 +77,10 @@ function normalize(raw: unknown): TtsSettings {
         : DEFAULT_SETTINGS.enabled,
     pitch: clamp(input.pitch, MIN_PITCH, MAX_PITCH, DEFAULT_SETTINGS.pitch),
     rate: clamp(input.rate, MIN_RATE, MAX_RATE, DEFAULT_SETTINGS.rate),
-    source: input.source === 'system' ? 'system' : 'azure',
+    source:
+      input.source === 'system' || input.source === 'youdao'
+        ? input.source
+        : 'azure',
     voices: normalizeVoices(input.voices),
   };
 }
@@ -87,6 +97,7 @@ function normalizeVoices(raw: unknown): TtsVoices {
   return {
     azure: pickVoiceIds(input.azure),
     system: pickVoiceIds(input.system),
+    youdao: pickVoiceIds(input.youdao),
   };
 }
 

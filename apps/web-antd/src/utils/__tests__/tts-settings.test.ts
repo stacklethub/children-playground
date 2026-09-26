@@ -84,7 +84,7 @@ describe('tts-settings', () => {
     expect(getTtsSettings()).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('两条通道的音色各自可保存读回，互不覆盖', () => {
+  it('三条通道的音色各自可保存读回，互不覆盖', () => {
     saveTtsSettings({
       ...DEFAULT_SETTINGS,
       voices: {
@@ -93,10 +93,13 @@ describe('tts-settings', () => {
           'en-US': '',
           'zh-CN': 'Microsoft Huihui - Chinese (Simplified, PRC)',
         },
+        youdao: { 'en-US': '2', 'zh-CN': '' },
       },
     });
     const settings = getTtsSettings();
     expect(settings.voices.azure['zh-CN']).toBe('zh-CN-XiaoxiaoNeural');
+    // 有道的值是口音 id，与另两条通道的标识空间不同，同样要能独立存回
+    expect(settings.voices.youdao['en-US']).toBe('2');
     expect(settings.voices.system['zh-CN']).toBe(
       'Microsoft Huihui - Chinese (Simplified, PRC)',
     );
