@@ -16,6 +16,7 @@ const TILE_SNAPSHOT = [
   { bg: 'bg-rose-400', defaultGoal: 6, emoji: '🅰️', key: 'pinyin', path: '/kid/pinyin' },
   { bg: 'bg-lime-500', defaultGoal: 1, emoji: '📜', key: 'poems', path: '/kid/poems' },
   { bg: 'bg-cyan-500', defaultGoal: 4, emoji: '🧩', key: 'logic', path: '/kid/logic' },
+  { bg: 'bg-fuchsia-500', defaultGoal: 1, emoji: '🗺️', key: 'adventure', path: '/kid/adventure' },
   { bg: 'bg-emerald-400', defaultGoal: 6, emoji: '🔢', key: 'numbers', path: '/kid/numbers' },
   { bg: 'bg-violet-400', defaultGoal: 2, emoji: '🎵', key: 'songs', path: '/kid/songs' },
   { bg: 'bg-amber-400', defaultGoal: 0, emoji: '⭐', key: 'rewards', path: '/kid/rewards' },

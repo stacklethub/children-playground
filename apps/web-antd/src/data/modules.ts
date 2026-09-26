@@ -16,6 +16,7 @@ export const MODULE_KEYS = [
   'pinyin',
   'poems',
   'logic',
+  'adventure',
   'numbers',
   'songs',
 ] as const;
@@ -99,6 +100,21 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     kind: 'param',
     path: '/kid/letters',
     range: { default: 26, max: 26, min: 6 },
+  },
+  adventure: {
+    bg: 'bg-fuchsia-500',
+    color: '#D946EF',
+    defaultGoal: 1,
+    emoji: '🗺️',
+    fields: [
+      { key: 'title', labelKey: 'levelTitle', required: true, type: 'text' },
+      { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
+      { key: 'questionCount', labelKey: 'questionCount', type: 'number' },
+      { key: 'modules', labelKey: 'levelModules', type: 'textarea' },
+    ],
+    key: 'adventure',
+    kind: 'content',
+    path: '/kid/adventure',
   },
   logic: {
     bg: 'bg-cyan-500',

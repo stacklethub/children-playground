@@ -90,6 +90,12 @@ const coreRoutes: RouteRecordRaw[] = [
         path: 'logic',
       },
       {
+        component: () => import('#/views/kid/adventure/index.vue'),
+        meta: { title: $t('kid.modules.adventure') },
+        name: 'KidAdventure',
+        path: 'adventure',
+      },
+      {
         component: () => import('#/views/kid/numbers/index.vue'),
         meta: { title: $t('kid.modules.numbers') },
         name: 'KidNumbers',

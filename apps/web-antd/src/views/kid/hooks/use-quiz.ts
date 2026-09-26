@@ -25,10 +25,14 @@ export function useQuiz<T extends number | string>(options: {
   create: () => QuizState<T>;
   /** 朗读题目 */
   ask: (quiz: QuizState<T>) => void;
-  /** 记录所属模块 */
-  module: LearnModule;
+  /** 记录所属模块；传函数时按题实时取（闯关冒险一关可混合多个模块） */
+  module: (() => LearnModule) | LearnModule;
   /** 题目在错题本里的条目 id；默认取 answer 的字符串形式 */
   itemIdOf?: (quiz: QuizState<T>) => string;
+  /** 答对计分后的回调（闯关冒险用它推进关卡进度） */
+  onCorrect?: () => void;
+  /** 答错后的回调（闯关冒险用它扣心） */
+  onWrong?: () => void;
 }) {
   const { reward, wrong } = useReward();
   const kidStore = useKidStore();
@@ -49,23 +53,27 @@ export function useQuiz<T extends number | string>(options: {
     // 未绑定孩子时不写错题本（页面此时显示的是引导页）
     const child = childId.value;
     const itemId = options.itemIdOf?.(current) ?? `${current.answer}`;
+    const moduleKey =
+      typeof options.module === 'function' ? options.module() : options.module;
 
     if (value === current.answer) {
       if (child) {
-        kidStore.removeWrong(child, options.module, itemId);
+        kidStore.removeWrong(child, moduleKey, itemId);
       }
       reward({
         detail: `${current.answer}`,
         itemId,
-        module: options.module,
+        module: moduleKey,
         stars: options.stars ?? 2,
       });
+      options.onCorrect?.();
       setTimeout(next, 1400);
     } else {
       if (child) {
-        kidStore.addWrong(child, options.module, itemId);
+        kidStore.addWrong(child, moduleKey, itemId);
       }
       wrong();
+      options.onWrong?.();
     }
   }
 

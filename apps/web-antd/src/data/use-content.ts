@@ -2,6 +2,7 @@ import type {
   KidCard,
   KidCategory,
   KidLetter,
+  KidLevel,
   KidLogicItem,
   KidNumber,
   KidPinyin,
@@ -18,6 +19,7 @@ import {
   kidCards,
   kidCategories,
   kidLetters,
+  kidLevels,
   kidLogicItems,
   kidNumbers,
   kidPinyin,
@@ -30,6 +32,7 @@ export type {
   KidCard,
   KidCategory,
   KidLetter,
+  KidLevel,
   KidLogicItem,
   KidNumber,
   KidPinyin,
@@ -52,6 +55,7 @@ export interface CardDraft {
  * 新增内容型模块时在这里补一行，家长端内容管理即可管理它。
  */
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
+  adventure: kidLevels,
   cards: kidCards,
   logic: kidLogicItems,
   pinyin: kidPinyin,
@@ -103,6 +107,20 @@ export function useContent() {
     poemCollection.items.value.map((poem) => ({
       ...poem,
       lines: toLines(poem.lines),
+    })),
+  );
+
+  const levelCollection = useCollection<KidLevel>({
+    defaults: kidLevels,
+    key: 'adventure',
+  });
+
+  /** 关卡的两个字段在家长端都是文本，统一规范化后再交给页面 */
+  const levels = computed<KidLevel[]>(() =>
+    levelCollection.items.value.map((level) => ({
+      ...level,
+      modules: toLines(level.modules),
+      questionCount: Math.max(1, Number(level.questionCount) || 1),
     })),
   );
 
@@ -158,6 +176,7 @@ export function useContent() {
     categories,
     deleteCard,
     letters,
+    levels,
     logicItems,
     numbers,
     pinyinList: pinyinCollection.items,

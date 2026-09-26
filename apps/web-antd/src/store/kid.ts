@@ -80,6 +80,8 @@ export const useKidStore = defineStore(
     const wrongBook = ref<Record<string, WrongItem[]>>({});
     /** 参数型模块的家长设置 */
     const moduleSettings = ref<Partial<Record<LearnModule, ModuleSetting>>>({});
+    /** 闯关冒险进度：孩子 id → 已通关的关卡 id 列表 */
+    const adventureProgress = ref<Record<string, string[]>>({});
 
     // ---------- 派生数据 ----------
     function recordsOf(childId?: string) {
@@ -304,15 +306,28 @@ export const useKidStore = defineStore(
       };
     }
 
-    /** 清空某个孩子（或全部）的本机记录与错题本 */
+    /** 标记某关通关；重复调用无副作用 */
+    function clearLevel(childId: string, levelId: string) {
+      const cleared = adventureProgress.value[childId] ?? [];
+      if (cleared.includes(levelId)) return;
+      adventureProgress.value = {
+        ...adventureProgress.value,
+        [childId]: [...cleared, levelId],
+      };
+    }
+
+    /** 清空某个孩子（或全部）的本机记录、错题本与闯关进度 */
     function clearRecords(childId?: string) {
       records.value = childId
         ? records.value.filter((r) => r.childId !== childId)
         : [];
       if (childId) {
         clearWrong(childId);
+        const { [childId]: _dropped, ...rest } = adventureProgress.value;
+        adventureProgress.value = rest;
       } else {
         wrongBook.value = {};
+        adventureProgress.value = {};
       }
     }
 
@@ -326,7 +341,9 @@ export const useKidStore = defineStore(
       $reset,
       addRecord,
       addWrong,
+      adventureProgress,
       badgesOf,
+      clearLevel,
       clearRecords,
       clearWrong,
       contentOverrides,
@@ -358,6 +375,7 @@ export const useKidStore = defineStore(
         'contentOverrides',
         'wrongBook',
         'moduleSettings',
+        'adventureProgress',
       ],
       /**
        * 持久化数据在 store 创建后才注入，所以迁移必须挂在 afterHydrate，

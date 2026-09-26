@@ -69,6 +69,21 @@ export interface KidPoem {
 /** 逻辑挑战的四个题型 */
 export type LogicKind = 'compare' | 'match' | 'pattern' | 'sort';
 
+/**
+ * 闯关冒险的一关。
+ * `modules` 用 string[] 而非 LearnModule[]：注册表反过来依赖本文件，
+ * 直接引用会形成循环；取值在页面里按 MODULE_KEYS 校验。
+ */
+export interface KidLevel {
+  emoji: string;
+  id: string;
+  /** 考察模块，单关的题目从这里抽 */
+  modules: string[];
+  /** 本关题数 */
+  questionCount: number;
+  title: string;
+}
+
 /** 逻辑题：题干与选项都是 emoji / 短文本，答案必须是选项之一 */
 export interface KidLogicItem {
   answer: string;
@@ -503,6 +518,33 @@ export const kidLogicItems: KidLogicItem[] = [
   ...LOGIC_SORT,
   ...LOGIC_COMPARE,
   ...LOGIC_MATCH,
+];
+
+/** 闯关冒险：按顺序解锁，通关前一关才开下一关 */
+export const kidLevels: KidLevel[] = [
+  { emoji: '🌱', id: 'lv1', modules: ['logic'], questionCount: 3, title: '小小起步' },
+  { emoji: '🔢', id: 'lv2', modules: ['numbers'], questionCount: 4, title: '数字山谷' },
+  {
+    emoji: '🧩',
+    id: 'lv3',
+    modules: ['logic', 'numbers'],
+    questionCount: 4,
+    title: '逻辑森林',
+  },
+  {
+    emoji: '📜',
+    id: 'lv4',
+    modules: ['logic', 'numbers'],
+    questionCount: 5,
+    title: '智慧山顶',
+  },
+  {
+    emoji: '🏆',
+    id: 'lv5',
+    modules: ['logic', 'numbers'],
+    questionCount: 5,
+    title: '冠军之路',
+  },
 ];
 
 export const kidPoems: KidPoem[] = [
