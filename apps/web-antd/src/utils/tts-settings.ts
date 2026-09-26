@@ -11,6 +11,19 @@ export type TtsLang = 'en-US' | 'zh-CN';
 
 export const SUPPORTED_LANGS: TtsLang[] = ['zh-CN', 'en-US'];
 
+/**
+ * 音色标识。两条通道的标识空间不同，必须分开存：
+ * azure 存的是音色 id（'zh-CN-XiaoxiaoNeural'），system 存的是
+ * SpeechSynthesisVoice.name（'Microsoft Huihui - Chinese (Simplified, PRC)'）。
+ * 挤在同一个字段里的话，某一通道存进去的值喂给另一通道只会被静默丢弃或拒绝。
+ */
+export interface TtsVoices {
+  /** Azure 音色 id；空串表示用该源的默认音色 */
+  azure: Record<TtsLang, string>;
+  /** 系统语音名称；空串表示用该源的默认音色 */
+  system: Record<TtsLang, string>;
+}
+
 export interface TtsSettings {
   enabled: boolean;
   /** 音调，百分比，与 Azure SSML / Web Speech pitch 量纲一致 */
@@ -18,8 +31,8 @@ export interface TtsSettings {
   /** 语速倍率 */
   rate: number;
   source: TtsSource;
-  /** 各语言选定的音色 id；空串表示用该源的默认音色 */
-  voices: Record<TtsLang, string>;
+  /** 各通道各语言选定的音色 */
+  voices: TtsVoices;
 }
 
 export const DEFAULT_SETTINGS: TtsSettings = {
@@ -27,7 +40,10 @@ export const DEFAULT_SETTINGS: TtsSettings = {
   pitch: 0,
   rate: 0.9,
   source: 'azure',
-  voices: { 'en-US': '', 'zh-CN': '' },
+  voices: {
+    azure: { 'en-US': '', 'zh-CN': '' },
+    system: { 'en-US': '', 'zh-CN': '' },
+  },
 };
 
 const SETTINGS_KEY = 'child-study-tts-settings';
@@ -47,11 +63,6 @@ function clamp(value: unknown, min: number, max: number, fallback: number) {
 /** 把任意来源的数据规范化成合法配置，非法项一律回落默认值 */
 function normalize(raw: unknown): TtsSettings {
   const input = (raw ?? {}) as Partial<TtsSettings>;
-  const voices = { ...DEFAULT_SETTINGS.voices };
-  for (const lang of SUPPORTED_LANGS) {
-    const value = input.voices?.[lang];
-    voices[lang] = typeof value === 'string' ? value : '';
-  }
   return {
     enabled:
       typeof input.enabled === 'boolean'
@@ -60,8 +71,33 @@ function normalize(raw: unknown): TtsSettings {
     pitch: clamp(input.pitch, MIN_PITCH, MAX_PITCH, DEFAULT_SETTINGS.pitch),
     rate: clamp(input.rate, MIN_RATE, MAX_RATE, DEFAULT_SETTINGS.rate),
     source: input.source === 'system' ? 'system' : 'azure',
-    voices,
+    voices: normalizeVoices(input.voices),
   };
+}
+
+/**
+ * 两条通道的音色各自规范化。
+ *
+ * 旧版本的扁平结构（voices['zh-CN'] 直接是字符串）在这里被丢弃：那个结构不区分
+ * 通道，无法判断存的是 id 还是 name，怎么塞都会喂错其中一条通道。它没有随版本
+ * 发布过（当时还没有设置界面），所以不需要迁移，空串即该通道的默认音色。
+ */
+function normalizeVoices(raw: unknown): TtsVoices {
+  const input = (raw ?? {}) as Record<string, unknown>;
+  return {
+    azure: pickVoiceIds(input.azure),
+    system: pickVoiceIds(input.system),
+  };
+}
+
+function pickVoiceIds(raw: unknown): Record<TtsLang, string> {
+  const input = (raw ?? {}) as Record<string, unknown>;
+  const voices: Record<TtsLang, string> = { 'en-US': '', 'zh-CN': '' };
+  for (const lang of SUPPORTED_LANGS) {
+    const value = input[lang];
+    voices[lang] = typeof value === 'string' ? value : '';
+  }
+  return voices;
 }
 
 function readStorage(key: string): null | string {

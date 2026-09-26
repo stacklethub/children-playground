@@ -44,11 +44,11 @@ describe('tts-settings', () => {
     expect(getTtsSettings()).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('默认走 azure，中文与英文音色均为空串（表示用该源默认音色）', () => {
+  it('默认走 azure，两条通道的音色均为空串（表示用该源默认音色）', () => {
     const settings = getTtsSettings();
     expect(settings.source).toBe('azure');
-    expect(settings.voices['zh-CN']).toBe('');
-    expect(settings.voices['en-US']).toBe('');
+    expect(settings.voices.azure).toEqual({ 'en-US': '', 'zh-CN': '' });
+    expect(settings.voices.system).toEqual({ 'en-US': '', 'zh-CN': '' });
   });
 
   it('可保存并读回', () => {
@@ -84,14 +84,60 @@ describe('tts-settings', () => {
     expect(getTtsSettings()).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('voices 里的非字符串值被规范成空串', () => {
+  it('两条通道的音色各自可保存读回，互不覆盖', () => {
+    saveTtsSettings({
+      ...DEFAULT_SETTINGS,
+      voices: {
+        azure: { 'en-US': '', 'zh-CN': 'zh-CN-XiaoxiaoNeural' },
+        system: {
+          'en-US': '',
+          'zh-CN': 'Microsoft Huihui - Chinese (Simplified, PRC)',
+        },
+      },
+    });
+    const settings = getTtsSettings();
+    expect(settings.voices.azure['zh-CN']).toBe('zh-CN-XiaoxiaoNeural');
+    expect(settings.voices.system['zh-CN']).toBe(
+      'Microsoft Huihui - Chinese (Simplified, PRC)',
+    );
+  });
+
+  it('各通道里的非字符串值被规范成空串', () => {
     localStorage.setItem(
       SETTINGS_KEY,
-      JSON.stringify({ voices: { 'en-US': 42, 'zh-CN': 'zh-CN-XiaoxiaoNeural' } }),
+      JSON.stringify({
+        voices: {
+          azure: { 'en-US': 42, 'zh-CN': 'zh-CN-XiaoxiaoNeural' },
+          system: { 'en-US': 'Microsoft Ava', 'zh-CN': null },
+        },
+      }),
     );
     const settings = getTtsSettings();
-    expect(settings.voices['en-US']).toBe('');
-    expect(settings.voices['zh-CN']).toBe('zh-CN-XiaoxiaoNeural');
+    expect(settings.voices.azure).toEqual({
+      'en-US': '',
+      'zh-CN': 'zh-CN-XiaoxiaoNeural',
+    });
+    expect(settings.voices.system).toEqual({
+      'en-US': 'Microsoft Ava',
+      'zh-CN': '',
+    });
+  });
+
+  it('旧版本的扁平 voices 结构被丢弃，回落成两条通道的默认音色', () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ voices: { 'zh-CN': 'zh-CN-XiaoxiaoNeural' } }),
+    );
+    const settings = getTtsSettings();
+    expect(settings.voices.azure['zh-CN']).toBe('');
+    expect(settings.voices.system['zh-CN']).toBe('');
+  });
+
+  it('voices 是垃圾值时回落成两条通道的默认音色，不抛错', () => {
+    for (const junk of ['不是对象', 42, [], { azure: 'zh-CN-XiaoxiaoNeural' }]) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ voices: junk }));
+      expect(getTtsSettings().voices).toEqual(DEFAULT_SETTINGS.voices);
+    }
   });
 
   it('首次读取时迁移旧开关并删除旧键', () => {
