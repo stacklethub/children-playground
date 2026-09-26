@@ -1330,7 +1330,15 @@ git commit -m "feat(kid): 新增 Azure 语音通道（走代理 Worker）"
 **同时要把文件顶部的 import 改成**（`speakEnglish` 等到 Task 5 再删）：
 
 ```ts
-import { hasVoiceFor, speak, setTtsEnabled, stopSpeak } from '#/utils/tts';
+import {
+  hasVoiceFor,
+  setTtsEnabled,
+  speak,
+  // speakEnglish 到 Task 5 才删。这里必须保留导入，
+  // 否则本文件已有的 speakEnglish 用例会全部因「未定义」而失败
+  speakEnglish,
+  stopSpeak,
+} from '#/utils/tts';
 import {
   DEFAULT_SETTINGS,
   getTtsSettings,
