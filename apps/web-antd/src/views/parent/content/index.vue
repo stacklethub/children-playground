@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { TileKey } from '#/data/modules';
+import type { FieldDef, TileKey } from '#/data/modules';
 import type { ContentItemBase } from '#/data/use-collection';
 
 import { computed, ref } from 'vue';
@@ -59,6 +59,26 @@ const columns = computed(() => [
   })),
   { key: 'actions', title: $t('parent.content.actions'), width: 160 },
 ]);
+
+/** 按列 key 取回字段声明，bodyCell 才知道要不要把 select 的 value 翻成 label */
+function fieldOf(key: string): FieldDef | undefined {
+  return activeFields.value.find((field) => field.key === key);
+}
+
+/**
+ * 单元格取值：select 字段要显示 label（否则表格里出现 pattern/sort 这类
+ * 标识符），数组与多行文本统一成按行显示，避免「内置行逗号串、编辑后
+ * 多行串」两种形态混在一起。
+ */
+function formatValue(field: FieldDef | undefined, record: Record<string, any>) {
+  if (!field) return '';
+  const raw = record[field.key];
+  if (field.type === 'select') {
+    return field.options?.().find((o) => o.value === raw)?.label ?? raw ?? '';
+  }
+  if (Array.isArray(raw)) return raw.join('\n');
+  return raw ?? '';
+}
 
 function switchModule(key: TileKey) {
   activeModule.value = key;
@@ -153,10 +173,9 @@ function remove(id: string) {
           <span class="text-2xl">{{ record.emoji }}</span>
         </template>
         <template v-else-if="column.key === 'categoryId'">
-          {{
-            categoryField?.options?.().find((o) => o.value === record.categoryId)
-              ?.label ?? record.categoryId
-          }}
+          <span class="whitespace-pre-line">
+            {{ formatValue(categoryField, record) }}
+          </span>
         </template>
         <template v-else-if="column.key === 'actions'">
           <Button size="small" type="link" @click="openEdit(record.id)">
@@ -170,6 +189,11 @@ function remove(id: string) {
               {{ $t('parent.common.delete') }}
             </Button>
           </Popconfirm>
+        </template>
+        <template v-else>
+          <span class="whitespace-pre-line">
+            {{ formatValue(fieldOf(column.key as string), record) }}
+          </span>
         </template>
       </template>
     </Table>
