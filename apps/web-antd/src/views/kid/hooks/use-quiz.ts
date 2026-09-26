@@ -144,24 +144,43 @@ export function useLetterPractice() {
         };
   }
 
-  /** 学一学：读字母 + 例词 + 释义 */
+  /**
+   * speak() 每次调用都会先 cancel() 掉正在播放的内容（utils/tts.ts:87），
+   * 所以「先英文、后中文」必须在 onEnd 里串起来 —— 连着调两次的话，
+   * 第一句会被第二句当场掐掉，听感就是「只读了中文」。
+   * seq 用于丢弃过期回调：快速连点卡片时，旧链的尾巴不该再出声。
+   */
+  let saySeq = 0;
+
+  /** 学一学：先读字母与例词（英文），读完再读释义（中文） */
   function sayLetter(item: {
     letter: string;
     lower: string;
     word: string;
     zh: string;
   }) {
-    speak(`${item.letter} ${item.lower}, ${item.word}`, { lang: 'en-US' });
-    // 释义是中文素材，跟在英文后面用中文读
-    speak($t('kid.tts.lettersSay', { word: item.word, zh: item.zh }), {
-      lang: CONTENT_TTS_LANG,
+    const seq = ++saySeq;
+    speak(`${item.letter} ${item.lower}, ${item.word}`, {
+      lang: 'en-US',
+      onEnd: () => {
+        if (seq !== saySeq) return;
+        speak($t('kid.tts.lettersSay', { word: item.word, zh: item.zh }), {
+          lang: CONTENT_TTS_LANG,
+        });
+      },
     });
   }
 
-  /** 认单词：英文单词与例句用英文语音，中文释义用中文语音 */
+  /** 认单词：先读单词与例句（英文），读完再读中文释义 */
   function sayWord(item: { word: string; zh: string; sentence: string }) {
-    speak(`${item.word}. ${item.sentence}`, { lang: 'en-US' });
-    speak(item.zh, { lang: CONTENT_TTS_LANG });
+    const seq = ++saySeq;
+    speak(`${item.word}. ${item.sentence}`, {
+      lang: 'en-US',
+      onEnd: () => {
+        if (seq !== saySeq) return;
+        speak(item.zh, { lang: CONTENT_TTS_LANG });
+      },
+    });
   }
 
   return { createQuiz, sayLetter, sayWord };
