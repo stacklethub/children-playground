@@ -30,4 +30,9 @@ describe('kidButton', () => {
     });
     expect(ghost.get('button').classes()).toContain('bg-kid-paper');
   });
+
+  it('主按钮文字用暖棕而非白色（白字对比度仅 2.00:1，不达标）', () => {
+    const primary = mount(KidButton, { slots: { default: 'x' } });
+    expect(primary.get('button').classes()).toContain('text-kid-ink');
+  });
 });
