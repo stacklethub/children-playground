@@ -40,7 +40,9 @@
   - `interface TtsSettings { enabled: boolean; pitch: number; rate: number; source: TtsSource; voices: Record<TtsLang, string> }`
   - `const DEFAULT_SETTINGS: TtsSettings`
   - `function getTtsSettings(): TtsSettings`
-  - `function saveTtsSettings(settings: TtsSettings): void`
+  - `function saveTtsSettings(settings: TtsSettings): boolean` —— 写入成功返回 `true`，失败返回 `false` 且不抛错。
+    读路径可以吞掉异常回落默认值，**写路径不能**：静默失败会让家长改了设置、界面显示新值、
+    存储里还是旧值，刷新即回退且无从查起。调用方（设置页）负责把 `false` 变成用户可见的提示。
   - 存储键 `child-study-tts-settings`；旧键 `child-study-tts-enabled` 首次读取时迁移并删除
 
 > **不要**在本模块 import `tts.ts`（`setTtsEnabled` 需要 `stopSpeak`，反向依赖会造成循环）。
@@ -1859,9 +1861,13 @@ function voiceOptions(lang: TtsLang) {
 /**
  * 只有开关变化时才走 setTtsEnabled —— 它会在关闭时停掉正在播放的语音。
  * 其它字段（音色/语速/音调）直接落盘即可，不要顺手多写一次。
+ *
+ * 写入失败必须让家长看见（隐私模式 / 配额满时的静默失败会让设置刷新即回退）。
  */
 function persist() {
-  saveTtsSettings(settings.value);
+  if (!saveTtsSettings(settings.value)) {
+    message.error($t('parent.settings.voiceSaveFailed'));
+  }
 }
 
 function onEnabledChange(checked: boolean | number | string) {
