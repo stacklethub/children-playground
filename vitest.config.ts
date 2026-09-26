@@ -9,11 +9,13 @@ export default defineConfig({
   resolve: {
     alias: {
       // 各应用的 `#/` 源码别名（见 @vben/vite-config）
-      '#': fileURLToPath(new URL('./apps/web-antd/src', import.meta.url)),
+      '#': fileURLToPath(new URL('apps/web-antd/src', import.meta.url)),
     },
   },
   test: {
     environment: 'happy-dom',
+    // Node 22+ 自带的 localStorage 访问器会遮蔽 happy-dom 注入的全局，见该文件注释
+    setupFiles: ['./vitest.setup.ts'],
     environmentOptions: {
       happyDOM: {
         settings: {
