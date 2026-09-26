@@ -43,6 +43,7 @@
     "@vben/utils": "workspace:*",
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
+    "cnchar": "^3.2.6",
     "dayjs": "catalog:",
     "pinia": "catalog:",
     "vue": "catalog:",

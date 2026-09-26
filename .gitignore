@@ -64,3 +64,7 @@ datalog
 
 # Superpowers brainstorming 会话产物（本地临时）
 .superpowers/
+
+# 本地工具与构建产物
+.workbuddy/
+apps/tts-proxy/.wrangler/

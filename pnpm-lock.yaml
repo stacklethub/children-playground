@@ -698,6 +698,9 @@ importers:
       ant-design-vue:
         specifier: 'catalog:'
         version: 4.2.6(vue@3.5.41(typescript@6.0.3))
+      cnchar:
+        specifier: ^3.2.6
+        version: 3.2.6
       dayjs:
         specifier: 'catalog:'
         version: 1.11.23
@@ -6967,6 +6970,12 @@ packages:
   cluster-key-slot@1.1.1:
     resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
     engines: {node: '>=0.10.0'}
+
+  cnchar-types@3.2.6:
+    resolution: {integrity: sha512-LGU2ss7KcsI1Psme73+jffUX0ZDuChr6P9Rj2j8lynJHStklNpoC/+kheKSSUcXQ1u2KNvZt1Shs/5efcihHkg==}
+
+  cnchar@3.2.6:
+    resolution: {integrity: sha512-7Up5ALAkoOTAHlRMN0B7VgrrRsp6+trgFV0M7xSsZ0TwnnBfW68gXClcE9Oz8sTOEu+zqGOZjBhlHNzPIBckDA==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -16441,6 +16450,12 @@ snapshots:
   clsx@2.1.1: {}
 
   cluster-key-slot@1.1.1: {}
+
+  cnchar-types@3.2.6: {}
+
+  cnchar@3.2.6:
+    dependencies:
+      cnchar-types: 3.2.6
 
   color-convert@2.0.1:
     dependencies:
