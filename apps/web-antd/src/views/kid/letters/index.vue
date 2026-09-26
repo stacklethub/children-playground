@@ -6,7 +6,7 @@ import type { KidLetter } from '#/data/content';
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
 import { type LearnModule } from '#/store';
-import { speak } from '#/utils/tts';
+import { speak, speakEnglish } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
 import KidPage from '../components/kid-page.vue';
@@ -45,10 +45,8 @@ const { next, pick, quiz, quizCount } = useQuiz<string>({
       speak($t('kid.tts.lettersQuiz', { letter: meta.value.itemId }));
       return;
     }
-    // 题干是英文单词，用英文语音，避免中文语音把字母念成怪音
-    speak($t('kid.tts.lettersWordQuiz', { word: meta.value.word }), {
-      lang: 'en-US',
-    });
+    // 题干是英文单词，读英文发音；中文问句已显示在页面上
+    speakEnglish(meta.value.word);
   },
   create: () => {
     const created = createQuiz();

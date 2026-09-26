@@ -145,7 +145,6 @@
     "lettersQuiz": "找一找，字母 {letter} 在哪里呀？",
     "lettersSay": "{word}，{zh}",
     "lettersWordIntro": "点一点单词，听听它的意思吧！",
-    "lettersWordQuiz": "「{word}」是什么意思呀？",
     "numbersIntro": "点一点数字，一起数一数吧！",
     "numbersQuiz": "数一数，有几个呀？",
     "arithPlus": "{left} 加 {right} 等于几？",
