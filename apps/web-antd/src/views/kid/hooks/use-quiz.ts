@@ -80,8 +80,17 @@ export function useQuiz<T extends number | string>(options: {
   return { next, pick, quiz, quizCount };
 }
 
+/** 字母乐园「考一考」的题目：认字母 或 认单词释义 */
+export interface LetterQuizState extends QuizState<string> {
+  /** 错题本条目标识始终用字母，方便按字母复习 */
+  itemId: string;
+  mode: 'letter' | 'word';
+  word: string;
+}
+
 /**
- * 字母乐园：学一学朗读 + 考一考出题。
+ * 字母乐园：学一学 / 认单词 / 考一考 三模式共用。
+ * 考一考混出两类题 —— 看字母选字母、看单词选释义。
  */
 export function useLetterPractice() {
   const { letters } = useContent();
@@ -95,29 +104,67 @@ export function useLetterPractice() {
     return [answer, ...others].sort(() => Math.random() - 0.5);
   }
 
-  function createQuiz(): QuizState<string> {
+  function meaningOptions(answer: string, count = 3) {
+    const others = letters.value
+      .filter((l) => l.zh !== answer)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count - 1)
+      .map((l) => l.zh);
+    return [answer, ...others].sort(() => Math.random() - 0.5);
+  }
+
+  function createQuiz(): LetterQuizState {
     const pool = letters.value;
+    // 难度范围理论上不会裁空，但池子为空时给出题也要有兜底
+    if (pool.length === 0) {
+      return {
+        answer: '',
+        itemId: '',
+        mode: 'letter',
+        options: [],
+        word: '',
+      };
+    }
     const item = pool[Math.floor(Math.random() * pool.length)]!;
-    return { answer: item.letter, options: letterOptions(item.letter) };
+    const asWord = Boolean(item.zh) && Math.random() < 0.5;
+    return asWord
+      ? {
+          answer: item.zh,
+          itemId: item.letter,
+          mode: 'word',
+          options: meaningOptions(item.zh),
+          word: item.word,
+        }
+      : {
+          answer: item.letter,
+          itemId: item.letter,
+          mode: 'letter',
+          options: letterOptions(item.letter),
+          word: item.word,
+        };
   }
 
-  function askQuiz(quiz: QuizState<string>) {
-    speak($t('kid.tts.lettersQuiz', { letter: quiz.answer }));
+  /** 学一学：读字母 + 例词 + 释义 */
+  function sayLetter(item: {
+    letter: string;
+    lower: string;
+    word: string;
+    zh: string;
+  }) {
+    speak(`${item.letter} ${item.lower}, ${item.word}`, { lang: 'en-US' });
+    // 释义是中文素材，跟在英文后面用中文读
+    speak($t('kid.tts.lettersSay', { word: item.word, zh: item.zh }), {
+      lang: CONTENT_TTS_LANG,
+    });
   }
 
-  function sayLetter(item: { letter: string; word: string; zh: string }) {
-    // 字母释义属于内容层中文素材，固定中文语音
-    speak(
-      $t('kid.tts.lettersSay', {
-        letter: item.letter,
-        word: item.word,
-        zh: item.zh,
-      }),
-      { lang: CONTENT_TTS_LANG },
-    );
+  /** 认单词：英文单词与例句用英文语音，中文释义用中文语音 */
+  function sayWord(item: { word: string; zh: string; sentence: string }) {
+    speak(`${item.word}. ${item.sentence}`, { lang: 'en-US' });
+    speak(item.zh, { lang: CONTENT_TTS_LANG });
   }
 
-  return { createQuiz, askQuiz, sayLetter };
+  return { createQuiz, sayLetter, sayWord };
 }
 
 /**

@@ -26,9 +26,14 @@ export interface KidCard {
 
 export interface KidLetter {
   emoji: string;
-  example: string;
+  /** 大写形式，如 A */
   letter: string;
+  /** 小写形式，如 a */
+  lower: string;
+  /** 例句 */
+  sentence: string;
   word: string;
+  /** 单词释义 */
   zh: string;
 }
 
@@ -318,32 +323,32 @@ export const kidCards: KidCard[] = [
 ];
 
 export const kidLetters: KidLetter[] = [
-  { emoji: '🍎', example: '🍎', letter: 'A', word: 'apple', zh: '苹果' },
-  { emoji: '🐼', example: '🐼', letter: 'B', word: 'bear', zh: '熊' },
-  { emoji: '🐱', example: '🐱', letter: 'C', word: 'cat', zh: '猫' },
-  { emoji: '🐶', example: '🐶', letter: 'D', word: 'dog', zh: '狗' },
-  { emoji: '🥚', example: '🥚', letter: 'E', word: 'egg', zh: '鸡蛋' },
-  { emoji: '🐟', example: '🐟', letter: 'F', word: 'fish', zh: '鱼' },
-  { emoji: '👧', example: '👧', letter: 'G', word: 'girl', zh: '女孩' },
-  { emoji: '🏠', example: '🏠', letter: 'H', word: 'house', zh: '房子' },
-  { emoji: '🍦', example: '🍦', letter: 'I', word: 'ice cream', zh: '冰淇淋' },
-  { emoji: '🧃', example: '🧃', letter: 'J', word: 'juice', zh: '果汁' },
-  { emoji: '🪁', example: '🪁', letter: 'K', word: 'kite', zh: '风筝' },
-  { emoji: '🦁', example: '🦁', letter: 'L', word: 'lion', zh: '狮子' },
-  { emoji: '🌙', example: '🌙', letter: 'M', word: 'moon', zh: '月亮' },
-  { emoji: '🪹', example: '🐦', letter: 'N', word: 'nest', zh: '鸟窝' },
-  { emoji: '🐄', example: '🐄', letter: 'O', word: 'ox', zh: '牛' },
-  { emoji: '🐷', example: '🐷', letter: 'P', word: 'pig', zh: '猪' },
-  { emoji: '👑', example: '👑', letter: 'Q', word: 'queen', zh: '女王' },
-  { emoji: '🌈', example: '🌈', letter: 'R', word: 'rainbow', zh: '彩虹' },
-  { emoji: '☀️', example: '☀️', letter: 'S', word: 'sun', zh: '太阳' },
-  { emoji: '🌳', example: '🌳', letter: 'T', word: 'tree', zh: '树' },
-  { emoji: '☂️', example: '☂️', letter: 'U', word: 'umbrella', zh: '雨伞' },
-  { emoji: '🎻', example: '🎻', letter: 'V', word: 'violin', zh: '小提琴' },
-  { emoji: '💧', example: '💧', letter: 'W', word: 'water', zh: '水' },
-  { emoji: '📦', example: '📦', letter: 'X', word: 'box', zh: '盒子' },
-  { emoji: '🟡', example: '🟡', letter: 'Y', word: 'yellow', zh: '黄色' },
-  { emoji: '🦓', example: '🦓', letter: 'Z', word: 'zebra', zh: '斑马' },
+  { emoji: '🍎', letter: 'A', lower: 'a', sentence: 'I eat an apple every day.', word: 'apple', zh: '苹果' },
+  { emoji: '🐻', letter: 'B', lower: 'b', sentence: 'The bear is big and brown.', word: 'bear', zh: '熊' },
+  { emoji: '🐱', letter: 'C', lower: 'c', sentence: 'The cat is sleeping on the sofa.', word: 'cat', zh: '猫' },
+  { emoji: '🐶', letter: 'D', lower: 'd', sentence: 'The dog can run very fast.', word: 'dog', zh: '狗' },
+  { emoji: '🥚', letter: 'E', lower: 'e', sentence: 'I have an egg for breakfast.', word: 'egg', zh: '鸡蛋' },
+  { emoji: '🐟', letter: 'F', lower: 'f', sentence: 'The fish swims in the water.', word: 'fish', zh: '鱼' },
+  { emoji: '👧', letter: 'G', lower: 'g', sentence: 'The girl is singing a song.', word: 'girl', zh: '女孩' },
+  { emoji: '🏠', letter: 'H', lower: 'h', sentence: 'We live in a big house.', word: 'house', zh: '房子' },
+  { emoji: '🍦', letter: 'I', lower: 'i', sentence: 'I like ice cream in summer.', word: 'ice cream', zh: '冰淇淋' },
+  { emoji: '🧃', letter: 'J', lower: 'j', sentence: 'She drinks orange juice.', word: 'juice', zh: '果汁' },
+  { emoji: '🪁', letter: 'K', lower: 'k', sentence: 'The kite flies high in the sky.', word: 'kite', zh: '风筝' },
+  { emoji: '🦁', letter: 'L', lower: 'l', sentence: 'The lion is the king of animals.', word: 'lion', zh: '狮子' },
+  { emoji: '🌙', letter: 'M', lower: 'm', sentence: 'The moon is bright tonight.', word: 'moon', zh: '月亮' },
+  { emoji: '🪹', letter: 'N', lower: 'n', sentence: 'The bird lives in a nest.', word: 'nest', zh: '鸟窝' },
+  { emoji: '🐄', letter: 'O', lower: 'o', sentence: 'The ox works on the farm.', word: 'ox', zh: '牛' },
+  { emoji: '🐷', letter: 'P', lower: 'p', sentence: 'The pig is pink and round.', word: 'pig', zh: '猪' },
+  { emoji: '👑', letter: 'Q', lower: 'q', sentence: 'The queen wears a golden crown.', word: 'queen', zh: '女王' },
+  { emoji: '🌈', letter: 'R', lower: 'r', sentence: 'I see a rainbow after the rain.', word: 'rainbow', zh: '彩虹' },
+  { emoji: '☀️', letter: 'S', lower: 's', sentence: 'The sun gives us light.', word: 'sun', zh: '太阳' },
+  { emoji: '🌳', letter: 'T', lower: 't', sentence: 'There is a tall tree in the park.', word: 'tree', zh: '树' },
+  { emoji: '☂️', letter: 'U', lower: 'u', sentence: 'Take an umbrella, it is raining.', word: 'umbrella', zh: '雨伞' },
+  { emoji: '🎻', letter: 'V', lower: 'v', sentence: 'She plays the violin very well.', word: 'violin', zh: '小提琴' },
+  { emoji: '💧', letter: 'W', lower: 'w', sentence: 'Please drink more water.', word: 'water', zh: '水' },
+  { emoji: '📦', letter: 'X', lower: 'x', sentence: 'The gift is in the box.', word: 'box', zh: '盒子' },
+  { emoji: '🟡', letter: 'Y', lower: 'y', sentence: 'The banana is yellow.', word: 'yellow', zh: '黄色' },
+  { emoji: '🦓', letter: 'Z', lower: 'z', sentence: 'The zebra has black and white stripes.', word: 'zebra', zh: '斑马' },
 ];
 
 export const kidNumbers: KidNumber[] = [

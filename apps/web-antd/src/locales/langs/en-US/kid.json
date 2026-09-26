@@ -64,8 +64,10 @@
   },
   "letters": {
     "learn": "Learn",
+    "word": "Words",
     "quiz": "Quiz",
     "quizPrompt": "Where is letter {letter}?",
+    "wordQuizPrompt": "What does \"{word}\" mean?",
     "questionNo": "Question {n}"
   },
   "numbers": {
@@ -147,7 +149,9 @@
     "cardsDone": "You finished this category, great job!",
     "lettersIntro": "Tap a letter and say hello to it!",
     "lettersQuiz": "Find the letter {letter}!",
-    "lettersSay": "{letter}, {zh}, {word}",
+    "lettersSay": "{word}, {zh}",
+    "lettersWordIntro": "Tap a word and hear what it means!",
+    "lettersWordQuiz": "What does \"{word}\" mean?",
     "numbersIntro": "Tap a number and let us count together!",
     "numbersQuiz": "Let us count, how many are there?",
     "arithPlus": "What is {left} plus {right}?",

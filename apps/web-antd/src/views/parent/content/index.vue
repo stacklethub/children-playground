@@ -6,14 +6,16 @@ import { computed, ref } from 'vue';
 
 import { Button, message, Popconfirm, Select, Table } from 'ant-design-vue';
 
-import { MODULES, TILE_KEYS } from '#/data/modules';
+import { hasContentFields, MODULES, TILE_KEYS } from '#/data/modules';
 import { builtinOf, useCollection } from '#/data/use-content';
 import { $t } from '#/locales';
 
 import ContentFormModal from '../components/content-form-modal.vue';
 
-/** 只把内容型模块做成 Tab */
-const contentModules = TILE_KEYS.filter((key) => MODULES[key].kind === 'content');
+/** 声明了 fields 的模块才在内容管理里出 Tab（字母乐园也算） */
+const contentModules = TILE_KEYS.filter((key) =>
+  hasContentFields(MODULES[key]),
+);
 
 const activeModule = ref<TileKey>(contentModules[0]!);
 

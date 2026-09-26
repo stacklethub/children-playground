@@ -56,9 +56,18 @@ export interface CardDraft {
  * 各模块的内置内容。
  * 新增内容型模块时在这里补一行，家长端内容管理即可管理它。
  */
+/** 字母乐园的条目类型：useCollection 要 id，字母本身天然唯一，直接借用 */
+export type LetterItem = KidLetter & { id: string };
+
+const LETTER_ITEMS: LetterItem[] = kidLetters.map((item) => ({
+  ...item,
+  id: item.letter,
+}));
+
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   adventure: kidLevels,
   cards: kidCards,
+  letters: LETTER_ITEMS,
   logic: kidLogicItems,
   pinyin: kidPinyin,
   poems: kidPoems,
@@ -132,9 +141,18 @@ export function useContent() {
 
   const cards = cardCollection.items;
 
-  /** 字母数量受家长端「难度范围」限制，学一学与考一考共用同一份数据 */
-  const letters = computed<KidLetter[]>(() =>
-    kidLetters.slice(0, kidStore.moduleRange('letters')),
+  const letterCollection = useCollection<LetterItem>({
+    defaults: LETTER_ITEMS,
+    key: 'letters',
+  });
+
+  /**
+   * 字母乐园既是内容型又是参数型：
+   * 家长改过的单词/例句走覆盖项合并，数量再受「难度范围」限制（前 N 个）。
+   * 三个子模式共用这一份数据，保证难度设定一致。
+   */
+  const letters = computed<LetterItem[]>(() =>
+    letterCollection.items.value.slice(0, kidStore.moduleRange('letters')),
   );
 
   /** 数字数量受家长端「难度范围」限制 */

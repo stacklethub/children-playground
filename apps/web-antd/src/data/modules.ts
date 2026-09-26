@@ -28,16 +28,25 @@ export const TILE_KEYS = [...MODULE_KEYS, 'rewards'] as const;
 
 export type TileKey = (typeof TILE_KEYS)[number];
 
-/**
- * content — 家长可完整增/改/删（配 fields）
- * param   — 家长可开关 + 设难度区间（配 range）
- * fixed   — 不可配置
- */
-export type ModuleKind = 'content' | 'fixed' | 'param';
-
 /** 该磁贴是否是可学习模块（rewards 等非学习入口返回 false） */
 export function isLearnModule(key: TileKey): key is LearnModule {
   return (MODULE_KEYS as readonly string[]).includes(key);
+}
+
+/**
+ * 模块能力由「声明了什么」派生，而不是由单一的 kind 字段决定 ——
+ * 这样同一个模块可以既能被家长编辑内容，又能调难度区间（如字母乐园）。
+ *
+ * 有 fields → 家长端内容管理出一个 Tab，可增/改/删
+ * 有 range  → 家长端学习计划出开关 + 难度滑杆
+ * 都没有    → 不可配置
+ */
+export function hasContentFields(def: ModuleDef): boolean {
+  return (def.fields?.length ?? 0) > 0;
+}
+
+export function hasRange(def: ModuleDef): boolean {
+  return Boolean(def.range);
 }
 
 /** 内容型模块在家长端表单里的字段声明 */
@@ -70,7 +79,6 @@ export interface ModuleDef {
   bg: string;
   /** 图表等场景用的十六进制主色，与 bg 同色系 */
   color: string;
-  kind: ModuleKind;
   /** 每日目标默认值；非学习入口为 0 */
   defaultGoal: number;
   range?: { default: number; max: number; min: number };
@@ -105,7 +113,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       { key: 'fact', labelKey: 'fact', type: 'textarea' },
     ],
     key: 'cards',
-    kind: 'content',
     path: '/kid/cards',
   },
   letters: {
@@ -113,8 +120,16 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     color: '#3B82F6',
     defaultGoal: 6,
     emoji: '🔤',
+    // 字母乐园同时是内容型与参数型：家长既能改单词/例句，也能限定学到第几个字母
+    fields: [
+      { key: 'letter', labelKey: 'letter', required: true, type: 'text' },
+      { key: 'lower', labelKey: 'letterLower', required: true, type: 'text' },
+      { key: 'word', labelKey: 'word', required: true, type: 'text' },
+      { key: 'zh', labelKey: 'zh', required: true, type: 'text' },
+      { key: 'sentence', labelKey: 'sentence', type: 'textarea' },
+      { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
+    ],
     key: 'letters',
-    kind: 'param',
     path: '/kid/letters',
     range: { default: 26, max: 26, min: 6 },
   },
@@ -135,7 +150,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       },
     ],
     key: 'adventure',
-    kind: 'content',
     path: '/kid/adventure',
     // 考察模块决定这一关能出什么题；填错或留空会让关卡永远停在 0/N 且无法通关
     validate: (draft) => {
@@ -180,7 +194,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       },
     ],
     key: 'logic',
-    kind: 'content',
     path: '/kid/logic',
     // 答案必须落在选项里，否则孩子端永远答不对（还会被扣光闯关的心）
     validate: (draft) => {
@@ -197,7 +210,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     defaultGoal: 6,
     emoji: '🔢',
     key: 'numbers',
-    kind: 'param',
     path: '/kid/numbers',
     range: { default: 10, max: 10, min: 5 },
   },
@@ -213,7 +225,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
     ],
     key: 'pinyin',
-    kind: 'content',
     path: '/kid/pinyin',
   },
   poems: {
@@ -228,7 +239,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
     ],
     key: 'poems',
-    kind: 'content',
     path: '/kid/poems',
   },
   songs: {
@@ -237,7 +247,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     defaultGoal: 2,
     emoji: '🎵',
     key: 'songs',
-    kind: 'fixed',
     path: '/kid/songs',
   },
   rewards: {
@@ -246,7 +255,6 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     defaultGoal: 0,
     emoji: '⭐',
     key: 'rewards',
-    kind: 'fixed',
     path: '/kid/rewards',
   },
 };

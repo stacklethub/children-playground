@@ -64,8 +64,10 @@
   },
   "letters": {
     "learn": "学一学",
+    "word": "认单词",
     "quiz": "考一考",
     "quizPrompt": "字母 {letter} 藏在哪里？",
+    "wordQuizPrompt": "「{word}」是什么意思？",
     "questionNo": "第 {n} 题"
   },
   "numbers": {
@@ -141,7 +143,9 @@
     "cardsDone": "这个分类全部学完啦，你真棒！",
     "lettersIntro": "点一点字母，跟它打个招呼吧！",
     "lettersQuiz": "找一找，字母 {letter} 在哪里呀？",
-    "lettersSay": "{letter}，{zh}，{word}",
+    "lettersSay": "{word}，{zh}",
+    "lettersWordIntro": "点一点单词，听听它的意思吧！",
+    "lettersWordQuiz": "「{word}」是什么意思呀？",
     "numbersIntro": "点一点数字，一起数一数吧！",
     "numbersQuiz": "数一数，有几个呀？",
     "arithPlus": "{left} 加 {right} 等于几？",

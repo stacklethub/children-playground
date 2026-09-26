@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { MODULE_KEYS, MODULES, TILE_KEYS } from '#/data/modules';
+import {
+  hasContentFields,
+  hasRange,
+  MODULE_KEYS,
+  MODULES,
+  TILE_KEYS,
+} from '#/data/modules';
 
 /**
  * 首页磁贴基准快照：改造前（registry 化之前）的硬编码值。
@@ -63,23 +69,35 @@ describe('模块注册表', () => {
     }
   });
 
-  it('内容型模块都声明了表单字段', () => {
+  it('可编辑模块的字段声明完整（key / labelKey / type 都不缺）', () => {
     for (const key of TILE_KEYS) {
-      if (MODULES[key].kind !== 'content') continue;
-      expect(MODULES[key].fields?.length ?? 0).toBeGreaterThan(0);
+      const def = MODULES[key];
+      if (!hasContentFields(def)) continue;
+      for (const field of def.fields!) {
+        expect(field.key).toBeTruthy();
+        expect(field.labelKey).toBeTruthy();
+        expect(field.type).toBeTruthy();
+        // select 必须能取到选项，否则表单渲染空下拉
+        if (field.type === 'select') {
+          expect(field.options?.().length ?? 0).toBeGreaterThan(0);
+        }
+      }
     }
   });
 
-  it('参数型模块都声明了难度区间且默认值落在区间内', () => {
+  it('声明了难度区间的模块，默认值落在区间内', () => {
     for (const key of TILE_KEYS) {
       const def = MODULES[key];
-      if (def.kind !== 'param') continue;
-      const range = def.range;
-      expect(range).toBeDefined();
-      if (!range) continue;
+      if (!hasRange(def)) continue;
+      const range = def.range!;
       expect(range.default).toBeGreaterThanOrEqual(range.min);
       expect(range.default).toBeLessThanOrEqual(range.max);
     }
+  });
+
+  it('字母乐园同时具备内容可编辑与难度区间', () => {
+    expect(hasContentFields(MODULES.letters)).toBe(true);
+    expect(hasRange(MODULES.letters)).toBe(true);
   });
 
   it('非学习入口不参与每日目标', () => {

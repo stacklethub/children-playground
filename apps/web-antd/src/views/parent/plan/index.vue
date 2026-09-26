@@ -28,13 +28,13 @@ const goals = reactive<Record<LearnModule, number>>(
 );
 
 /**
- * 参数型模块设置（开关 + 难度区间）。
- * 必须同时有 range 才渲染滑杆，否则模板取不到 max/min。
+ * 声明了 range 的模块才有「开关 + 难度区间」。
+ * 与内容管理共用同一套派生规则，同一模块可以两处都出现（如字母乐园）。
  */
 const paramModules = computed(() =>
   MODULE_KEYS.flatMap((key) => {
     const def = MODULES[key];
-    if (def.kind !== 'param' || !def.range) return [];
+    if (!def.range) return [];
     return [{ key, range: def.range }];
   }),
 );
