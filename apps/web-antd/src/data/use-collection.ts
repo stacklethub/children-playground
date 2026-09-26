@@ -53,6 +53,12 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
     >;
   }
 
+  /** 覆盖项里 added / deleted 是集合自身的标记，不是内容字段，合并前必须剥掉 */
+  function fieldsOf(patch: ContentPatch<T>): Partial<T> {
+    const { added: _added, deleted: _deleted, ...fields } = patch;
+    return fields;
+  }
+
   const items = computed<T[]>(() => {
     const overrides = readOverrides();
     const result: T[] = [];
@@ -62,12 +68,12 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
       builtinIds.add(item.id);
       const patch = overrides[item.id];
       if (patch?.deleted) continue;
-      result.push(patch ? { ...item, ...patch, id: item.id } : item);
+      result.push(patch ? { ...item, ...fieldsOf(patch), id: item.id } : item);
     }
 
     for (const [id, patch] of Object.entries(overrides)) {
       if (patch?.added && !builtinIds.has(id)) {
-        result.push({ ...patch, id } as T);
+        result.push({ ...fieldsOf(patch), id } as T);
       }
     }
 
