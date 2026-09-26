@@ -1,8 +1,8 @@
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 
 import type { TileKey } from './modules';
 
-import { computed } from 'vue';
+import { computed, toValue } from 'vue';
 
 import { useKidStore } from '#/store';
 
@@ -16,11 +16,15 @@ export type ContentPatch<T> = Partial<T> & {
   deleted?: boolean;
 };
 
+/**
+ * `key` 与 `defaults` 都接受 ref / getter：家长端内容管理按模块切 Tab 时，
+ * 模块会变。若只收普通值，setup 期求值一次后就永远绑定在首个模块上。
+ */
 export interface CollectionConfig<T extends ContentItemBase> {
   /** 覆盖项的命名空间，取模块 key */
-  key: TileKey;
+  key: MaybeRefOrGetter<TileKey>;
   /** 内置默认条目 */
-  defaults: T[];
+  defaults: MaybeRefOrGetter<T[]>;
 }
 
 /**
@@ -39,24 +43,22 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
   const kidStore = useKidStore();
 
   function readOverrides(): Record<string, ContentPatch<T>> {
-    return (kidStore.contentOverrides[config.key] ?? {}) as Record<
+    return (kidStore.contentOverrides[toValue(config.key)] ?? {}) as Record<
       string,
       ContentPatch<T>
     >;
   }
 
   function writeOverrides(): Record<string, ContentPatch<T>> {
-    kidStore.contentOverrides[config.key] ??= {};
-    return kidStore.contentOverrides[config.key] as Record<
-      string,
-      ContentPatch<T>
-    >;
+    const key = toValue(config.key);
+    kidStore.contentOverrides[key] ??= {};
+    return kidStore.contentOverrides[key] as Record<string, ContentPatch<T>>;
   }
 
   /** 覆盖项里 added / deleted 是集合自身的标记，不是内容字段，合并前必须剥掉 */
   function fieldsOf(patch: ContentPatch<T>): Partial<T> {
     const { added: _added, deleted: _deleted, ...fields } = patch;
-    return fields;
+    return fields as Partial<T>;
   }
 
   const items = computed<T[]>(() => {
@@ -64,7 +66,7 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
     const result: T[] = [];
     const builtinIds = new Set<string>();
 
-    for (const item of config.defaults) {
+    for (const item of toValue(config.defaults)) {
       builtinIds.add(item.id);
       const patch = overrides[item.id];
       if (patch?.deleted) continue;
@@ -88,9 +90,11 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
 
   function update(id: string, patch: Partial<T>) {
     const overrides = writeOverrides();
-    const base = config.defaults.find((d) => d.id === id);
+    const base = toValue(config.defaults).find((d) => d.id === id);
+    // 内置项也要保留已有覆盖项里 base 上没有的字段（版本间结构变动时不丢数据）
     overrides[id] = {
-      ...(base ?? overrides[id] ?? {}),
+      ...(base ?? {}),
+      ...fieldsOf(overrides[id] ?? {}),
       ...patch,
       added: !base,
     } as ContentPatch<T>;
@@ -98,7 +102,7 @@ export function useCollection<T extends ContentItemBase>(config: CollectionConfi
 
   function remove(id: string) {
     const overrides = writeOverrides();
-    const base = config.defaults.find((d) => d.id === id);
+    const base = toValue(config.defaults).find((d) => d.id === id);
     if (base) {
       overrides[id] = { deleted: true } as ContentPatch<T>;
     } else {

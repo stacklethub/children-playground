@@ -107,19 +107,29 @@ export function useChildReport() {
       .filter((item) => item.value > 0),
   );
 
+  /**
+   * 请求代次：切换孩子与 init 都可能并发发起请求，
+   * 且 init 的请求在 syncPending() 之后、数据更完整。
+   * 只让最后发起的那次写入结果，避免先返回的旧数据覆盖掉它。
+   */
+  let loadSeq = 0;
+
   async function load() {
+    const seq = ++loadSeq;
     loading.value = true;
     try {
       const report = await getLearnReportApi({
         childId: selectedChildId.value || undefined,
         range: 'week',
       });
+      if (seq !== loadSeq) return;
       serverRecords.value = report.records ?? [];
     } catch {
+      if (seq !== loadSeq) return;
       // 云端不可用时仅展示本机数据
       serverRecords.value = [];
     } finally {
-      loading.value = false;
+      if (seq === loadSeq) loading.value = false;
     }
   }
 

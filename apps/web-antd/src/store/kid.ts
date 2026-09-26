@@ -297,13 +297,18 @@ export const useKidStore = defineStore(
 
     /** 清空：传 module 只清该模块，不传则清空该孩子全部错题 */
     function clearWrong(childId: string, module?: LearnModule) {
-      if (!wrongBook.value[childId]) return;
-      wrongBook.value = {
-        ...wrongBook.value,
-        [childId]: module
-          ? (wrongBook.value[childId] ?? []).filter((w) => w.module !== module)
-          : [],
-      };
+      const list = wrongBook.value[childId];
+      if (!list) return;
+      if (module) {
+        wrongBook.value = {
+          ...wrongBook.value,
+          [childId]: list.filter((w) => w.module !== module),
+        };
+        return;
+      }
+      // 整体清空时删键而不是写空数组，避免空键长期占据持久化体积
+      const { [childId]: _dropped, ...rest } = wrongBook.value;
+      wrongBook.value = rest;
     }
 
     /** 标记某关通关；重复调用无副作用 */

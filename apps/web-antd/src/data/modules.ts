@@ -52,6 +52,15 @@ export interface FieldDef {
   options?: () => { label: string; value: string }[];
 }
 
+/** 把家长端逐行填写的文本切成数组（与 use-content 的规范化口径一致） */
+export function splitLines(value: unknown): string[] {
+  if (Array.isArray(value)) return value as string[];
+  return String(value ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 export interface ModuleDef {
   key: TileKey;
   emoji: string;
@@ -66,6 +75,14 @@ export interface ModuleDef {
   defaultGoal: number;
   range?: { default: number; max: number; min: number };
   fields?: FieldDef[];
+  /**
+   * 跨字段校验：返回错误文案的 i18n key（可带插值参数），通过则返回 undefined。
+   * 单个字段的必填/长度由 FieldDef 承担，这里只放 FieldDef 表达不了的约束
+   * （如「正确答案必须属于选项」）。本文件不引 $t，翻译交给调用方。
+   */
+  validate?: (draft: Record<string, any>) =>
+    | { key: string; params?: Record<string, unknown> }
+    | undefined;
 }
 
 export const MODULES: Record<TileKey, ModuleDef> = {
@@ -110,11 +127,30 @@ export const MODULES: Record<TileKey, ModuleDef> = {
       { key: 'title', labelKey: 'levelTitle', required: true, type: 'text' },
       { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
       { key: 'questionCount', labelKey: 'questionCount', type: 'number' },
-      { key: 'modules', labelKey: 'levelModules', type: 'textarea' },
+      {
+        key: 'modules',
+        labelKey: 'levelModules',
+        required: true,
+        type: 'textarea',
+      },
     ],
     key: 'adventure',
     kind: 'content',
     path: '/kid/adventure',
+    // 考察模块决定这一关能出什么题；填错或留空会让关卡永远停在 0/N 且无法通关
+    validate: (draft) => {
+      const modules = splitLines(draft.modules);
+      if (modules.length === 0) return { key: 'parent.content.needOneModule' };
+      const unknown = modules.filter(
+        (key) => !(MODULE_KEYS as readonly string[]).includes(key),
+      );
+      return unknown.length > 0
+        ? {
+            key: 'parent.content.unknownModule',
+            params: { keys: unknown.join(' / ') },
+          }
+        : undefined;
+    },
   },
   logic: {
     bg: 'bg-cyan-500',
@@ -146,6 +182,14 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     key: 'logic',
     kind: 'content',
     path: '/kid/logic',
+    // 答案必须落在选项里，否则孩子端永远答不对（还会被扣光闯关的心）
+    validate: (draft) => {
+      const options = splitLines(draft.options);
+      if (options.length < 2) return { key: 'parent.content.needTwoOptions' };
+      return options.includes(String(draft.answer ?? '').trim())
+        ? undefined
+        : { key: 'parent.content.answerNotInOptions' };
+    },
   },
   numbers: {
     bg: 'bg-emerald-400',
@@ -164,7 +208,8 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     emoji: '🅰️',
     fields: [
       { key: 'pinyin', labelKey: 'pinyin', required: true, type: 'text' },
-      { key: 'hanzi', labelKey: 'hanzi', type: 'text' },
+      // 例字是朗读与加星文案的来源，不能为空
+      { key: 'hanzi', labelKey: 'hanzi', required: true, type: 'text' },
       { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
     ],
     key: 'pinyin',

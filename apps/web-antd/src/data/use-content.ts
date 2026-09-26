@@ -11,6 +11,8 @@ import type {
 } from './content';
 import type { TileKey } from './modules';
 
+import { splitLines } from './modules';
+
 import { computed } from 'vue';
 
 import { useKidStore } from '#/store';
@@ -62,17 +64,6 @@ const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   poems: kidPoems,
 };
 
-/**
- * 诗句 / 选项在家长端都是一个 textarea（逐行一条），内置数据则是数组。
- * 这里统一切成数组，让页面对两种来源一视同仁。
- */
-function toLines(value: unknown): string[] {
-  if (Array.isArray(value)) return value as string[];
-  return String(value ?? '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
 
 /** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
 export function builtinOf(key: TileKey): { id: string }[] {
@@ -102,11 +93,11 @@ export function useContent() {
     key: 'poems',
   });
 
-  /** 家长可能把诗句填成一个多行字符串，统一规范成句数组 */
+  /** 诗句 / 选项在家长端是逐行填写的 textarea，内置数据则是数组，统一规范 */
   const poems = computed<KidPoem[]>(() =>
     poemCollection.items.value.map((poem) => ({
       ...poem,
-      lines: toLines(poem.lines),
+      lines: splitLines(poem.lines),
     })),
   );
 
@@ -119,7 +110,7 @@ export function useContent() {
   const levels = computed<KidLevel[]>(() =>
     levelCollection.items.value.map((level) => ({
       ...level,
-      modules: toLines(level.modules),
+      modules: splitLines(level.modules),
       questionCount: Math.max(1, Number(level.questionCount) || 1),
     })),
   );
@@ -133,7 +124,7 @@ export function useContent() {
   const logicItems = computed<KidLogicItem[]>(() =>
     logicCollection.items.value.map((item) => ({
       ...item,
-      options: toLines(item.options),
+      options: splitLines(item.options),
     })),
   );
 

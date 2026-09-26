@@ -60,7 +60,7 @@
   },
   "content": {
     "title": "内容管理",
-    "tip": "维护宝宝端「看图识物」的卡片内容，修改后立即生效",
+    "tip": "维护各学习模块给宝宝看的内容，修改后立即生效。这些内容在本机所有孩子之间共用。",
     "allCategories": "全部分类",
     "add": "新增卡片",
     "edit": "编辑卡片",
@@ -90,7 +90,11 @@
     "deleted": "已删除",
     "deleteConfirm": "确定删除这张卡片吗？",
     "required": "请填写{field}",
-    "modules": "学习模块"
+    "modules": "学习模块",
+    "needTwoOptions": "至少要填两个选项",
+    "answerNotInOptions": "正确答案要和其中某个选项完全一致",
+    "needOneModule": "至少填一个考察模块",
+    "unknownModule": "模块名不存在：{keys}（可用：cards / letters / pinyin / poems / logic / adventure / numbers / songs）"
   },
   "plan": {
     "title": "每日学习目标",
@@ -104,7 +108,7 @@
     "moduleTitle": "模块与难度",
     "moduleTip": "关闭模块后宝宝端首页不再显示该入口；难度范围决定宝宝端出现的题目数量",
     "rangeLabel": "难度范围",
-    "rangeHint": "{min}-{max}（当前 {value}）"
+    "rangeHint": "前 {value} 个（最多 {max}）"
   },
   "settings": {
     "childTitle": "个人信息",

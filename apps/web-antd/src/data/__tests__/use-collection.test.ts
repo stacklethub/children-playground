@@ -1,5 +1,8 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ref } from 'vue';
+
+import type { TileKey } from '#/data/modules';
 
 // store/kid.ts 会在导入时拉取 #/api；这里只关心集合语义，故整体替换。
 vi.mock('#/api', () => ({
@@ -86,5 +89,39 @@ describe('useCollection', () => {
     cards.remove('a1');
     expect(cards.items.value).toHaveLength(1);
     expect(letters.items.value).toHaveLength(2);
+  });
+
+  /**
+   * 回归：家长端内容管理切模块 Tab 时，key/defaults 必须跟着变。
+   * 若只传普通值，setup 期解包后就永远绑定在首个模块上，
+   * 会出现「列头变了、数据没变」，且编辑会写进错误的命名空间。
+   */
+  it('key/defaults 传 getter 时，切换模块会切到新的命名空间', () => {
+    const OTHER: Item[] = [{ id: 'b1', name: '拼音' }];
+    const active = ref<TileKey>('cards');
+    const { add, items, remove } = useCollection<Item>({
+      defaults: () => (active.value === 'cards' ? DEFAULTS : OTHER),
+      key: () => active.value,
+    });
+
+    expect(items.value).toEqual(DEFAULTS);
+
+    active.value = 'letters';
+    expect(items.value).toEqual(OTHER);
+
+    // 新增落进新模块，旧模块不受影响
+    add({ name: '新项' });
+    expect(items.value).toHaveLength(2);
+    expect(items.value[1]?.name).toBe('新项');
+
+    active.value = 'cards';
+    expect(items.value).toEqual(DEFAULTS);
+
+    // 删除同样作用在当前模块上
+    active.value = 'letters';
+    remove('b1');
+    expect(items.value).toHaveLength(1);
+    active.value = 'cards';
+    expect(items.value).toEqual(DEFAULTS);
   });
 });

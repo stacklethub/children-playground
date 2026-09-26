@@ -44,7 +44,10 @@ function defaultValueOf(field: FieldDef) {
 watch(open, (value) => {
   if (!value) return;
   for (const field of fields.value) {
-    form[field.key] = props.record?.[field.key] ?? defaultValueOf(field);
+    const raw = props.record?.[field.key] ?? defaultValueOf(field);
+    // 诗句/选项在数据层是数组，直接绑给 textarea 会渲染成逗号串；
+    // 家长一旦编辑就会把整串存回去，切句只认换行，诗会被压成一行。
+    form[field.key] = Array.isArray(raw) ? raw.join('\n') : raw;
   }
 });
 
@@ -65,7 +68,21 @@ function submit() {
       return;
     }
   }
-  emit('submit', { ...form });
+
+  // 只提交当前模块声明的字段：form 是长生命周期的 reactive，
+  // 切过模块后会残留上一个模块的键与值，整体提交会写出混合条目。
+  const draft = Object.fromEntries(
+    fields.value.map((field) => [field.key, form[field.key]]),
+  );
+
+  // 跨字段约束（如「正确答案必须属于选项」）由模块自己声明
+  const error = MODULES[props.moduleKey].validate?.(draft);
+  if (error) {
+    message.warning($t(error.key, error.params ?? {}));
+    return;
+  }
+
+  emit('submit', draft);
   open.value = false;
 }
 </script>

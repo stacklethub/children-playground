@@ -74,6 +74,28 @@ describe('错题本', () => {
     expect(kid.wrongOf('child-a', 'letters')).toEqual([]);
   });
 
+  it('清空本机记录会一并清掉该孩子的错题本与闯关进度，且不影响其他孩子', () => {
+    const kid = useKidStore();
+    kid.addWrong('child-a', 'cards', 'a1');
+    kid.addWrong('child-b', 'cards', 'a2');
+    kid.clearLevel('child-a', 'lv1');
+    kid.clearLevel('child-b', 'lv1');
+
+    kid.clearRecords('child-a');
+
+    expect(kid.wrongOf('child-a', 'cards')).toEqual([]);
+    expect(kid.adventureProgress['child-a']).toBeUndefined();
+    expect(kid.wrongOf('child-b', 'cards')).toHaveLength(1);
+    expect(kid.adventureProgress['child-b']).toEqual(['lv1']);
+  });
+
+  it('整体清空错题本时删键而不是留空数组', () => {
+    const kid = useKidStore();
+    kid.addWrong('child-a', 'cards', 'a1');
+    kid.clearWrong('child-a');
+    expect(kid.wrongBook['child-a']).toBeUndefined();
+  });
+
   it('最新答错的排在最前', () => {
     const kid = useKidStore();
     kid.addWrong('child-a', 'cards', 'a1');

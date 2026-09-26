@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 
 import {
   Button,
@@ -11,7 +11,13 @@ import {
 } from 'ant-design-vue';
 
 import { $t } from '#/locales';
-import { type LearnModule, MODULE_KEYS, MODULES, useKidStore } from '#/store';
+import {
+  type LearnModule,
+  MODULE_KEYS,
+  MODULES,
+  type ModuleSetting,
+  useKidStore,
+} from '#/store';
 
 const kidStore = useKidStore();
 
@@ -21,12 +27,21 @@ const goals = reactive<Record<LearnModule, number>>(
   ) as Record<LearnModule, number>,
 );
 
-/** 参数型模块设置（开关 + 难度区间） */
-const paramModules = MODULE_KEYS.filter((key) => MODULES[key].kind === 'param');
+/**
+ * 参数型模块设置（开关 + 难度区间）。
+ * 必须同时有 range 才渲染滑杆，否则模板取不到 max/min。
+ */
+const paramModules = computed(() =>
+  MODULE_KEYS.flatMap((key) => {
+    const def = MODULES[key];
+    if (def.kind !== 'param' || !def.range) return [];
+    return [{ key, range: def.range }];
+  }),
+);
 
 const settings = reactive<Record<string, { enabled: boolean; range: number }>>(
   Object.fromEntries(
-    paramModules.map((key) => [
+    paramModules.value.map(({ key }) => [
       key,
       {
         enabled: kidStore.moduleEnabled(key),
@@ -36,14 +51,39 @@ const settings = reactive<Record<string, { enabled: boolean; range: number }>>(
   ),
 );
 
+/**
+ * 只落盘「与注册表默认值不同」的项。
+ *
+ * 若把整份表单写回，家长没动过的模块也会变成显式赋值，
+ * `goalOf()` 与 `range.default` 的回落就永久失效了 ——
+ * 以后调整注册表默认值，只对新设备生效。顺带获得
+ * 「改回默认值即清除覆盖」的语义。
+ */
 function save() {
-  kidStore.dailyGoals = { ...goals };
-  kidStore.moduleSettings = Object.fromEntries(
-    paramModules.map((key) => [
-      key,
-      { enabled: settings[key]!.enabled, range: settings[key]!.range },
-    ]),
+  kidStore.dailyGoals = Object.fromEntries(
+    MODULE_KEYS.filter((key) => goals[key] !== MODULES[key].defaultGoal).map(
+      (key) => [key, goals[key]],
+    ),
   );
+
+  // 在现有设置上合并，避免把本页不认识的模块设置整体覆盖掉
+  const nextSettings = { ...kidStore.moduleSettings };
+  for (const { key, range } of paramModules.value) {
+    const current = settings[key];
+    if (!current) continue;
+
+    const patch: ModuleSetting = {};
+    if (current.enabled === false) patch.enabled = false;
+    if (current.range !== range.default) patch.range = current.range;
+
+    if (Object.keys(patch).length === 0) {
+      delete nextSettings[key];
+    } else {
+      nextSettings[key] = patch;
+    }
+  }
+  kidStore.moduleSettings = nextSettings;
+
   message.success($t('parent.common.saved'));
 }
 </script>
@@ -83,7 +123,7 @@ function save() {
           {{ $t('parent.plan.moduleTip') }}
         </p>
         <div
-          v-for="key in paramModules"
+          v-for="{ key, range } in paramModules"
           :key="key"
           class="flex flex-col gap-3 rounded-lg border border-solid p-4"
         >
@@ -98,15 +138,15 @@ function save() {
             <Slider
               v-model:value="settings[key]!.range"
               :disabled="!settings[key]!.enabled"
-              :max="MODULES[key].range!.max"
-              :min="MODULES[key].range!.min"
+              :max="range.max"
+              :min="range.min"
               class="flex-1"
             />
-            <span class="w-16 text-right text-sm">
+            <span class="w-24 text-right text-sm">
               {{
                 $t('parent.plan.rangeHint', {
-                  max: MODULES[key].range!.max,
-                  min: MODULES[key].range!.min,
+                  max: range.max,
+                  min: range.min,
                   value: settings[key]!.range,
                 })
               }}

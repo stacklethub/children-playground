@@ -24,9 +24,13 @@ const categoryField = computed(() =>
   activeFields.value.find((field) => field.key === 'categoryId'),
 );
 
+/**
+ * 传 getter 而非值：切 Tab 时模块会变，若在 setup 期解包，
+ * 集合会永远绑定在第一个模块上（显示与写入都落在 cards）。
+ */
 const collection = useCollection<ContentItemBase>({
-  defaults: builtinOf(activeModule.value),
-  key: activeModule.value,
+  defaults: () => builtinOf(activeModule.value),
+  key: () => activeModule.value,
 });
 
 const formOpen = ref(false);

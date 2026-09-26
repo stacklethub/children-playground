@@ -60,7 +60,7 @@
   },
   "content": {
     "title": "Content",
-    "tip": "Manage picture cards for the kid side, changes take effect immediately",
+    "tip": "Manage the content shown in the kid app; changes take effect immediately. This content is shared by all children on this device.",
     "allCategories": "All categories",
     "add": "Add card",
     "edit": "Edit card",
@@ -90,7 +90,11 @@
     "deleted": "Deleted",
     "deleteConfirm": "Delete this card?",
     "required": "Please fill in {field}",
-    "modules": "Learning modules"
+    "modules": "Learning modules",
+    "needTwoOptions": "Provide at least two options",
+    "answerNotInOptions": "The answer must exactly match one of the options",
+    "needOneModule": "Provide at least one module",
+    "unknownModule": "Unknown module: {keys} (available: cards / letters / pinyin / poems / logic / adventure / numbers / songs)"
   },
   "plan": {
     "title": "Daily goals",
@@ -104,7 +108,7 @@
     "moduleTitle": "Modules & difficulty",
     "moduleTip": "A disabled module disappears from the kid home; the range controls how many items the kid sees",
     "rangeLabel": "Range",
-    "rangeHint": "{min}-{max} (now {value})"
+    "rangeHint": "First {value} (max {max})"
   },
   "settings": {
     "childTitle": "Profile",
