@@ -595,3 +595,43 @@ html.invert-mode {
 html.grayscale-mode {
   @apply grayscale;
 }
+
+/* ===== 儿童端（kid）设计令牌 =====
+ * 色值事实源：apps/web-antd/src/data/kid-palette.ts
+ * 一致性由 apps/web-antd/src/data/__tests__/kid-palette.test.ts 守住。
+ */
+@theme {
+  --color-kid-ink: #4a3f35;
+  --color-kid-ink-soft: #9a8877;
+  --color-kid-paper: #fffdf7;
+  --color-kid-cream: #f5e3c6;
+  --color-kid-coral: #e8756b;
+  --color-kid-apricot: #f0a868;
+  --color-kid-sun: #ffd98e;
+  --color-kid-leaf: #8fc98a;
+  --color-kid-leaf-dark: #7fb87c;
+  --color-kid-sky: #5b8db8;
+  --color-kid-blush: #e8a0b4;
+  --color-kid-lilac: #d5cfea;
+  --color-kid-sea: #6bbbd8;
+  --color-kid-berry: #b98a5e;
+  --color-kid-gold: #ffb100;
+
+  /* 圆角 */
+  --radius-kid-card: 26px;
+  --radius-kid-pill: 999px;
+
+  /* 阴影 */
+  --shadow-kid-hard: 4px 4px 0 #4a3f35;
+  --shadow-kid-soft: 0 10px 30px rgb(74 63 53 / 14%);
+
+  /* 缓动 */
+  --ease-kid-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 时长不进 @theme（Tailwind 无此时长命名空间），用普通自定义属性 */
+:root {
+  --kid-dur-fast: 120ms;
+  --kid-dur-base: 220ms;
+  --kid-dur-enter: 620ms;
+}
