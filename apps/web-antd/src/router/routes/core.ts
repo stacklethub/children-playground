@@ -84,6 +84,12 @@ const coreRoutes: RouteRecordRaw[] = [
         path: 'poems',
       },
       {
+        component: () => import('#/views/kid/logic/index.vue'),
+        meta: { title: $t('kid.modules.logic') },
+        name: 'KidLogic',
+        path: 'logic',
+      },
+      {
         component: () => import('#/views/kid/numbers/index.vue'),
         meta: { title: $t('kid.modules.numbers') },
         name: 'KidNumbers',

@@ -8,6 +8,7 @@
     "letters": "字母乐园",
     "pinyin": "拼音乐园",
     "poems": "古诗花园",
+    "logic": "逻辑挑战",
     "numbers": "数字王国",
     "songs": "儿歌点播",
     "rewards": "我的星星"
@@ -17,6 +18,7 @@
     "lettersDesc": "和字母做朋友",
     "pinyinDesc": "认一认拼音，听一听怎么读",
     "poemsDesc": "听一听古诗",
+    "logicDesc": "动动脑筋想一想",
     "numbersDesc": "数一数，算一算",
     "songsDesc": "听儿歌啦",
     "rewardsDesc": "看看我的奖励"
@@ -31,6 +33,14 @@
   "poems": {
     "back": "回到诗单",
     "readAll": "朗读全诗"
+  },
+  "logic": {
+    "pattern": "找规律",
+    "sort": "分类归类",
+    "compare": "比较排序",
+    "match": "配对空间",
+    "questionNo": "第 {n} 题",
+    "empty": "这个题型还没有题目哦"
   },
   "home": {
     "greeting": "你好，{name}！",
@@ -111,6 +121,7 @@
     "welcome": "欢迎来到宝宝学堂，{name}！今天想玩什么呢？",
     "pinyinIntro": "点一点屏幕，看看下一个怎么读吧！",
     "poemsIntro": "选一首诗，我们一起听一听吧！",
+    "logicIntro": "动动小脑筋，选一选答案吧！",
     "cardsIntro": "点一点卡片，听听它是什么？",
     "cardsCategory": "我们一起来认识{name}吧！",
     "cardsNext": "看一看，这是什么？",

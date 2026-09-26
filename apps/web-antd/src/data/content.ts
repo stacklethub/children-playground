@@ -66,6 +66,20 @@ export interface KidPoem {
   title: string;
 }
 
+/** 逻辑挑战的四个题型 */
+export type LogicKind = 'compare' | 'match' | 'pattern' | 'sort';
+
+/** 逻辑题：题干与选项都是 emoji / 短文本，答案必须是选项之一 */
+export interface KidLogicItem {
+  answer: string;
+  id: string;
+  kind: LogicKind;
+  /** 选项，2-4 个 */
+  options: string[];
+  /** 题干，中文朗读 */
+  prompt: string;
+}
+
 export const kidCategories: KidCategory[] = [
   { color: '#F97316', emoji: '🐘', id: 'animals', name: '动物世界' },
   { color: '#EF4444', emoji: '🍎', id: 'fruits', name: '好吃的水果' },
@@ -443,6 +457,53 @@ const PINYIN_YUNMU: KidPinyin[] = [
 ];
 
 export const kidPinyin: KidPinyin[] = [...PINYIN_SHENGMU, ...PINYIN_YUNMU];
+
+/** 找规律 */
+const LOGIC_PATTERN: KidLogicItem[] = [
+  { answer: '🍎', id: 'lg-p1', kind: 'pattern', options: ['🍎', '🍌', '🍇'], prompt: '🍎🍌🍎🍌，后面是什么？' },
+  { answer: '🔴', id: 'lg-p2', kind: 'pattern', options: ['🔴', '🔵', '🟡'], prompt: '🔴🔵🔴🔵，后面是什么？' },
+  { answer: '🐶', id: 'lg-p3', kind: 'pattern', options: ['🐶', '🐱', '🐭'], prompt: '🐶🐱🐶🐱，后面是什么？' },
+  { answer: '⭐', id: 'lg-p4', kind: 'pattern', options: ['⭐', '🌙', '☀️'], prompt: '⭐🌙⭐🌙，后面是什么？' },
+  { answer: '🔺', id: 'lg-p5', kind: 'pattern', options: ['🔺', '🔻', '⬛'], prompt: '🔺🔻🔺🔻，后面是什么？' },
+  { answer: '🍇', id: 'lg-p6', kind: 'pattern', options: ['🍓', '🍇', '🍊'], prompt: '🍓🍓🍇🍓🍓，后面是什么？' },
+];
+
+/** 分类归类 */
+const LOGIC_SORT: KidLogicItem[] = [
+  { answer: '🚗', id: 'lg-s1', kind: 'sort', options: ['🍎', '🚗', '🍌'], prompt: '哪一个不是水果？' },
+  { answer: '🌸', id: 'lg-s2', kind: 'sort', options: ['🐶', '🐱', '🌸'], prompt: '哪一个不是动物？' },
+  { answer: '👟', id: 'lg-s3', kind: 'sort', options: ['🍞', '🍎', '👟'], prompt: '哪一个不能吃？' },
+  { answer: '🍎', id: 'lg-s4', kind: 'sort', options: ['🚗', '✈️', '🍎'], prompt: '哪一个不是交通工具？' },
+  { answer: '🌳', id: 'lg-s5', kind: 'sort', options: ['👀', '👂', '🌳'], prompt: '哪一个不是身体的一部分？' },
+  { answer: '🐟', id: 'lg-s6', kind: 'sort', options: ['🐦', '✈️', '🐟'], prompt: '哪一个不会飞？' },
+];
+
+/** 比较与排序 */
+const LOGIC_COMPARE: KidLogicItem[] = [
+  { answer: '🐘', id: 'lg-c1', kind: 'compare', options: ['🐘', '🐭', '🐱'], prompt: '哪一个最大？' },
+  { answer: '🐭', id: 'lg-c2', kind: 'compare', options: ['🐘', '🐭', '🐱'], prompt: '哪一个最小？' },
+  { answer: '🐍', id: 'lg-c3', kind: 'compare', options: ['🐍', '🐰', '🐦'], prompt: '哪一个最长？' },
+  { answer: '🌳', id: 'lg-c4', kind: 'compare', options: ['🌳', '🌱', '🍀'], prompt: '哪一个最高？' },
+  { answer: '🍎🍎🍎', id: 'lg-c5', kind: 'compare', options: ['🍎🍎🍎', '🍎', '🍎🍎'], prompt: '哪一边最多？' },
+  { answer: '🐆', id: 'lg-c6', kind: 'compare', options: ['🐆', '🐢', '🐌'], prompt: '哪一个跑得最快？' },
+];
+
+/** 配对与空间 */
+const LOGIC_MATCH: KidLogicItem[] = [
+  { answer: '🐟', id: 'lg-m1', kind: 'match', options: ['🐟', '🐦', '🐰'], prompt: '谁住在水里？' },
+  { answer: '🐦', id: 'lg-m2', kind: 'match', options: ['🐦', '🐟', '🐶'], prompt: '谁在天上飞？' },
+  { answer: '🐼', id: 'lg-m3', kind: 'match', options: ['🐼', '🐶', '🐱'], prompt: '谁最爱吃竹子？' },
+  { answer: '☂️', id: 'lg-m4', kind: 'match', options: ['☂️', '👟', '🎈'], prompt: '下雨了要用什么？' },
+  { answer: '🌙', id: 'lg-m5', kind: 'match', options: ['🌙', '☀️', '🌈'], prompt: '天黑了会看到什么？' },
+  { answer: '💧', id: 'lg-m6', kind: 'match', options: ['💧', '🍞', '⚽'], prompt: '口渴了要喝什么？' },
+];
+
+export const kidLogicItems: KidLogicItem[] = [
+  ...LOGIC_PATTERN,
+  ...LOGIC_SORT,
+  ...LOGIC_COMPARE,
+  ...LOGIC_MATCH,
+];
 
 export const kidPoems: KidPoem[] = [
   {

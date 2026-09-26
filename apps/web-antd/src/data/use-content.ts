@@ -2,6 +2,7 @@ import type {
   KidCard,
   KidCategory,
   KidLetter,
+  KidLogicItem,
   KidNumber,
   KidPinyin,
   KidPoem,
@@ -17,6 +18,7 @@ import {
   kidCards,
   kidCategories,
   kidLetters,
+  kidLogicItems,
   kidNumbers,
   kidPinyin,
   kidPoems,
@@ -28,6 +30,7 @@ export type {
   KidCard,
   KidCategory,
   KidLetter,
+  KidLogicItem,
   KidNumber,
   KidPinyin,
   KidPoem,
@@ -50,13 +53,14 @@ export interface CardDraft {
  */
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   cards: kidCards,
+  logic: kidLogicItems,
   pinyin: kidPinyin,
   poems: kidPoems,
 };
 
 /**
- * 诗句在家长端是一个 textarea（逐句换行），内置数据则是数组。
- * 这里统一切成句数组，让页面对两种来源一视同仁。
+ * 诗句 / 选项在家长端都是一个 textarea（逐行一条），内置数据则是数组。
+ * 这里统一切成数组，让页面对两种来源一视同仁。
  */
 function toLines(value: unknown): string[] {
   if (Array.isArray(value)) return value as string[];
@@ -102,6 +106,19 @@ export function useContent() {
     })),
   );
 
+  const logicCollection = useCollection<KidLogicItem>({
+    defaults: kidLogicItems,
+    key: 'logic',
+  });
+
+  /** 同上，选项也是逐行填写 */
+  const logicItems = computed<KidLogicItem[]>(() =>
+    logicCollection.items.value.map((item) => ({
+      ...item,
+      options: toLines(item.options),
+    })),
+  );
+
   const categories = computed<KidCategory[]>(() => [...kidCategories]);
 
   const cards = cardCollection.items;
@@ -141,6 +158,7 @@ export function useContent() {
     categories,
     deleteCard,
     letters,
+    logicItems,
     numbers,
     pinyinList: pinyinCollection.items,
     poems,

@@ -15,6 +15,7 @@ export const MODULE_KEYS = [
   'letters',
   'pinyin',
   'poems',
+  'logic',
   'numbers',
   'songs',
 ] as const;
@@ -98,6 +99,37 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     kind: 'param',
     path: '/kid/letters',
     range: { default: 26, max: 26, min: 6 },
+  },
+  logic: {
+    bg: 'bg-cyan-500',
+    color: '#06B6D4',
+    defaultGoal: 4,
+    emoji: '🧩',
+    fields: [
+      { key: 'prompt', labelKey: 'prompt', required: true, type: 'text' },
+      {
+        key: 'options',
+        labelKey: 'options',
+        required: true,
+        type: 'textarea',
+      },
+      { key: 'answer', labelKey: 'answer', required: true, type: 'text' },
+      {
+        key: 'kind',
+        labelKey: 'kind',
+        // 题型名与 kidCategories 同属题库内容域，沿用中文单语的既有做法
+        options: () => [
+          { label: '找规律', value: 'pattern' },
+          { label: '分类归类', value: 'sort' },
+          { label: '比较排序', value: 'compare' },
+          { label: '配对空间', value: 'match' },
+        ],
+        type: 'select',
+      },
+    ],
+    key: 'logic',
+    kind: 'content',
+    path: '/kid/logic',
   },
   numbers: {
     bg: 'bg-emerald-400',
