@@ -622,7 +622,7 @@ html.grayscale-mode {
   --radius-kid-pill: 999px;
 
   /* 阴影 */
-  --shadow-kid-hard: 4px 4px 0 #4a3f35;
+  --shadow-kid-hard: 4px 4px 0 var(--color-kid-ink);
   --shadow-kid-soft: 0 10px 30px rgb(74 63 53 / 14%);
 
   /* 缓动 */

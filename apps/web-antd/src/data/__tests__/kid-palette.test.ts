@@ -37,13 +37,27 @@ describe('kidPalette', () => {
   });
 
   it('css 令牌与调色板逐一对应', () => {
-    // 比较忽略十六进制大小写：oxfmt 会把 CSS 里的颜色统一成小写（pre-commit 钩子
-    // 带 stage_fixed，落库的必然是小写形式），而十六进制大小写在 CSS 中语义等价，
-    // 不是本测试要锁的契约。要锁的是「令牌名 ↔ 色值」的逐一对应关系。
-    const css = themeCss.toLowerCase();
+    // 大小写敏感：CSS 自定义属性名大小写敏感（`--color-kid-Ink` 不会生成
+    // `bg-kid-ink`），因此调色板与主题文件都统一用小写十六进制，逐字比对。
     for (const [name, hex] of Object.entries(KID_PALETTE)) {
       const kebab = name.replaceAll(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
-      expect(css).toContain(`--color-kid-${kebab}: ${hex.toLowerCase()};`);
+      expect(themeCss).toContain(`--color-kid-${kebab}: ${hex};`);
+    }
+  });
+
+  it('非颜色令牌与主题文件逐一对应', () => {
+    // 这些令牌同样承诺了工具类（rounded-kid-card / shadow-kid-hard / ease-kid-pop），
+    // 拼错一个字母工具类就会静默消失，所以和色值一样需要锁住。
+    // 值带 `;` 结尾，避免 `--shadow-kid-hard` 被相近前缀误命中。
+    const tokens: [string, string][] = [
+      ['--radius-kid-card', '26px'],
+      ['--radius-kid-pill', '999px'],
+      ['--shadow-kid-hard', '4px 4px 0 var(--color-kid-ink)'],
+      ['--shadow-kid-soft', '0 10px 30px rgb(74 63 53 / 14%)'],
+      ['--ease-kid-pop', 'cubic-bezier(0.34, 1.56, 0.64, 1)'],
+    ];
+    for (const [name, value] of tokens) {
+      expect(themeCss).toContain(`${name}: ${value};`);
     }
   });
 });
