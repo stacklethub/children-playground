@@ -6,7 +6,7 @@ import type { KidLetter } from '#/data/content';
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
 import { type LearnModule } from '#/store';
-import { speak, speakEnglish } from '#/utils/tts';
+import { speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
 import KidPage from '../components/kid-page.vue';
@@ -46,7 +46,7 @@ const { next, pick, quiz, quizCount } = useQuiz<string>({
       return;
     }
     // 题干是英文单词，读英文发音；中文问句已显示在页面上
-    speakEnglish(meta.value.word);
+    speak(meta.value.word, { lang: 'en-US' });
   },
   create: () => {
     const created = createQuiz();

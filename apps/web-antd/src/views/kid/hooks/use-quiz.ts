@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
 import { type LearnModule, useKidStore } from '#/store';
-import { CONTENT_TTS_LANG, speak, speakEnglish } from '#/utils/tts';
+import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import { useCurrentChild } from './use-current-child';
 import { useReward } from './use-reward';
@@ -147,19 +147,19 @@ export function useLetterPractice() {
   /**
    * 每次点击只朗读一次英文，中文释义与例句显示在卡片上即可。
    *
-   * 例句不朗读：英文发音走在线音频（见 utils/tts 的 speakEnglish），
-   * 而该接口对整句不可靠（约 65% 返回 500），只保证字母与单词。
+   * 走统一的 speak()，由家长设置的语音源决定走哪个通道 ——
+   * 不要在模块里绕过设置直连某个在线接口，那会出现「家长设置了却仍走别的接口」。
    *
    * 不做「英文读完接中文」的串接 —— 串接要靠在 onEnd 里再调 speak()，
-   * 而 speak() 默认先 cancel()，在 onend 回调中执行 cancel() 会让 Chrome
+   * 而 speak() 会 cancel()，在 onend 回调中执行 cancel() 会让 Chrome
    * 的语音引擎卡死且不报错（表现为整个模块静音，要刷新页面才恢复）。
    */
   function sayLetter(item: { letter: string }) {
-    speakEnglish(item.letter);
+    speak(item.letter, { lang: 'en-US' });
   }
 
   function sayWord(item: { word: string }) {
-    speakEnglish(item.word);
+    speak(item.word, { lang: 'en-US' });
   }
 
   return { createQuiz, sayLetter, sayWord };

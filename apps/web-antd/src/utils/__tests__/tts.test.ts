@@ -1,11 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   hasVoiceFor,
   setTtsEnabled,
   speak,
-  speakEnglish,
-  stopSpeak,
 } from '#/utils/tts';
 import {
   DEFAULT_SETTINGS,
@@ -55,8 +53,6 @@ class FakeAudio {
   }
 }
 
-const TTS_ENABLED_KEY = 'child-study-tts-enabled';
-
 /** happy-dom 不提供 localStorage，用内存版顶替，行为与浏览器一致 */
 function stubLocalStorage() {
   const store = new Map<string, string>();
@@ -67,139 +63,6 @@ function stubLocalStorage() {
     setItem: (key: string, value: string) => store.set(key, value),
   });
 }
-
-function lastAudio(): FakeAudio {
-  const audio = FakeAudio.instances.at(-1);
-  if (!audio) throw new Error('没有创建任何音频');
-  return audio;
-}
-
-describe('speakEnglish', () => {
-  beforeEach(() => {
-    FakeAudio.instances = [];
-    FakeAudio.playImpl = () => Promise.resolve();
-    stubLocalStorage();
-    vi.stubGlobal('Audio', FakeAudio);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('请求有道发音接口，带上文本与口音参数', () => {
-    speakEnglish('apple');
-
-    const url = new URL(lastAudio().src);
-    expect(url.origin + url.pathname).toBe('https://dict.youdao.com/dictvoice');
-    expect(url.searchParams.get('audio')).toBe('apple');
-    expect(url.searchParams.get('type')).toBe('1');
-  });
-
-  it('文本里的空格会被正确转义', () => {
-    speakEnglish('ice cream');
-
-    expect(new URL(lastAudio().src).searchParams.get('audio')).toBe(
-      'ice cream',
-    );
-  });
-
-  it('播放新的英文发音前先停掉上一段，避免两段声音叠在一起', () => {
-    speakEnglish('apple');
-    const first = lastAudio();
-
-    speakEnglish('bear');
-
-    expect(first.paused).toBe(true);
-    expect(FakeAudio.instances).toHaveLength(2);
-    expect(lastAudio().paused).toBe(false);
-  });
-
-  it('音频播完时回调 onEnd', async () => {
-    const onEnd = vi.fn();
-    speakEnglish('apple', { onEnd });
-
-    lastAudio().onended?.();
-
-    expect(onEnd).toHaveBeenCalledTimes(1);
-  });
-
-  it('音频加载失败时也回调 onEnd，不让调用方卡住', () => {
-    const onEnd = vi.fn();
-    speakEnglish('apple', { onEnd });
-
-    lastAudio().onerror?.();
-
-    expect(onEnd).toHaveBeenCalledTimes(1);
-  });
-
-  it('加载失败同时触发 error 事件与 play() 拒绝时，onEnd 只回调一次', async () => {
-    FakeAudio.playImpl = () => Promise.reject(new Error('NotSupportedError'));
-    const onEnd = vi.fn();
-    speakEnglish('apple', { onEnd });
-
-    const audio = lastAudio();
-    audio.onerror?.();
-    await vi.waitFor(() => expect(audio.onended).toBeNull());
-
-    expect(onEnd).toHaveBeenCalledTimes(1);
-  });
-
-  it('播放被浏览器拒绝（缺少用户手势）时不抛错，仍然回调 onEnd', async () => {
-    FakeAudio.playImpl = () => Promise.reject(new Error('NotAllowedError'));
-    const onEnd = vi.fn();
-
-    expect(() => speakEnglish('apple', { onEnd })).not.toThrow();
-
-    await vi.waitFor(() => expect(onEnd).toHaveBeenCalledTimes(1));
-  });
-
-  it('语音开关关闭时不播放，但仍回调 onEnd', () => {
-    localStorage.setItem(TTS_ENABLED_KEY, '0');
-    const onEnd = vi.fn();
-
-    speakEnglish('apple', { onEnd });
-
-    expect(FakeAudio.instances).toHaveLength(0);
-    expect(onEnd).toHaveBeenCalledTimes(1);
-  });
-
-  it('stopSpeak 会停掉正在播放的英文发音并释放 src', () => {
-    speakEnglish('apple');
-    const audio = lastAudio();
-
-    stopSpeak();
-
-    expect(audio.paused).toBe(true);
-    expect(audio.src).toBe('');
-    expect(audio.loadedTimes).toBe(1);
-  });
-
-  it('已被停掉的音频不再回调 onEnd（连点时旧音频不能盖过新的）', async () => {
-    FakeAudio.playImpl = () => Promise.reject(new Error('AbortError'));
-    const onEndA = vi.fn();
-    speakEnglish('apple', { onEnd: onEndA });
-    const audioA = lastAudio();
-
-    speakEnglish('bear');
-
-    // 等一个宏任务，确保 A 的 play() 拒绝回调已经跑完
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    // A 被 pause 后 play() 拒绝，此时 B 已经在放，A 的 onEnd 不应再触发
-    expect(audioA.paused).toBe(true);
-    expect(onEndA).not.toHaveBeenCalled();
-  });
-
-  it('中文朗读开始前会停掉英文发音，避免中英同时出声', () => {
-    speakEnglish('apple');
-    const audio = lastAudio();
-
-    speak('点一点字母');
-
-    expect(audio.paused).toBe(true);
-  });
-});
-
 describe('speak 路由与降级', () => {
   interface VoiceStub {
     lang: string;

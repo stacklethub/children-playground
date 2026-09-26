@@ -84,85 +84,6 @@ async function isSystemUsable(lang: TtsLang): Promise<boolean> {
   return hasVoiceIn(await readyVoices(), lang);
 }
 
-/**
- * 英文发音接口（有道词典），返回 mp3。
- *
- * 英文不走 Web Speech API：它只能用系统里装了的语音，设备没装英文语音包时，
- * 声明 lang='en-US' 会被浏览器直接静默，不声明又会被默认中文语音用中文字音念出来。
- * 在线音频与系统语音包无关，代价是需要联网。
- *
- * 选型时有两条硬约束，换接口前请先验证：
- * 1. 该接口只对字母、单词可靠。整句（例句）约 65% 会返回 500，不要传句子。
- * 2. 必须是不校验 Referer 的接口。百度 fanyi.baidu.com/gettts 对带 Referer 的
- *    请求返回空 body，而页面里的 <audio> 一定会带上本站 Referer
- *    （HTMLMediaElement 不支持 referrerPolicy，绕不过去），实测直接放不出来。
- */
-const EN_TTS_ENDPOINT = 'https://dict.youdao.com/dictvoice';
-
-/** 发音口音：1 美音 / 2 英音 */
-const EN_TTS_TYPE = '1';
-
-/** 正在播放的英文发音 */
-let enAudio: HTMLAudioElement | undefined;
-
-/**
- * 当前音频的结束回调。停止时一并清空，让这段音频的 finish 失效 ——
- * 否则「点了 A 又点 B」时，A 被 pause 触发的 play() 拒绝会再回调一次
- * A 的 onEnd，此时 B 已经在放了。
- */
-let enFinish: (() => void) | undefined;
-
-/** 停止英文发音 */
-function stopEnglish() {
-  const audio = enAudio;
-  enAudio = undefined;
-  enFinish = undefined;
-  if (!audio) return;
-  audio.onended = null;
-  audio.onerror = null;
-  audio.pause();
-  // 只 pause 的话元素仍可能在后台把 mp3 缓冲完，连点会积压若干段在途请求，
-  // 清掉 src 才能真正中止这次加载
-  audio.removeAttribute('src');
-  audio.load();
-}
-
-/**
- * 朗读英文。只传字母或单词 —— 见 EN_TTS_ENDPOINT 的说明，整句不可靠。
- * 会先停掉正在进行的中英文朗读，保证同一时刻只有一段声音。
- */
-export function speakEnglish(
-  text: string,
-  options: { onEnd?: () => void } = {},
-) {
-  stopSpeak();
-  if (!isTtsEnabled()) {
-    options.onEnd?.();
-    return;
-  }
-  try {
-    const url = `${EN_TTS_ENDPOINT}?audio=${encodeURIComponent(text)}&type=${EN_TTS_TYPE}`;
-    const audio = new Audio(url);
-    enAudio = audio;
-    // 加载失败会同时触发 error 事件和 play() 拒绝，两条路径都指向 finish，
-    // 所以这里必须幂等，onEnd 只回调一次
-    const finish = () => {
-      if (enFinish !== finish) return;
-      enFinish = undefined;
-      if (enAudio === audio) enAudio = undefined;
-      audio.onended = null;
-      audio.onerror = null;
-      options.onEnd?.();
-    };
-    enFinish = finish;
-    audio.onended = finish;
-    audio.onerror = finish;
-    audio.play().catch(finish);
-  } catch {
-    options.onEnd?.();
-  }
-}
-
 /** 挑选与朗读语言匹配的系统语音，缺失时回退到同语系语音 */
 function pickVoice(lang: string, voices: SpeechSynthesisVoice[]) {
   const prefix = lang.slice(0, 2).toLowerCase();
@@ -320,7 +241,6 @@ export function speak(
 /** 停止当前朗读（Azure 与系统语音两个通道都停） */
 export function stopSpeak() {
   stopAzure();
-  stopEnglish();
   try {
     window.speechSynthesis?.cancel();
   } catch {
