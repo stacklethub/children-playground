@@ -97,6 +97,24 @@ describe('handleRequest', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('语速不同时缓存 key 不同，两次请求都要打到上游', async () => {
+    const cache = fakeCache();
+    const fetchImpl = vi.fn(async () =>
+      new Response(new Uint8Array([1, 2, 3]), {
+        headers: { 'Content-Type': 'audio/mpeg' },
+        status: 200,
+      }),
+    );
+    const request = (rate: number) =>
+      postJson({ lang: 'en-US', rate, text: 'apple', voice: 'en-US-AvaNeural' });
+
+    await handleRequest(request(1), ENV, { cache, fetchImpl });
+    await handleRequest(request(1.2), ENV, { cache, fetchImpl });
+
+    // 只按 text 建 key 的话第二次会命中缓存，这里就只剩 1 次
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('上游失败时返回 502，且响应体里不含 key', async () => {
     const fetchImpl = vi.fn(async () => new Response('nope', { status: 401 }));
     const response = await handleRequest(

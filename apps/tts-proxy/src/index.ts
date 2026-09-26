@@ -27,7 +27,7 @@ export interface Deps {
 
 const AZURE_OUTPUT_FORMAT = 'audio-24khz-48kbitrate-mono-mp3';
 const AZURE_TIMEOUT_MS = 15_000;
-/** Azure 神经语音的上限，这里给单次请求留足余量即可 */
+/** 合成结果的 HTTP 缓存时长（30 天）。引导语高度重复，缓存命中能省下 Azure 额度 */
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 function corsHeaders(env: Env): Record<string, string> {
