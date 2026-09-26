@@ -113,7 +113,59 @@ export function useLetterPractice() {
 }
 
 /**
- * 数字小屋：学一学朗读 + 考一考出题。
+ * 数字王国「算一算」：10 以内加减。
+ * 算式上限受家长端「难度区间」约束（moduleRange），与「认一认」共用同一设定。
+ */
+export function useArithmeticPractice() {
+  const kidStore = useKidStore();
+
+  /** 上界取难度区间，但至少 2（否则出不了加减题），最多 10 */
+  function limit() {
+    return Math.min(Math.max(kidStore.moduleRange('numbers'), 2), 10);
+  }
+
+  /** 围绕正确答案取干扰项，都落在 [0, max] 内 */
+  function optionsAround(answer: number, max: number, count = 3) {
+    const set = new Set<number>([answer]);
+    let guard = 0;
+    while (set.size < count && guard < 50) {
+      guard += 1;
+      const candidate = answer + (Math.floor(Math.random() * 5) - 2);
+      if (candidate >= 0 && candidate <= max) set.add(candidate);
+    }
+    return [...set].sort(() => Math.random() - 0.5);
+  }
+
+  function createQuiz(): QuizState<number> & {
+    expr: string;
+    isMinus: boolean;
+    left: number;
+    right: number;
+  } {
+    const max = limit();
+    // 保证 a + b <= max，减法则由 a + b 反推，结果天然非负
+    const a = 1 + Math.floor(Math.random() * (max - 1));
+    const b = 1 + Math.floor(Math.random() * (max - a + 1));
+    const isMinus = Math.random() < 0.4;
+    const left = isMinus ? a + b : a;
+    const right = b;
+    const answer = isMinus ? a : a + b;
+
+    return {
+      answer,
+      expr: `${left} ${isMinus ? '−' : '+'} ${right}`,
+      isMinus,
+      left,
+      options: optionsAround(answer, max),
+      right,
+    };
+  }
+
+  return { createQuiz };
+}
+
+/**
+ * 数字王国：认一认朗读 + 玩一玩数数出题。
  */
 export function useNumberPractice() {
   const { numbers } = useContent();

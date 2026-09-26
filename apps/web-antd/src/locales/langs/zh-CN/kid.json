@@ -48,8 +48,9 @@
     "questionNo": "第 {n} 题"
   },
   "numbers": {
-    "learn": "学一学",
-    "quiz": "考一考",
+    "learn": "认一认",
+    "arithmetic": "算一算",
+    "quiz": "玩一玩",
     "quizPrompt": "数一数，有几个？",
     "questionNo": "第 {n} 题"
   },
@@ -119,6 +120,8 @@
     "lettersSay": "{letter}，{zh}，{word}",
     "numbersIntro": "点一点数字，一起数一数吧！",
     "numbersQuiz": "数一数，有几个呀？",
+    "arithPlus": "{left} 加 {right} 等于几？",
+    "arithMinus": "{left} 减 {right} 等于几？",
     "numbersSay": "这是数字 {word}，跟着我数：{list}",
     "songsIntro": "选一首喜欢的儿歌吧！",
     "songRetry": "唱完啦，还想再听一遍吗？",
