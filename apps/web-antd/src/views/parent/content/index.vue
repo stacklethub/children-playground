@@ -12,12 +12,19 @@ import { $t } from '#/locales';
 
 import ContentFormModal from '../components/content-form-modal.vue';
 
-/** 声明了 fields 的模块才在内容管理里出 Tab（字母乐园也算） */
+/** 声明了 fields 的模块才在内容管理里出 Tab（英文乐园也算） */
 const contentModules = TILE_KEYS.filter((key) =>
   hasContentFields(MODULES[key]),
 );
 
-const activeModule = ref<TileKey>(contentModules[0]!);
+/**
+ * 默认选中第一个可编辑模块。
+ * `MODULES.cards` 一定声明了 fields，兜底常量取不到的情况不会发生 ——
+ * 写成 `find` + 兜底只是为了不用非空断言（oxlint 禁止 `!`）。
+ */
+const activeModule = ref<TileKey>(
+  TILE_KEYS.find((key) => hasContentFields(MODULES[key])) ?? 'cards',
+);
 
 const activeFields = computed(() => MODULES[activeModule.value].fields ?? []);
 
@@ -42,7 +49,8 @@ const filterCategory = ref<string>();
 const list = computed(() =>
   filterCategory.value
     ? collection.items.value.filter(
-        (item) => (item as Record<string, any>).categoryId === filterCategory.value,
+        (item) =>
+          (item as Record<string, any>).categoryId === filterCategory.value,
       )
     : collection.items.value,
 );

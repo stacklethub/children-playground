@@ -15,6 +15,7 @@ import {
 
 import { MODULES } from '#/data/modules';
 import { $t } from '#/locales';
+import { pinyinOf } from '#/utils/pinyin';
 
 /**
  * 字段驱动的家长端内容表单：
@@ -30,7 +31,9 @@ const emit = defineEmits<{ submit: [draft: Record<string, any>] }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
-const fields = computed<FieldDef[]>(() => MODULES[props.moduleKey].fields ?? []);
+const fields = computed<FieldDef[]>(
+  () => MODULES[props.moduleKey].fields ?? [],
+);
 
 /** 用 Record 而非固定形状：字段随模块而变 */
 const form = reactive<Record<string, any>>({});
@@ -41,15 +44,36 @@ function defaultValueOf(field: FieldDef) {
   return '';
 }
 
+/** 打开表单时会先把现有值灌进 form，那次赋值不该触发下面的自动派生 */
+let hydrating = false;
+
 watch(open, (value) => {
   if (!value) return;
+  hydrating = true;
   for (const field of fields.value) {
     const raw = props.record?.[field.key] ?? defaultValueOf(field);
     // 诗句/选项在数据层是数组，直接绑给 textarea 会渲染成逗号串；
     // 家长一旦编辑就会把整串存回去，切句只认换行，诗会被压成一行。
     form[field.key] = Array.isArray(raw) ? raw.join('\n') : raw;
   }
+  hydrating = false;
 });
+
+/**
+ * 中文乐园：填了汉字就带出完整拼音（「苹果」→「píng guǒ」），省去家长自己查。
+ *
+ * 带出来的是整词拼音，家长看着改成教学内容即可 —— 声母条目填 `p`、
+ * 韵母条目填 `ai`，cnchar 判断不了该教哪个，只能由家长定。
+ * 同步 flush 是为了让上面的灌数据能挡住这次触发。
+ */
+watch(
+  () => form.hanzi,
+  (hanzi) => {
+    if (hydrating || props.moduleKey !== 'pinyin' || !hanzi) return;
+    form.pinyin = pinyinOf(String(hanzi));
+  },
+  { flush: 'sync' },
+);
 
 function isEmpty(value: unknown) {
   if (Array.isArray(value)) return value.length === 0;

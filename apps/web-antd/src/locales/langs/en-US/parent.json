@@ -113,7 +113,11 @@
     "moduleTitle": "Modules & difficulty",
     "moduleTip": "A disabled module disappears from the kid home; the range controls how many items the kid sees",
     "rangeLabel": "Range",
-    "rangeHint": "First {value} (max {max})"
+    "rangeHint": "First {value} (max {max})",
+    "orderLabel": "Letter order",
+    "orderSeq": "A to Z",
+    "orderRandom": "Shuffled",
+    "saveModule": "Save module settings"
   },
   "settings": {
     "childTitle": "Profile",

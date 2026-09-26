@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { LearnModule, ModuleOrder, ModuleSetting } from '#/store';
+
 import { computed, reactive } from 'vue';
 
 import {
@@ -6,18 +8,13 @@ import {
   Card,
   InputNumber,
   message,
+  Radio,
   Slider,
   Switch,
 } from 'ant-design-vue';
 
 import { $t } from '#/locales';
-import {
-  type LearnModule,
-  MODULE_KEYS,
-  MODULES,
-  type ModuleSetting,
-  useKidStore,
-} from '#/store';
+import { MODULE_KEYS, MODULES, useKidStore } from '#/store';
 
 const kidStore = useKidStore();
 
@@ -29,7 +26,7 @@ const goals = reactive<Record<LearnModule, number>>(
 
 /**
  * 声明了 range 的模块才有「开关 + 难度区间」。
- * 与内容管理共用同一套派生规则，同一模块可以两处都出现（如字母乐园）。
+ * 与内容管理共用同一套派生规则，同一模块可以两处都出现（如英文乐园）。
  */
 const paramModules = computed(() =>
   MODULE_KEYS.flatMap((key) => {
@@ -39,12 +36,22 @@ const paramModules = computed(() =>
   }),
 );
 
-const settings = reactive<Record<string, { enabled: boolean; range: number }>>(
+/** 支持「条目顺序」设置的模块：英文乐园的字母与单词可以打乱顺序 */
+const ORDER_MODULE_KEYS: LearnModule[] = ['letters'];
+
+interface SettingForm {
+  enabled: boolean;
+  order: ModuleOrder;
+  range: number;
+}
+
+const settings = reactive<Record<string, SettingForm>>(
   Object.fromEntries(
     paramModules.value.map(({ key }) => [
       key,
       {
         enabled: kidStore.moduleEnabled(key),
+        order: kidStore.moduleOrder(key),
         range: kidStore.moduleRange(key),
       },
     ]),
@@ -67,22 +74,30 @@ function save() {
   );
 
   // 在现有设置上合并，避免把本页不认识的模块设置整体覆盖掉
-  const nextSettings = { ...kidStore.moduleSettings };
+  const merged = { ...kidStore.moduleSettings };
+  /** 本页管辖、但改回默认值因而应当清除覆盖的模块 */
+  const drop = new Set<string>();
+
   for (const { key, range } of paramModules.value) {
     const current = settings[key];
     if (!current) continue;
 
     const patch: ModuleSetting = {};
     if (current.enabled === false) patch.enabled = false;
+    if (current.order !== 'seq') patch.order = current.order;
     if (current.range !== range.default) patch.range = current.range;
 
-    if (Object.keys(patch).length === 0) {
-      delete nextSettings[key];
+    if (Object.keys(patch).length > 0) {
+      merged[key] = patch;
     } else {
-      nextSettings[key] = patch;
+      drop.add(key);
     }
   }
-  kidStore.moduleSettings = nextSettings;
+
+  // 用「先收集再过滤」替代逐键 delete（oxlint 禁止动态 delete）
+  kidStore.moduleSettings = Object.fromEntries(
+    Object.entries(merged).filter(([key]) => !drop.has(key)),
+  );
 
   message.success($t('parent.common.saved'));
 }
@@ -152,7 +167,29 @@ function save() {
               }}
             </span>
           </div>
+          <div
+            v-if="ORDER_MODULE_KEYS.includes(key)"
+            class="flex items-center gap-3"
+          >
+            <span class="text-sm">{{ $t('parent.plan.orderLabel') }}</span>
+            <Radio.Group
+              v-model:value="settings[key]!.order"
+              :disabled="!settings[key]!.enabled"
+              button-style="solid"
+            >
+              <Radio.Button value="seq">
+                {{ $t('parent.plan.orderSeq') }}
+              </Radio.Button>
+              <Radio.Button value="random">
+                {{ $t('parent.plan.orderRandom') }}
+              </Radio.Button>
+            </Radio.Group>
+          </div>
         </div>
+        <!-- 本卡的修改同样要点保存；按钮放在这里，免得家长在左卡里找 -->
+        <Button type="primary" @click="save">
+          {{ $t('parent.plan.saveModule') }}
+        </Button>
       </div>
     </Card>
 

@@ -113,7 +113,11 @@
     "moduleTitle": "模块与难度",
     "moduleTip": "关闭模块后宝宝端首页不再显示该入口；难度范围决定宝宝端出现的题目数量",
     "rangeLabel": "难度范围",
-    "rangeHint": "前 {value} 个（最多 {max}）"
+    "rangeHint": "前 {value} 个（最多 {max}）",
+    "orderLabel": "字母顺序",
+    "orderSeq": "A → Z 顺序",
+    "orderRandom": "随机打乱",
+    "saveModule": "保存模块设置"
   },
   "settings": {
     "childTitle": "个人信息",
