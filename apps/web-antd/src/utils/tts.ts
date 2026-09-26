@@ -69,19 +69,14 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
  *
  * @param options.lang 显式指定朗读语言，省略时跟随界面语言。
  *   朗读内容层中文素材时传 CONTENT_TTS_LANG。
- * @param options.interrupt 是否打断当前朗读，默认 true。
- *   ⚠️ 在 onEnd 里接着读下一句时必须传 false：Chrome 的语音引擎
- *   在 onend 回调中执行 cancel() 后会卡死，之后彻底不出声
- *   （整个页面要刷新才恢复），而且不报任何错。
+ *
+ * ⚠️ 不要在 onEnd 回调里紧接着再调一次 speak()：那样会在 onend 中执行
+ *   cancel()，Chrome 的语音引擎会卡死且不报错，整个页面要刷新才恢复。
+ *   需要连读多句时，改用单句或另行设计排队逻辑。
  */
 export function speak(
   text: string,
-  options: {
-    interrupt?: boolean;
-    lang?: string;
-    onEnd?: () => void;
-    rate?: number;
-  } = {},
+  options: { lang?: string; onEnd?: () => void; rate?: number } = {},
 ) {
   if (!isTtsEnabled()) {
     options.onEnd?.();
@@ -93,9 +88,7 @@ export function speak(
     return;
   }
   try {
-    if (options.interrupt !== false) {
-      synth.cancel();
-    }
+    synth.cancel();
     const lang = options.lang ?? resolveTtsLang();
     const utterance = new SpeechSynthesisUtterance(text);
     // 英文按词连读，语速略快于中文更自然

@@ -145,45 +145,19 @@ export function useLetterPractice() {
   }
 
   /**
-   * 「先英文、后中文」必须串成一条链，两个原因：
-   * 1. speak() 默认会先 cancel()，连着调两次的话第一句会被当场掐掉；
-   * 2. 但也不能简单地在 onEnd 里再调一次默认的 speak() —— 在 onend 回调中
-   *    执行 cancel() 会让 Chrome 的语音引擎卡死且不报错，所以续读要传
-   *    interrupt: false。
-   * seq 用于丢弃过期回调：快速连点卡片时，旧链的尾巴不该再出声。
+   * 每次点击只朗读一次，不做「英文读完接着读中文」的串接。
+   *
+   * 串接要靠在 onEnd 里再调 speak()，而 speak() 默认先 cancel()——
+   * 在 onend 回调中执行 cancel() 会让 Chrome 的语音引擎卡死且不报错
+   * （表现为整个模块静音，要刷新页面才恢复）。单句朗读与其它模块
+   * 走的是同一条路径，不存在这个风险；中文释义显示在卡片上即可。
    */
-  let saySeq = 0;
-
-  /** 学一学：先读字母与例词（英文），读完再读释义（中文） */
-  function sayLetter(item: {
-    letter: string;
-    lower: string;
-    word: string;
-    zh: string;
-  }) {
-    const seq = ++saySeq;
-    speak(`${item.letter} ${item.lower}, ${item.word}`, {
-      lang: 'en-US',
-      onEnd: () => {
-        if (seq !== saySeq) return;
-        speak($t('kid.tts.lettersSay', { word: item.word, zh: item.zh }), {
-          interrupt: false,
-          lang: CONTENT_TTS_LANG,
-        });
-      },
-    });
+  function sayLetter(item: { letter: string; lower: string; word: string }) {
+    speak(`${item.letter} ${item.lower}, ${item.word}`, { lang: 'en-US' });
   }
 
-  /** 认单词：先读单词与例句（英文），读完再读中文释义 */
-  function sayWord(item: { word: string; zh: string; sentence: string }) {
-    const seq = ++saySeq;
-    speak(`${item.word}. ${item.sentence}`, {
-      lang: 'en-US',
-      onEnd: () => {
-        if (seq !== saySeq) return;
-        speak(item.zh, { interrupt: false, lang: CONTENT_TTS_LANG });
-      },
-    });
+  function sayWord(item: { word: string; sentence: string }) {
+    speak(`${item.word}. ${item.sentence}`, { lang: 'en-US' });
   }
 
   return { createQuiz, sayLetter, sayWord };
