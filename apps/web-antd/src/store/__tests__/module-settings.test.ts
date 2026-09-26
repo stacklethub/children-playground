@@ -1,13 +1,22 @@
+import type { LearnModule } from '#/data/modules';
+
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { MODULES } from '#/data/modules';
+import { useKidStore } from '#/store';
 
 vi.mock('#/api', () => ({
   submitLearnRecordApi: vi.fn(),
   syncLearnRecordsApi: vi.fn(),
 }));
 
-import { MODULES } from '#/data/modules';
-import { useKidStore } from '#/store';
+/** 注册表声明的难度区间默认值；只对声明了区间的模块调用 */
+function rangeDefault(module: LearnModule): number {
+  const range = MODULES[module].range;
+  if (!range) throw new Error(`${module} 未声明难度区间`);
+  return range.default;
+}
 
 /** 参数型模块：默认启用、难度取注册表默认值，家长配置后以配置为准 */
 describe('模块设置', () => {
@@ -31,15 +40,27 @@ describe('模块设置', () => {
 
   it('难度范围未配置时回落到注册表默认值', () => {
     const kid = useKidStore();
-    expect(kid.moduleRange('letters')).toBe(MODULES.letters.range!.default);
-    expect(kid.moduleRange('numbers')).toBe(MODULES.numbers.range!.default);
+    expect(kid.moduleRange('letters')).toBe(rangeDefault('letters'));
+    expect(kid.moduleRange('numbers')).toBe(rangeDefault('numbers'));
   });
 
   it('家长配置后以配置为准', () => {
     const kid = useKidStore();
     kid.moduleSettings = { letters: { range: 8 } };
     expect(kid.moduleRange('letters')).toBe(8);
-    expect(kid.moduleRange('numbers')).toBe(MODULES.numbers.range!.default);
+    expect(kid.moduleRange('numbers')).toBe(rangeDefault('numbers'));
+  });
+
+  it('条目顺序未配置时按内容顺序', () => {
+    const kid = useKidStore();
+    expect(kid.moduleOrder('letters')).toBe('seq');
+  });
+
+  it('条目顺序配置后以配置为准，不影响其他模块', () => {
+    const kid = useKidStore();
+    kid.moduleSettings = { letters: { order: 'random' } };
+    expect(kid.moduleOrder('letters')).toBe('random');
+    expect(kid.moduleOrder('numbers')).toBe('seq');
   });
 
   it('无难度区间的模块返回 Infinity（不限制）', () => {

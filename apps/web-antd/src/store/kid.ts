@@ -1,4 +1,5 @@
 import type { LearnRecordPayload } from '#/api';
+import type { LearnModule } from '#/data/modules';
 
 import { ref } from 'vue';
 
@@ -6,7 +7,7 @@ import { defineStore } from 'pinia';
 
 import { submitLearnRecordApi, syncLearnRecordsApi } from '#/api';
 import { migrateContentOverrides } from '#/data/migrate-content-overrides';
-import { type LearnModule, MODULE_KEYS, MODULES } from '#/data/modules';
+import { MODULE_KEYS, MODULES } from '#/data/modules';
 import { getBindToken } from '#/utils/bind-token';
 
 export type { LearnModule };
@@ -53,10 +54,15 @@ export interface WrongItem {
   lastAt: number;
 }
 
+/** 条目展示顺序：按内容顺序，或每次进入时打乱一次 */
+export type ModuleOrder = 'random' | 'seq';
+
 /** 参数型模块的家长设置 */
 export interface ModuleSetting {
   /** 关闭后宝宝端首页不显示该入口；默认启用 */
   enabled?: boolean;
+  /** 条目顺序；默认按内容顺序 */
+  order?: ModuleOrder;
   /** 难度范围：宝宝端只出现前 N 个条目 */
   range?: number;
 }
@@ -88,7 +94,7 @@ export const useKidStore = defineStore(
       if (!childId) return [];
       return records.value
         .filter((r) => r.childId === childId)
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .toSorted((a, b) => b.createdAt - a.createdAt);
     }
 
     function starsOf(childId?: string) {
@@ -103,6 +109,11 @@ export const useKidStore = defineStore(
     /** 模块是否启用；未配置视为启用 */
     function moduleEnabled(module: LearnModule): boolean {
       return moduleSettings.value[module]?.enabled !== false;
+    }
+
+    /** 模块条目顺序；未配置视为按内容顺序 */
+    function moduleOrder(module: LearnModule): ModuleOrder {
+      return moduleSettings.value[module]?.order ?? 'seq';
     }
 
     /** 模块难度范围；无 range 定义的模块返回 Infinity 表示不限制 */
@@ -184,9 +195,11 @@ export const useKidStore = defineStore(
       result?: 'learn' | 'right' | 'wrong';
       stars?: number;
     }) {
-      const before = badgesOf(options.childId)
-        .filter((b) => b.earned)
-        .map((b) => b.id);
+      const before = new Set(
+        badgesOf(options.childId)
+          .filter((b) => b.earned)
+          .map((b) => b.id),
+      );
 
       const record: LearnRecordItem = {
         childId: options.childId,
@@ -204,7 +217,7 @@ export const useKidStore = defineStore(
       void pushToServer(record);
 
       const after = badgesOf(options.childId).filter((b) => b.earned);
-      const newBadges = after.filter((b) => !before.includes(b.id));
+      const newBadges = after.filter((b) => !before.has(b.id));
       return newBadges;
     }
 
@@ -248,10 +261,15 @@ export const useKidStore = defineStore(
 
       let synced = 0;
       for (const [childId, group] of groups) {
-        const token = getBindToken(childId)!;
+        const token = getBindToken(childId);
+        // 只有拿到令牌的记录才会进 groups，这里的空值检查只为类型收窄
+        if (!token) continue;
         const batch = group.slice(0, 200);
         try {
-          await syncLearnRecordsApi(batch.map(stripLocal), token);
+          await syncLearnRecordsApi(
+            batch.map((record) => stripLocal(record)),
+            token,
+          );
           markSynced(batch.map((r) => r.id));
           synced += batch.length;
         } catch {
@@ -355,6 +373,7 @@ export const useKidStore = defineStore(
       dailyGoals,
       goalOf,
       moduleEnabled,
+      moduleOrder,
       moduleRange,
       moduleSettings,
       pendingOf,

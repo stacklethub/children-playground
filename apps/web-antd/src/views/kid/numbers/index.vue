@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
@@ -24,8 +24,22 @@ const { rewardBadges, rewardShow, rewardText, guide, reward } = useReward();
 
 const mode = ref('learn');
 
-// ---------- 认一认 ----------
+// ---------- 认一认：单张大卡片翻页 ----------
+const index = ref(0);
 const learned = ref<number[]>([]);
+
+const currentNumber = computed(() => numbers.value[index.value]);
+const total = computed(() => numbers.value.length);
+const atStart = computed(() => index.value <= 0);
+const atEnd = computed(() => index.value >= total.value - 1);
+
+/** 翻到上/下一个数字；已在两端返回 false，按钮会置灰 */
+function step(delta: number) {
+  const target = index.value + delta;
+  if (target < 0 || target >= total.value) return false;
+  index.value = target;
+  return true;
+}
 
 function tapNumber(item: { num: number; word: string }) {
   sayNumber(item);
@@ -119,24 +133,48 @@ onMounted(() => {
       @change="onModeChange"
     />
 
-    <!-- 认一认 -->
-    <div
-      v-if="mode === 'learn'"
-      class="grid w-full max-w-4xl grid-cols-3 gap-4 sm:grid-cols-5"
-    >
+    <!-- 认一认：一进来就是一个数字大卡片，左右翻页 -->
+    <template v-if="mode === 'learn' && currentNumber">
       <button
-        v-for="item in numbers"
-        :key="item.num"
-        class="flex flex-col items-center gap-1 rounded-3xl bg-white/95 p-4 shadow-md transition hover:-translate-y-1 active:scale-90"
-        @click="tapNumber(item)"
+        class="relative flex min-h-[50vh] w-full max-w-xl flex-col items-center justify-center gap-4 rounded-[3rem] bg-white/95 p-10 shadow-2xl transition hover:-translate-y-1 active:scale-95"
+        data-star-anchor
+        @click="tapNumber(currentNumber)"
       >
-        <span class="text-6xl font-black text-emerald-500">{{ item.num }}</span>
-        <span class="text-2xl font-bold text-slate-500">{{ item.word }}</span>
-        <span class="text-lg">
-          <span v-for="n in item.count" :key="n">{{ item.emoji }}</span>
+        <span
+          class="absolute left-6 top-6 flex max-w-[calc(100%-3rem)] flex-wrap text-3xl leading-none"
+        >
+          <span v-for="n in currentNumber.count" :key="n">
+            {{ currentNumber.emoji }}
+          </span>
+        </span>
+        <span class="text-[9rem] leading-none font-black text-emerald-500">
+          {{ currentNumber.num }}
+        </span>
+        <span class="text-3xl font-bold text-slate-500">
+          {{ currentNumber.word }}
         </span>
       </button>
-    </div>
+
+      <nav class="mt-8 flex items-center gap-6">
+        <button
+          class="rounded-full bg-white/90 px-8 py-4 text-2xl font-bold text-slate-600 shadow transition active:scale-95 disabled:opacity-40"
+          :disabled="atStart"
+          @click="step(-1)"
+        >
+          ← {{ $t('kid.numbers.prev') }}
+        </button>
+        <span class="text-2xl font-bold text-slate-600">
+          {{ index + 1 }} / {{ total }}
+        </span>
+        <button
+          class="rounded-full bg-emerald-400 px-8 py-4 text-2xl font-bold text-white shadow-lg transition active:scale-95 disabled:opacity-40"
+          :disabled="atEnd"
+          @click="step(1)"
+        >
+          {{ $t('kid.numbers.next') }} →
+        </button>
+      </nav>
+    </template>
 
     <!-- 算一算 -->
     <template v-else-if="mode === 'arith'">
@@ -162,6 +200,7 @@ onMounted(() => {
       </p>
       <div
         class="mb-8 flex max-w-xl flex-wrap items-center justify-center gap-3 rounded-3xl bg-white/95 p-8 shadow-xl"
+        data-star-anchor
       >
         <span v-for="n in countQuiz.answer" :key="n" class="text-7xl">
           {{ quizEmoji }}

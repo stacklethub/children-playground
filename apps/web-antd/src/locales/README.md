@@ -25,7 +25,7 @@ messages[fileName] = json.default; // fileName 即 kid / parent / page
 所以 `zh-CN/kid.json` 的内容应当**直接**是：
 
 ```json
-{ "app": { "name": "宝宝学堂" }, "modules": { "home": "学习岛" } }
+{ "app": { "name": "幼儿学堂" }, "modules": { "home": "学习岛" } }
 ```
 
 用 `$t('kid.app.name')`、`$t('kid.modules.home')` 访问。

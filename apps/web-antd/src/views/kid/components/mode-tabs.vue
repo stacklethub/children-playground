@@ -11,9 +11,6 @@ const props = withDefaults(
 
 const emit = defineEmits<{ change: [mode: 'learn' | 'quiz'] }>();
 
-/**
- * 学一学 / 考一考 模式切换。
- */
 const mode = defineModel<'learn' | 'quiz'>('mode', { default: 'learn' });
 
 const options = computed(() => [

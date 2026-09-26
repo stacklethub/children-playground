@@ -35,7 +35,7 @@ export function isLearnModule(key: TileKey): key is LearnModule {
 
 /**
  * 模块能力由「声明了什么」派生，而不是由单一的 kind 字段决定 ——
- * 这样同一个模块可以既能被家长编辑内容，又能调难度区间（如字母乐园）。
+ * 这样同一个模块可以既能被家长编辑内容，又能调难度区间（如英文乐园）。
  *
  * 有 fields → 家长端内容管理出一个 Tab，可增/改/删
  * 有 range  → 家长端学习计划出开关 + 难度滑杆
@@ -88,9 +88,9 @@ export interface ModuleDef {
    * 单个字段的必填/长度由 FieldDef 承担，这里只放 FieldDef 表达不了的约束
    * （如「正确答案必须属于选项」）。本文件不引 $t，翻译交给调用方。
    */
-  validate?: (draft: Record<string, any>) =>
-    | { key: string; params?: Record<string, unknown> }
-    | undefined;
+  validate?: (
+    draft: Record<string, any>,
+  ) => undefined | { key: string; params?: Record<string, unknown> };
 }
 
 export const MODULES: Record<TileKey, ModuleDef> = {
@@ -120,7 +120,7 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     color: '#3B82F6',
     defaultGoal: 6,
     emoji: '🔤',
-    // 字母乐园同时是内容型与参数型：家长既能改单词/例句，也能限定学到第几个字母
+    // 英文乐园同时是内容型与参数型：家长既能改单词/例句，也能限定学到第几个字母
     fields: [
       { key: 'letter', labelKey: 'letter', required: true, type: 'text' },
       { key: 'lower', labelKey: 'letterLower', required: true, type: 'text' },

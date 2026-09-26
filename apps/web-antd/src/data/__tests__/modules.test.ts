@@ -17,15 +17,69 @@ import {
  * 顺序即首页渲染顺序，同样需要保持一致。
  */
 const TILE_SNAPSHOT = [
-  { bg: 'bg-orange-400', defaultGoal: 10, emoji: '🐘', key: 'cards', path: '/kid/cards' },
-  { bg: 'bg-sky-400', defaultGoal: 6, emoji: '🔤', key: 'letters', path: '/kid/letters' },
-  { bg: 'bg-rose-400', defaultGoal: 6, emoji: '🅰️', key: 'pinyin', path: '/kid/pinyin' },
-  { bg: 'bg-lime-500', defaultGoal: 1, emoji: '📜', key: 'poems', path: '/kid/poems' },
-  { bg: 'bg-cyan-500', defaultGoal: 4, emoji: '🧩', key: 'logic', path: '/kid/logic' },
-  { bg: 'bg-fuchsia-500', defaultGoal: 1, emoji: '🗺️', key: 'adventure', path: '/kid/adventure' },
-  { bg: 'bg-emerald-400', defaultGoal: 6, emoji: '🔢', key: 'numbers', path: '/kid/numbers' },
-  { bg: 'bg-violet-400', defaultGoal: 2, emoji: '🎵', key: 'songs', path: '/kid/songs' },
-  { bg: 'bg-amber-400', defaultGoal: 0, emoji: '⭐', key: 'rewards', path: '/kid/rewards' },
+  {
+    bg: 'bg-orange-400',
+    defaultGoal: 10,
+    emoji: '🐘',
+    key: 'cards',
+    path: '/kid/cards',
+  },
+  {
+    bg: 'bg-sky-400',
+    defaultGoal: 6,
+    emoji: '🔤',
+    key: 'letters',
+    path: '/kid/letters',
+  },
+  {
+    bg: 'bg-rose-400',
+    defaultGoal: 6,
+    emoji: '🅰️',
+    key: 'pinyin',
+    path: '/kid/pinyin',
+  },
+  {
+    bg: 'bg-lime-500',
+    defaultGoal: 1,
+    emoji: '📜',
+    key: 'poems',
+    path: '/kid/poems',
+  },
+  {
+    bg: 'bg-cyan-500',
+    defaultGoal: 4,
+    emoji: '🧩',
+    key: 'logic',
+    path: '/kid/logic',
+  },
+  {
+    bg: 'bg-fuchsia-500',
+    defaultGoal: 1,
+    emoji: '🗺️',
+    key: 'adventure',
+    path: '/kid/adventure',
+  },
+  {
+    bg: 'bg-emerald-400',
+    defaultGoal: 6,
+    emoji: '🔢',
+    key: 'numbers',
+    path: '/kid/numbers',
+  },
+  {
+    bg: 'bg-violet-400',
+    defaultGoal: 2,
+    emoji: '🎵',
+    key: 'songs',
+    path: '/kid/songs',
+  },
+  {
+    bg: 'bg-amber-400',
+    defaultGoal: 0,
+    emoji: '⭐',
+    key: 'rewards',
+    path: '/kid/rewards',
+  },
 ] as const;
 
 /**
@@ -73,14 +127,14 @@ describe('模块注册表', () => {
     for (const key of TILE_KEYS) {
       const def = MODULES[key];
       if (!hasContentFields(def)) continue;
-      for (const field of def.fields!) {
+      for (const field of def.fields ?? []) {
         expect(field.key).toBeTruthy();
         expect(field.labelKey).toBeTruthy();
         expect(field.type).toBeTruthy();
         // select 必须能取到选项，否则表单渲染空下拉
-        if (field.type === 'select') {
-          expect(field.options?.().length ?? 0).toBeGreaterThan(0);
-        }
+        expect(
+          field.type !== 'select' || (field.options?.().length ?? 0) > 0,
+        ).toBe(true);
       }
     }
   });
@@ -88,14 +142,14 @@ describe('模块注册表', () => {
   it('声明了难度区间的模块，默认值落在区间内', () => {
     for (const key of TILE_KEYS) {
       const def = MODULES[key];
-      if (!hasRange(def)) continue;
-      const range = def.range!;
+      const range = def.range;
+      if (!range) continue;
       expect(range.default).toBeGreaterThanOrEqual(range.min);
       expect(range.default).toBeLessThanOrEqual(range.max);
     }
   });
 
-  it('字母乐园同时具备内容可编辑与难度区间', () => {
+  it('英文乐园同时具备内容可编辑与难度区间', () => {
     expect(hasContentFields(MODULES.letters)).toBe(true);
     expect(hasRange(MODULES.letters)).toBe(true);
   });

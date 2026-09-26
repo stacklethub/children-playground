@@ -1,8 +1,11 @@
+import type { LearnModule } from '#/store';
+
 import { ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { type LearnModule, useKidStore } from '#/store';
+import { useKidStore } from '#/store';
+import { pinyinOf } from '#/utils/pinyin';
 import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import { useCurrentChild } from './use-current-child';
@@ -80,7 +83,7 @@ export function useQuiz<T extends number | string>(options: {
   return { next, pick, quiz, quizCount };
 }
 
-/** 字母乐园「考一考」的题目：认字母 或 认单词释义 */
+/** 英文乐园「考一考」的题目：认字母 或 认单词释义 */
 export interface LetterQuizState extends QuizState<string> {
   /** 错题本条目标识始终用字母，方便按字母复习 */
   itemId: string;
@@ -89,7 +92,7 @@ export interface LetterQuizState extends QuizState<string> {
 }
 
 /**
- * 字母乐园：学一学 / 认单词 / 考一考 三模式共用。
+ * 英文乐园：认字目 / 学单词 / 考一考 三模式共用。
  * 考一考混出两类题 —— 看字母选字母、看单词选释义。
  */
 export function useLetterPractice() {
@@ -98,25 +101,26 @@ export function useLetterPractice() {
   function letterOptions(answer: string, count = 4) {
     const others = letters.value
       .filter((l) => l.letter !== answer)
-      .sort(() => Math.random() - 0.5)
+      .toSorted(() => Math.random() - 0.5)
       .slice(0, count - 1)
       .map((l) => l.letter);
-    return [answer, ...others].sort(() => Math.random() - 0.5);
+    return [answer, ...others].toSorted(() => Math.random() - 0.5);
   }
 
   function meaningOptions(answer: string, count = 3) {
     const others = letters.value
       .filter((l) => l.zh !== answer)
-      .sort(() => Math.random() - 0.5)
+      .toSorted(() => Math.random() - 0.5)
       .slice(0, count - 1)
       .map((l) => l.zh);
-    return [answer, ...others].sort(() => Math.random() - 0.5);
+    return [answer, ...others].toSorted(() => Math.random() - 0.5);
   }
 
   function createQuiz(): LetterQuizState {
     const pool = letters.value;
     // 难度范围理论上不会裁空，但池子为空时给出题也要有兜底
-    if (pool.length === 0) {
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    if (!item) {
       return {
         answer: '',
         itemId: '',
@@ -125,7 +129,6 @@ export function useLetterPractice() {
         word: '',
       };
     }
-    const item = pool[Math.floor(Math.random() * pool.length)]!;
     const asWord = Boolean(item.zh) && Math.random() < 0.5;
     return asWord
       ? {
@@ -165,6 +168,85 @@ export function useLetterPractice() {
   return { createQuiz, sayLetter, sayWord };
 }
 
+/** 中文乐园「考一考」的题目：看拼音选汉字 或 看汉字选拼音 */
+export interface PinyinQuizState extends QuizState<string> {
+  /** 错题本条目标识始终用条目 id，方便按拼音条目复习 */
+  itemId: string;
+  emoji: string;
+  mode: 'pickHanzi' | 'pickPinyin';
+  /** 题干上显示的字形 */
+  prompt: string;
+}
+
+/**
+ * 中文乐园：学拼音 / 认汉字 / 考一考 三模式共用。
+ * 考一考混出两类题 —— 看拼音选汉字、看汉字选拼音。
+ */
+export function usePinyinPractice() {
+  const { pinyinList } = useContent();
+
+  function hanziOptions(answer: string, count = 3) {
+    const others = pinyinList.value
+      .filter((p) => p.hanzi !== answer)
+      .toSorted(() => Math.random() - 0.5)
+      .slice(0, count - 1)
+      .map((p) => p.hanzi);
+    return [answer, ...others].toSorted(() => Math.random() - 0.5);
+  }
+
+  /** 选项是汉字读出来的完整拼音（「苹果」→ píng guǒ），不是声韵母 */
+  function pinyinOptions(answer: string, count = 4) {
+    const others = pinyinList.value
+      .filter((p) => pinyinOf(p.hanzi) !== answer)
+      .toSorted(() => Math.random() - 0.5)
+      .slice(0, count - 1)
+      .map((p) => pinyinOf(p.hanzi));
+    return [answer, ...others].toSorted(() => Math.random() - 0.5);
+  }
+
+  function createQuiz(): PinyinQuizState {
+    const pool = pinyinList.value;
+    // 难度范围理论上不会裁空，但池子为空时给出题也要有兜底
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    if (!item) {
+      return {
+        answer: '',
+        emoji: '',
+        itemId: '',
+        mode: 'pickHanzi',
+        options: [],
+        prompt: '',
+      };
+    }
+    const full = pinyinOf(item.hanzi);
+    return Math.random() < 0.5
+      ? {
+          answer: item.hanzi,
+          emoji: item.emoji,
+          itemId: item.id,
+          mode: 'pickHanzi',
+          options: hanziOptions(item.hanzi),
+          prompt: full,
+        }
+      : {
+          answer: full,
+          emoji: item.emoji,
+          itemId: item.id,
+          mode: 'pickPinyin',
+          options: pinyinOptions(full),
+          prompt: item.hanzi,
+        };
+  }
+
+  /** 朗读例字：拼音字形是拉丁字母，交给中文语音会读成怪音 */
+  function sayPinyin(item: undefined | { hanzi: string }) {
+    if (!item) return;
+    speak(item.hanzi, { lang: CONTENT_TTS_LANG });
+  }
+
+  return { createQuiz, sayPinyin };
+}
+
 /**
  * 数字王国「算一算」：10 以内加减。
  * 算式上限受家长端「难度区间」约束（moduleRange），与「认一认」共用同一设定。
@@ -186,7 +268,7 @@ export function useArithmeticPractice() {
       const candidate = answer + (Math.floor(Math.random() * 5) - 2);
       if (candidate >= 0 && candidate <= max) set.add(candidate);
     }
-    return [...set].sort(() => Math.random() - 0.5);
+    return [...set].toSorted(() => Math.random() - 0.5);
   }
 
   function createQuiz(): QuizState<number> & {
@@ -228,12 +310,14 @@ export function useNumberPractice() {
     while (set.size < count) {
       set.add(1 + Math.floor(Math.random() * 10));
     }
-    return [...set].sort(() => Math.random() - 0.5);
+    return [...set].toSorted(() => Math.random() - 0.5);
   }
 
   function createQuiz(): QuizState<number> & { emoji: string } {
     const pool = numbers.value;
-    const item = pool[Math.floor(Math.random() * pool.length)]!;
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    // 难度范围可能把池子裁空；空池时没有可出的题，直接抛错而不是出一张空题
+    if (!item) throw new TypeError('数字王国内容池为空，无法出题');
     return {
       answer: item.count,
       emoji: item.emoji,

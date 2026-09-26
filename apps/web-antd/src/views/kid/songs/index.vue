@@ -43,6 +43,7 @@ function openSong(id: string, title: string) {
         v-for="item in songs"
         :key="item.id"
         class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
+        data-star-anchor
         @click="openSong(item.id, item.title)"
       >
         <span
@@ -58,6 +59,7 @@ function openSong(id: string, title: string) {
     <template v-else>
       <div
         class="flex w-full max-w-2xl flex-col gap-3 rounded-[2.5rem] bg-white/95 p-10 shadow-2xl"
+        data-star-anchor
       >
         <p
           v-for="(line, i) in song.lines"

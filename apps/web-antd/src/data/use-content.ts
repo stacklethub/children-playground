@@ -11,8 +11,6 @@ import type {
 } from './content';
 import type { TileKey } from './modules';
 
-import { splitLines } from './modules';
-
 import { computed } from 'vue';
 
 import { useKidStore } from '#/store';
@@ -28,6 +26,7 @@ import {
   kidPoems,
   kidSongs,
 } from './content';
+import { splitLines } from './modules';
 import { useCollection } from './use-collection';
 
 export type {
@@ -56,7 +55,7 @@ export interface CardDraft {
  * 各模块的内置内容。
  * 新增内容型模块时在这里补一行，家长端内容管理即可管理它。
  */
-/** 字母乐园的条目类型：useCollection 要 id，字母本身天然唯一，直接借用 */
+/** 英文乐园的条目类型：useCollection 要 id，字母本身天然唯一，直接借用 */
 export type LetterItem = KidLetter & { id: string };
 
 const LETTER_ITEMS: LetterItem[] = kidLetters.map((item) => ({
@@ -72,7 +71,6 @@ const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   pinyin: kidPinyin,
   poems: kidPoems,
 };
-
 
 /** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
 export function builtinOf(key: TileKey): { id: string }[] {
@@ -147,7 +145,7 @@ export function useContent() {
   });
 
   /**
-   * 字母乐园既是内容型又是参数型：
+   * 英文乐园既是内容型又是参数型：
    * 家长改过的单词/例句走覆盖项合并，数量再受「难度范围」限制（前 N 个）。
    * 三个子模式共用这一份数据，保证难度设定一致。
    */

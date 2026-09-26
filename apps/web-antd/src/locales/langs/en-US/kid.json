@@ -5,8 +5,8 @@
   "modules": {
     "home": "Learning Island",
     "cards": "Picture Cards",
-    "letters": "Letter Land",
-    "pinyin": "Pinyin Garden",
+    "letters": "English Land",
+    "pinyin": "Chinese Garden",
     "poems": "Poem Garden",
     "logic": "Logic Puzzles",
     "adventure": "Adventure Quest",
@@ -14,27 +14,23 @@
     "songs": "Nursery Songs",
     "rewards": "My Stars"
   },
-  "tiles": {
-    "cardsDesc": "Know things around you",
-    "lettersDesc": "Make friends with letters",
-    "pinyinDesc": "Meet pinyin and hear how it sounds",
-    "poemsDesc": "Listen to classic poems",
-    "logicDesc": "Think and puzzle it out",
-    "adventureDesc": "Clear levels, win stars",
-    "numbersDesc": "Count and do sums",
-    "songsDesc": "Sing along",
-    "rewardsDesc": "See my rewards"
-  },
   "pinyin": {
-    "learn": "Learn",
+    "learn": "Pinyin",
+    "hanzi": "Characters",
+    "quiz": "Quiz",
     "wrongs": "Wrong book {n}",
     "replay": "Hear it again",
     "gotIt": "Got it",
-    "remaining": "{n} left"
+    "prev": "Prev",
+    "next": "Next",
+    "quizPickHanzi": "Which character is this pinyin?",
+    "quizPickPinyin": "How do you read \"{hanzi}\"?",
+    "questionNo": "Question {n}"
   },
   "poems": {
-    "back": "Back to poems",
-    "readAll": "Read the whole poem"
+    "readAll": "Read the whole poem",
+    "prev": "Prev",
+    "next": "Next"
   },
   "logic": {
     "pattern": "Patterns",
@@ -68,14 +64,18 @@
     "quiz": "Quiz",
     "quizPrompt": "Where is letter {letter}?",
     "wordQuizPrompt": "What does \"{word}\" mean?",
-    "questionNo": "Question {n}"
+    "questionNo": "Question {n}",
+    "prev": "Prev",
+    "next": "Next"
   },
   "numbers": {
     "learn": "Recognize",
     "arithmetic": "Sums",
     "quiz": "Play",
     "quizPrompt": "How many are there?",
-    "questionNo": "Question {n}"
+    "questionNo": "Question {n}",
+    "prev": "Prev",
+    "next": "Next"
   },
   "songs": {
     "play": "Sing along",

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-
 import type { KidLevel } from '#/data/content';
+import type { LearnModule } from '#/store';
+
+import { computed, onMounted, ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { type LearnModule, MODULE_KEYS, useKidStore } from '#/store';
+import { MODULE_KEYS, useKidStore } from '#/store';
 import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
@@ -59,8 +60,15 @@ function buildQuestion(level: KidLevel) {
 
   if (source === 'numbers') {
     const created = createArith();
-    meta.value = { id: `adv-${created.expr}`, module: 'numbers', prompt: created.expr };
-    return { answer: `${created.answer}`, options: created.options.map(String) };
+    meta.value = {
+      id: `adv-${created.expr}`,
+      module: 'numbers',
+      prompt: created.expr,
+    };
+    return {
+      answer: `${created.answer}`,
+      options: created.options.map(String),
+    };
   }
 
   const pool = logicItems.value;
@@ -76,7 +84,12 @@ const { next, pick, quiz } = useQuiz<string>({
     if (done.value || failed.value) return;
     speak(meta.value.prompt, { lang: CONTENT_TTS_LANG });
   },
-  create: () => buildQuestion(active.value!),
+  create: () => {
+    const level = active.value;
+    // next() 只在 enter() 里调用，此处 active 必已赋值；判空仅为类型收窄
+    if (!level) return { answer: '', options: [] as string[] };
+    return buildQuestion(level);
+  },
   itemIdOf: () => meta.value.id,
   module: () => meta.value.module,
   onCorrect: () => {
@@ -134,6 +147,7 @@ onMounted(() => {
         v-for="(level, index) in levels"
         :key="level.id"
         class="flex min-h-32 items-center gap-4 rounded-3xl p-5 text-left shadow-md transition"
+        data-star-anchor
         :class="
           unlockedAt(index)
             ? 'bg-white/95 hover:-translate-y-1 active:scale-95'
@@ -146,7 +160,9 @@ onMounted(() => {
           {{ unlockedAt(index) ? level.emoji : '🔒' }}
         </span>
         <span class="flex flex-col">
-          <span class="text-2xl font-black text-slate-700">{{ level.title }}</span>
+          <span class="text-2xl font-black text-slate-700">{{
+            level.title
+          }}</span>
           <span class="text-base text-slate-400">
             {{ $t('kid.adventure.levelMeta', { n: level.questionCount }) }}
           </span>
@@ -190,13 +206,24 @@ onMounted(() => {
     </div>
 
     <!-- 答题 -->
-    <div v-else class="flex w-full max-w-4xl flex-col items-center">
+    <div
+      v-else
+      class="flex w-full max-w-4xl flex-col items-center"
+      data-star-anchor
+    >
       <div class="mb-6 flex items-center gap-6">
         <span class="text-3xl">
-          <span v-for="n in HEARTS" :key="n">{{ n <= hearts ? '❤️' : '🤍' }}</span>
+          <span v-for="n in HEARTS" :key="n">{{
+            n <= hearts ? '❤️' : '🤍'
+          }}</span>
         </span>
         <span class="text-xl font-bold text-slate-500">
-          {{ $t('kid.adventure.progress', { done: solved, total: active.questionCount }) }}
+          {{
+            $t('kid.adventure.progress', {
+              done: solved,
+              total: active.questionCount,
+            })
+          }}
         </span>
         <button
           class="min-h-20 rounded-full bg-white/90 px-6 text-xl font-bold text-slate-600 shadow transition active:scale-90"

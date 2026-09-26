@@ -12,10 +12,6 @@ const props = withDefaults(
 
 const emit = defineEmits<{ change: [key: string] }>();
 
-/**
- * 通用页签：项数与语义由调用方决定。
- * 与 ModeTabs 的区别是它不把选项写死成「学一学 / 考一考」两项。
- */
 const model = defineModel<string>('model');
 
 const active = computed(() => model.value ?? props.items[0]?.key ?? '');

@@ -51,6 +51,7 @@ function backToCategories() {
         v-for="cat in categories"
         :key="cat.id"
         class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
+        data-star-anchor
         @click="openCategory(cat.id, cat.name)"
       >
         <span
@@ -71,14 +72,17 @@ function backToCategories() {
       <ProgressDots :current="index" :total="cards.length" />
 
       <button
-        class="flex min-h-[45vh] w-full max-w-xl flex-col items-center justify-center gap-4 rounded-[3rem] bg-white/95 p-10 shadow-2xl transition active:scale-95"
+        class="relative flex min-h-[45vh] w-full max-w-xl flex-col items-center justify-center gap-4 rounded-[3rem] bg-white/95 p-10 shadow-2xl transition active:scale-95"
+        data-star-anchor
         @click="tapCard"
       >
-        <span class="text-[9rem] leading-none">{{ current.emoji }}</span>
-        <span class="text-5xl font-black text-slate-700">{{
+        <span class="absolute left-8 top-8 text-6xl leading-none">
+          {{ current.emoji }}
+        </span>
+        <span class="text-8xl font-black text-slate-700">{{
           current.name
         }}</span>
-        <span class="text-2xl text-amber-500">{{ current.pinyin }}</span>
+        <span class="text-3xl text-amber-500">{{ current.pinyin }}</span>
         <span class="text-xl text-slate-400">
           {{ $t('kid.cards.tapHint') }} 👆
         </span>

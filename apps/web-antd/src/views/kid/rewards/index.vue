@@ -71,6 +71,7 @@ onMounted(() => {
         v-for="task in tasks"
         :key="task.module"
         class="flex flex-col items-center gap-1 rounded-3xl bg-white/95 p-5 shadow-md"
+        data-star-anchor
         :class="task.done ? 'ring-4 ring-emerald-300' : ''"
       >
         <span class="text-4xl">{{ task.emoji }}</span>
