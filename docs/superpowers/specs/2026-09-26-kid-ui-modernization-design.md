@@ -159,10 +159,10 @@
 
 - **霞鹜文楷 LXGW WenKai**：UI 文案 + 汉字/古诗/拼音内容
 - **Baloo 2**（或 Nunito）：英文字母、数字
-- 子集化：使用 `fonttools` / `subset-font` 生成 WOFF2，覆盖 GB2312 常用字 + 内容数据中出现的全部汉字 + 标点
-- 落地方式：`apps/web-antd/src/assets/fonts/`，通过 `@font-face` + `font-display: swap` 引入
-- 回退栈：`'LXGW WenKai', 'PingFang SC', 'Microsoft YaHei', sans-serif`
-- **约束**：子集范围必须由 `scripts/build-kid-font-subset.mjs` 从内容数据自动推导，不得手工维护字符表——新增内容时漏字会导致豆腐块
+- 落地方式：直接依赖官方 npm 包 `lxgw-wenkai-screen-webfont` 与 `@fontsource/baloo-2`
+- **不做自建子集化脚本**：这两个包已自带 `unicode-range` 分片，浏览器只下载当前页面实际用到的字块。这比自建「从内容数据推导字符集」的子集化脚本更稳 —— 家长会新增内容，固定子集必然漏字出豆腐块
+- 回退栈：`'LXGW WenKai Screen', 'PingFang SC', 'Microsoft YaHei', sans-serif`
+- 引入位置：`apps/web-antd/src/bootstrap.ts`，且必须在 `import '@vben/styles'` **之前**，否则字体族会被样式包的 reset 覆盖
 
 ---
 
@@ -236,8 +236,8 @@
 | --- | --- |
 | **竖屏 / 窄容器** | 岛上场景横向过挤。当容器宽度 < 768px 时，`KidIsland` 降级为 3×3 卡片网格（复用 `KidSpot`，只是不再绝对定位）。这是硬性要求——平板横竖屏都会用到 |
 | 未绑定学习者 | 保留现有 `BindGuard` 引导页，套用新视觉 |
-| 字体加载失败 | `font-display: swap` + 系统字体回退栈 |
-| 字体子集缺字 | 构建脚本从内容数据推导子集；CI 增加校验，发现内容中的字不在子集内即失败 |
+| 字体加载失败 | 系统字体回退栈（`PingFang SC` → `Microsoft YaHei` → `sans-serif`） |
+| 内容新增了生僻字 | 字体包按 `unicode-range` 分片，浏览器自动按需拉取含该字的分片，不会出现豆腐块 |
 | 系统开启「减少动态效果」 | 关闭全部循环动画 |
 | 低端设备帧率 | 环境动画节点数上限 30；超出时合并 transform 层级 |
 
@@ -280,7 +280,7 @@
 | 风险 | 缓解 |
 | --- | --- |
 | 自绘 SVG 图标工作量大且质量不稳定 | 先交付 9 个模块图标 + 少量装饰，装饰元素可分批补 |
-| 字体子集体积 | 先测：若 WOFF2 > 2MB，改为按路由懒加载字体子集 |
+| 字体首屏请求数偏多 | 分片按需加载，首屏通常只命中少量分片；若 Network 面板显示请求数过多，改为在 `bootstrap.ts` 中只引 `style.css` 的常用分片子集 |
 | 满屏动效在低端平板掉帧 | 环境动画节点上限 + `prefers-reduced-motion` + 上线前真机帧率实测 |
 | 去侧边栏后模块页迷路 | 每个模块页强制有「回学习岛」入口；竖屏降级为网格 |
 | 视觉回归测试未就绪 | 作为前置任务单独立项，不阻塞页面开发 |
