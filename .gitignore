@@ -61,3 +61,6 @@ skills-lock.json
 .atomcode
 datalog
 .playwright-mcp
+
+# Superpowers brainstorming 会话产物（本地临时）
+.superpowers/

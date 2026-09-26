@@ -1,0 +1,484 @@
+<h2>「学习岛」动效版</h2>
+<p class="subtitle">这一屏是活的。云在飘、鸟在飞、草在摇、每个地点轻轻呼吸、火焰在跳、音符在升、宝箱星星在闪、小熊会眨眼呼吸。鼠标移上去有反馈。</p>
+
+<style>
+  /* ============ 基础 ============ */
+  .scene { position: relative; border-radius: 22px; overflow: hidden; box-shadow: 0 22px 54px rgba(0,0,0,.45); border: 3px solid #4A3F35; }
+  .scene > svg { display: block; width: 100%; height: auto; }
+
+  .hud { position: absolute; inset: 0; pointer-events: none; }
+  .hud-top { position: absolute; top: 3.2%; left: 2.8%; right: 2.8%; display: flex; align-items: center; gap: 12px; }
+  .hud-av { width: 6%; aspect-ratio: 1; border-radius: 50%; background: #FFF9F0; border: 3px solid #4A3F35; display: grid; place-items: center; box-shadow: 3px 3px 0 #4A3F35; }
+  .hud-av svg { width: 78%; height: 78%; }
+  .hud-hello { font-weight: 900; color: #4A3F35; font-size: clamp(13px, 1.8vw, 23px); line-height: 1.15; text-shadow: 0 2px 0 rgba(255,255,255,.8); }
+  .hud-hello small { display: block; font-size: .58em; font-weight: 700; opacity: .6; }
+  .hud-star { margin-left: auto; display: flex; align-items: center; gap: 7px; padding: .5em 1em; border-radius: 999px; background: #FFD98E; border: 3px solid #4A3F35; box-shadow: 3px 3px 0 #4A3F35; font-weight: 900; color: #7A4A0E; font-size: clamp(13px, 1.7vw, 22px); }
+  .hud-star svg { width: 1.1em; height: 1.1em; }
+
+  /* ============ 交互反馈层 ============ */
+  .spot { cursor: pointer; }
+  .spot .lift { transition: transform .22s cubic-bezier(.34,1.56,.64,1); }
+  .spot:hover .lift { transform: translateY(-9px) scale(1.07); }
+  .spot .lbl { opacity: 0; transform: translateY(6px) scale(.86); transition: opacity .16s, transform .22s cubic-bezier(.34,1.56,.64,1); }
+  .spot:hover .lbl { opacity: 1; transform: translateY(0) scale(1); }
+  .spot:active .lift { transform: translateY(-3px) scale(.97); }
+
+  /* ============ 环境呼吸层 ============ */
+  .cloud { animation: drift 78s ease-in-out infinite alternate; }
+  .cloud.c2 { animation-duration: 96s; animation-delay: -22s; }
+  .cloud.c3 { animation-duration: 64s; animation-delay: -40s; }
+  @keyframes drift { from { transform: translateX(-30px) } to { transform: translateX(34px) } }
+
+  .rays { transform-box: fill-box; transform-origin: center; animation: spin 60s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  .sun-halo { transform-box: fill-box; transform-origin: center; animation: halo 5.5s ease-in-out infinite; }
+  @keyframes halo { 0%,100% { transform: scale(1); opacity: .85 } 50% { transform: scale(1.11); opacity: 1 } }
+
+  .bird { animation: fly 34s linear infinite; }
+  .bird.b2 { animation-duration: 44s; animation-delay: -16s; }
+  @keyframes fly { from { transform: translate(-140px,10px) } to { transform: translate(1140px,-56px) } }
+  .wing { transform-box: fill-box; transform-origin: center; animation: flap .62s ease-in-out infinite alternate; }
+  @keyframes flap { from { transform: scaleY(1) } to { transform: scaleY(.35) } }
+
+  .sea-shimmer { animation: shimmer 11s ease-in-out infinite alternate; }
+  @keyframes shimmer { from { transform: translateX(-16px); opacity: .28 } to { transform: translateX(16px); opacity: .55 } }
+
+  .wave { animation: wavemove 9s ease-in-out infinite alternate; }
+  .wave.w2 { animation-duration: 12s; animation-delay: -3s; }
+  .wave.w3 { animation-duration: 7.5s; animation-delay: -6s; }
+  @keyframes wavemove { from { transform: translateX(-14px) } to { transform: translateX(18px) } }
+
+  .sparkle { transform-box: fill-box; transform-origin: center; animation: sparkle 3.2s ease-in-out infinite; }
+  @keyframes sparkle { 0%,100% { transform: scale(.5); opacity: .15 } 50% { transform: scale(1.05); opacity: .9 } }
+
+  .island-sway { transform-box: fill-box; transform-origin: center; animation: breathe 13s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.006) } }
+
+  .grass, .flower { transform-box: fill-box; transform-origin: bottom center; animation: sway 4.2s ease-in-out infinite alternate; }
+  .grass.g2 { animation-duration: 5.4s; animation-delay: -1.2s; }
+  .grass.g3 { animation-duration: 3.6s; animation-delay: -2.4s; }
+  .flower { animation-duration: 3.8s; animation-delay: -0.9s; }
+  .flower.f2 { animation-duration: 4.6s; animation-delay: -2.1s; }
+  @keyframes sway { from { transform: rotate(-4deg) } to { transform: rotate(4deg) } }
+  .flower { --sw: 7deg; }
+  @keyframes swayF { from { transform: rotate(-7deg) } to { transform: rotate(7deg) } }
+  .flower { animation-name: swayF; }
+
+  .bush { transform-box: fill-box; transform-origin: bottom center; animation: bushbreathe 5.2s ease-in-out infinite; }
+  .bush.b2 { animation-duration: 6.4s; animation-delay: -2.6s; }
+  @keyframes bushbreathe { 0%,100% { transform: scale(1) } 50% { transform: scale(1.045) } }
+
+  .path-dash { animation: dash 7s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -128 } }
+
+  /* 每个地点轻轻呼吸，各自错开 */
+  .bob { animation: bob 3.8s ease-in-out infinite; animation-delay: var(--d, 0s); }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+
+  /* 入场：从地面弹出 */
+  .pop { transform-box: fill-box; transform-origin: center bottom; animation: pop .62s cubic-bezier(.34,1.56,.64,1) backwards; animation-delay: var(--d, 0s); }
+  @keyframes pop { from { transform: scale(.3) translateY(12px); opacity: 0 } to { transform: scale(1) translateY(0); opacity: 1 } }
+
+  /* 局部小动作 */
+  .flame { transform-box: fill-box; transform-origin: top center; animation: flame .34s ease-in-out infinite alternate; }
+  @keyframes flame { from { transform: scaleY(.78) scaleX(.9) } to { transform: scaleY(1.18) scaleX(1.08) } }
+
+  .note { animation: rise 3.6s ease-out infinite; animation-delay: var(--d, 0s); opacity: 0; }
+  @keyframes rise { 0% { transform: translateY(0) scale(.5); opacity: 0 } 18% { opacity: .95 } 100% { transform: translateY(-78px) scale(1.15); opacity: 0 } }
+
+  .twinkle { transform-box: fill-box; transform-origin: center; animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+  @keyframes twinkle { 0%,100% { transform: scale(1); opacity: .85 } 50% { transform: scale(1.2); opacity: 1 } }
+
+  .bear-body { transform-box: fill-box; transform-origin: center bottom; animation: breathing 3.4s ease-in-out infinite; }
+  @keyframes breathing { 0%,100% { transform: scaleY(1) scaleX(1) } 50% { transform: scaleY(1.022) scaleX(1.014) } }
+  .eye { transform-box: fill-box; transform-origin: center; animation: blink 5.2s infinite; }
+  @keyframes blink { 0%,90%,100% { transform: scaleY(1) } 94% { transform: scaleY(.1) } }
+  .ear-l { transform-box: fill-box; transform-origin: center bottom; animation: earL 4.4s ease-in-out infinite; }
+  .ear-r { transform-box: fill-box; transform-origin: center bottom; animation: earR 4.4s ease-in-out infinite; }
+  @keyframes earL { 0%,88%,100% { transform: rotate(0) } 93% { transform: rotate(-9deg) } }
+  @keyframes earR { 0%,88%,100% { transform: rotate(0) } 93% { transform: rotate(9deg) } }
+  .bear-arm { transform-box: fill-box; transform-origin: center top; animation: wave 2.6s ease-in-out infinite; }
+  @keyframes wave { 0%,100% { transform: rotate(0) } 50% { transform: rotate(-14deg) } }
+
+  /* ============ 内容页 ============ */
+  .stack { display: grid; grid-template-columns: 1fr; gap: 26px; }
+  @media (min-width: 1150px) { .stack.two { grid-template-columns: 1.18fr .82fr; align-items: start; } }
+  .cap { display:flex; align-items:baseline; gap:10px; margin: 0 0 10px; }
+  .cap h3 { margin: 0; font-size: 16px; }
+  .cap span { font-size: 13px; opacity: .6; }
+
+  .page { background: linear-gradient(178deg,#FFF7EC 0%,#FFEDDC 46%,#E3F0FA 100%); border: 3px solid #4A3F35; border-radius: 22px; padding: 22px; box-shadow: 0 22px 54px rgba(0,0,0,.45); position: relative; overflow: hidden; }
+  .tabs { display:flex; justify-content:center; gap: 6px; background:#FFF9F0; border:3px solid #4A3F35; border-radius:999px; padding:6px; width:max-content; margin: 0 auto 20px; box-shadow: 3px 3px 0 #4A3F35; position: relative; }
+  .tab { padding: 7px 20px; border-radius:999px; font-weight:900; font-size:15px; color:#9A8877; cursor:pointer; transition: color .18s; }
+  .tab.on { background:#5B8DB8; color:#fff; }
+  .board { position:relative; background:#FFFDF7; border:3px solid #4A3F35; border-radius:26px; box-shadow: 6px 6px 0 #4A3F35; padding: 30px 20px 22px; min-height: 288px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 4px; }
+  .board .badge { position:absolute; top:-19px; left:-15px; width:64px; height:64px; border-radius:50%; background:#FFE0B5; border:3px solid #4A3F35; box-shadow:3px 3px 0 #4A3F35; display:grid; place-items:center; animation: badgePop 2.9s ease-in-out infinite; }
+  @keyframes badgePop { 0%,100% { transform: scale(1) } 50% { transform: scale(1.09) } }
+  .board .badge svg { width: 72%; height: 72%; }
+  .bigA { font-size: 124px; font-weight: 900; color:#5B8DB8; line-height: 1; letter-spacing:-.04em; animation: letterBob 3.2s ease-in-out infinite; }
+  @keyframes letterBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
+  .hint { font-size: 15px; font-weight: 800; color:#9A8877; animation: hintPulse 2.4s ease-in-out infinite; }
+  @keyframes hintPulse { 0%,100% { opacity: .55 } 50% { opacity: 1 } }
+  .navrow { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:20px; }
+  .rbtn { display:flex; align-items:center; gap:8px; padding: 13px 26px; border-radius:999px; border:3px solid #4A3F35; font-weight:900; font-size:17px; box-shadow: 4px 4px 0 #4A3F35; cursor:pointer; transition: transform .12s, box-shadow .12s; }
+  .rbtn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #4A3F35; }
+  .rbtn:active { transform: translate(4px,4px); box-shadow: 0 0 0 #4A3F35; }
+  .rbtn.ghost { background:#FFFDF7; color:#4A3F35; }
+  .rbtn.primary { background:#F0A868; color:#fff; animation: ctaPulse 2.2s ease-in-out infinite; }
+  @keyframes ctaPulse { 0%,100% { box-shadow: 4px 4px 0 #4A3F35 } 50% { box-shadow: 4px 4px 0 #4A3F35, 0 0 0 9px rgba(240,168,104,.22) } }
+  .count { font-weight:900; color:#9A8877; font-size:17px; }
+
+  /* 星星飞入 */
+  .flystar { position:absolute; font-size:0; pointer-events:none; }
+  .flystar svg { width: 30px; height: 30px; }
+
+  .crowd { display:flex; gap:10px; align-items:center; justify-content:center; margin-top:14px; }
+  .replay { padding: 9px 18px; border-radius:999px; border:2px solid rgba(255,255,255,.3); background:transparent; color:inherit; font-weight:800; font-size:14px; cursor:pointer; }
+  .replay:hover { background: rgba(255,255,255,.1); }
+
+  .motion-list { columns: 2; column-gap: 30px; margin-top: 10px; font-size: 14px; opacity: .85; line-height: 1.85; }
+  @media (max-width: 700px) { .motion-list { columns: 1 } }
+
+  /* 无障碍：尊重系统「减少动态效果」 */
+  @media (prefers-reduced-motion: reduce) {
+    .scene *, .page * { animation: none !important; transition: none !important; }
+    .spot .lbl { opacity: 1; }
+  }
+</style>
+
+<div class="stack two">
+
+  <div>
+    <div class="cap"><h3>① 首页 · 学习岛（动效版）</h3><span>活的</span></div>
+    <div class="scene" data-choice="island" onclick="toggleSelect(this.closest('div'))">
+      <svg viewBox="0 0 1000 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="学习岛场景">
+        <defs>
+          <linearGradient id="skyA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#FFFBF2"/><stop offset="26%" stop-color="#FFEEDA"/>
+            <stop offset="52%" stop-color="#FFE2CE"/><stop offset="72%" stop-color="#E4F0F8"/>
+            <stop offset="100%" stop-color="#C9E5F4"/>
+          </linearGradient>
+          <linearGradient id="seaA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#B6E5F3"/><stop offset="34%" stop-color="#94D3E9"/><stop offset="100%" stop-color="#6BBBD8"/>
+          </linearGradient>
+          <linearGradient id="grassA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#C3E4BD"/><stop offset="50%" stop-color="#A6D5A0"/><stop offset="100%" stop-color="#8AC585"/>
+          </linearGradient>
+          <radialGradient id="haloA"><stop offset="0%" stop-color="#FFE3A8" stop-opacity=".95"/><stop offset="100%" stop-color="#FFE3A8" stop-opacity="0"/></radialGradient>
+          <filter id="blurA" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="13"/></filter>
+          <filter id="blurB" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+        </defs>
+
+        <rect width="1000" height="660" fill="url(#skyA)"/>
+
+        <!-- 太阳 -->
+        <g class="sun-halo"><circle cx="858" cy="96" r="120" fill="url(#haloA)"/></g>
+        <g class="rays" opacity=".38" stroke="#FFD98E" stroke-width="7" stroke-linecap="round">
+          <path d="M858 96 L858 -22 M858 96 L858 214 M858 96 L740 96 M858 96 L976 96 M858 96 L775 13 M858 96 L941 179 M858 96 L775 179 M858 96 L941 13"/>
+        </g>
+        <circle cx="858" cy="96" r="43" fill="#FFCC73" stroke="#E8A93F" stroke-width="3"/>
+
+        <!-- 云 -->
+        <g fill="#FFFDF8" opacity=".95">
+          <g class="cloud"><ellipse cx="170" cy="90" rx="52" ry="28"/><ellipse cx="216" cy="80" rx="40" ry="32"/><ellipse cx="124" cy="98" rx="32" ry="20"/></g>
+          <g class="cloud c2"><ellipse cx="520" cy="58" rx="44" ry="23"/><ellipse cx="560" cy="50" rx="32" ry="26"/><ellipse cx="484" cy="64" rx="26" ry="16"/></g>
+          <g class="cloud c3" opacity=".8"><ellipse cx="700" cy="186" rx="35" ry="19"/><ellipse cx="730" cy="180" rx="24" ry="20"/></g>
+        </g>
+
+        <!-- 飞鸟 -->
+        <g stroke="#8FA9B8" stroke-width="3.4" fill="none" stroke-linecap="round" opacity=".65">
+          <g class="bird"><g class="wing"><path d="M0 0 q11 -12 22 0 q11 -12 22 0"/></g></g>
+          <g class="bird b2" opacity=".8"><g class="wing"><path d="M0 0 q8 -9 16 0 q8 -9 16 0"/></g></g>
+        </g>
+
+        <!-- 远山 -->
+        <path d="M0 358 C 96 288 190 280 274 330 C 352 280 448 288 522 334 C 606 280 712 288 792 334 C 872 296 940 308 1000 342 L1000 414 L0 414Z" fill="#D8E9E6" opacity=".9"/>
+        <path d="M0 392 C 112 344 214 344 302 378 C 400 340 520 346 608 382 C 716 344 848 350 1000 384 L1000 434 L0 434Z" fill="#C2DDDA" opacity=".92"/>
+
+        <!-- 海 -->
+        <rect y="406" width="1000" height="254" fill="url(#seaA)"/>
+        <rect class="sea-shimmer" y="424" width="1000" height="26" fill="#FFF9E8" opacity=".4" filter="url(#blurB)"/>
+        <rect class="sparkle" x="150" y="470" width="90" height="7" rx="3.5" fill="#FFFFFF" opacity=".5"/>
+        <rect class="sparkle" x="700" y="504" width="70" height="6" rx="3" fill="#FFFFFF" opacity=".45" style="animation-delay:-1.4s"/>
+        <rect class="sparkle" x="380" y="556" width="60" height="5" rx="2.5" fill="#FFFFFF" opacity=".4" style="animation-delay:-2.2s"/>
+        <g stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".5" fill="none">
+          <path class="wave" d="M46 622 q26 -13 52 0 q26 13 52 0"/>
+          <path class="wave w2" d="M712 634 q26 -13 52 0 q26 13 52 0"/>
+          <path class="wave w3" d="M292 648 q26 -13 52 0 q26 13 52 0"/>
+        </g>
+
+        <!-- 岛的投影 + 岛 -->
+        <ellipse cx="500" cy="624" rx="360" ry="34" fill="#2E6E8A" opacity=".22" filter="url(#blurA)"/>
+        <g class="island-sway">
+          <path d="M132,478 C 126,398 232,332 364,326 C 428,314 572,314 636,326 C 768,332 874,398 868,478 C 876,560 770,626 638,632 C 572,644 428,644 362,632 C 230,626 124,560 132,478 Z" fill="#F5E3C6" stroke="#DEC097" stroke-width="4"/>
+          <path d="M158,478 C 152,410 248,352 368,346 C 428,336 572,336 632,346 C 752,352 848,410 842,478 C 850,552 756,608 634,614 C 572,624 428,624 366,614 C 244,608 150,552 158,478 Z" fill="url(#grassA)" stroke="#7FB87C" stroke-width="4.2"/>
+          <path d="M158,478 C 152,410 248,352 368,346 C 428,336 572,336 632,346 C 752,352 848,410 842,478 C 800,462 700,452 500,452 C 300,452 200,462 158,478 Z" fill="#C9E7C3" opacity=".5"/>
+        </g>
+
+        <!-- 草丛 -->
+        <g stroke="#7FBB78" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".8">
+          <g class="grass"><path d="M232 430 q4 -11 0 -18 M242 430 q3 -9 7 -14 M222 430 q-3 -9 -7 -13"/></g>
+          <g class="grass g2"><path d="M470 372 q4 -11 0 -18 M480 372 q3 -9 7 -14 M460 372 q-3 -9 -7 -13"/></g>
+          <g class="grass g3"><path d="M700 424 q4 -11 0 -18 M710 424 q3 -9 7 -14 M690 424 q-3 -9 -7 -13"/></g>
+          <g class="grass g2"><path d="M300 528 q4 -11 0 -18 M310 528 q3 -9 7 -14 M290 528 q-3 -9 -7 -13"/></g>
+          <g class="grass g3"><path d="M760 540 q4 -11 0 -18 M770 540 q3 -9 7 -14 M750 540 q-3 -9 -7 -13"/></g>
+        </g>
+
+        <!-- 小花 -->
+        <g stroke="#7FB87C" stroke-width="3" stroke-linecap="round">
+          <g transform="translate(415,566)"><g class="flower"><path d="M0 0 v-16"/><circle cx="0" cy="-20" r="5" fill="#F7C9CE" stroke="none"/><circle cx="-5" cy="-17" r="3.6" fill="#FFF9F0" stroke="none"/></g></g>
+          <g transform="translate(600,552)"><g class="flower f2"><path d="M0 0 v-16"/><circle cx="0" cy="-20" r="5" fill="#FFD98E" stroke="none"/><circle cx="5" cy="-17" r="3.6" fill="#FFF9F0" stroke="none"/></g></g>
+          <g transform="translate(258,600)"><g class="flower" style="animation-delay:-1.8s"><path d="M0 0 v-14"/><circle cx="0" cy="-18" r="4.5" fill="#D5CFEA" stroke="none"/></g></g>
+        </g>
+
+        <!-- 灌木 -->
+        <g stroke="#4A3F35" stroke-width="4">
+          <g transform="translate(252,572)"><g class="bush"><circle cx="-14" cy="-8" r="15" fill="#8FC98A"/><circle cx="14" cy="-6" r="13" fill="#A8D5A2"/><circle cx="0" cy="-20" r="17" fill="#9BD196"/></g></g>
+          <g transform="translate(748,562)"><g class="bush b2"><circle cx="-13" cy="-7" r="14" fill="#8FC98A"/><circle cx="13" cy="-5" r="12" fill="#A8D5A2"/><circle cx="0" cy="-18" r="16" fill="#9BD196"/></g></g>
+        </g>
+
+        <!-- 小路 -->
+        <path d="M166 470 C 300 434 400 472 500 450 C 600 430 700 470 838 444" fill="none" stroke="#EBD6A6" stroke-width="22" stroke-linecap="round" opacity=".95"/>
+        <path class="path-dash" d="M166 470 C 300 434 400 472 500 450 C 600 430 700 470 838 444" fill="none" stroke="#FFFDF7" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="12 20" opacity=".9"/>
+
+        <!-- ===== 后排 ===== -->
+        <g class="spot" transform="translate(300,453)">
+          <g class="pop" style="--d:.30s"><g transform="scale(.68)"><g class="bob" style="--d:.0s">
+            <g class="lift">
+              <ellipse cx="0" cy="4" rx="50" ry="13" fill="#6FAF6C" opacity=".4"/>
+              <path d="M-17 0 L-25 -44 Q-23 -92 0 -112 Q23 -92 25 -44 L17 0Z" fill="#FFF9F0" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <path d="M0 -112 Q20 -94 22 -60 L-22 -60 Q-20 -94 0 -112Z" fill="#E8756B" stroke="#4A3F35" stroke-width="5"/>
+              <circle cx="0" cy="-40" r="12" fill="#9DD9E8" stroke="#4A3F35" stroke-width="5"/>
+              <path d="M-25 -30 L-46 2 L-17 2Z" fill="#E8756B" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <path d="M25 -30 L46 2 L17 2Z" fill="#E8756B" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <g class="flame"><path d="M-10 7 Q0 32 10 7 Q0 15 -10 7Z" fill="#FFC96B" stroke="#4A3F35" stroke-width="3.8"/></g>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-98)"><g class="lbl"><rect x="-38" y="-15" width="76" height="24" rx="12" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.6"/><text y="3" font-size="14" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">闯关冒险</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(400,434)">
+          <g class="pop" style="--d:.38s"><g transform="scale(.68)"><g class="bob" style="--d:.45s">
+            <g class="lift">
+              <ellipse cx="0" cy="4" rx="46" ry="12" fill="#6FAF6C" opacity=".4"/>
+              <rect x="-34" y="-36" width="34" height="36" rx="6" fill="#FFE0B5" stroke="#4A3F35" stroke-width="5"/>
+              <rect x="0" y="-36" width="34" height="36" rx="6" fill="#CFE3F0" stroke="#4A3F35" stroke-width="5"/>
+              <rect x="-17" y="-70" width="34" height="34" rx="6" fill="#F7C9CE" stroke="#4A3F35" stroke-width="5"/>
+              <text x="-17" y="-10" font-size="22" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">A</text>
+              <text x="17" y="-10" font-size="22" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">B</text>
+              <text x="0" y="-45" font-size="22" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">C</text>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-78)"><g class="lbl"><rect x="-38" y="-15" width="76" height="24" rx="12" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.6"/><text y="3" font-size="14" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">英文乐园</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(500,431)">
+          <g class="pop" style="--d:.46s"><g transform="scale(.68)"><g class="bob" style="--d:.9s">
+            <g class="lift">
+              <ellipse cx="0" cy="4" rx="52" ry="13" fill="#6FAF6C" opacity=".4"/>
+              <rect x="-34" y="-62" width="68" height="62" rx="7" fill="#FFF9F0" stroke="#4A3F35" stroke-width="5"/>
+              <path d="M-46 -62 L0 -106 L46 -62Z" fill="#D96A5F" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <rect x="-14" y="-30" width="28" height="30" rx="5" fill="#E8A0B4" stroke="#4A3F35" stroke-width="5"/>
+              <rect x="17" y="-54" width="32" height="26" rx="5" fill="#FFD98E" stroke="#4A3F35" stroke-width="5"/>
+              <text x="33" y="-34" font-size="17" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">中</text>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-100)"><g class="lbl"><rect x="-38" y="-15" width="76" height="24" rx="12" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.6"/><text y="3" font-size="14" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">中文乐园</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(600,434)">
+          <g class="pop" style="--d:.54s"><g transform="scale(.68)"><g class="bob" style="--d:1.35s">
+            <g class="lift">
+              <ellipse cx="0" cy="4" rx="52" ry="13" fill="#6FAF6C" opacity=".4"/>
+              <rect x="-52" y="-48" width="25" height="48" rx="4" fill="#D5CFEA" stroke="#4A3F35" stroke-width="5"/>
+              <rect x="27" y="-48" width="25" height="48" rx="4" fill="#D5CFEA" stroke="#4A3F35" stroke-width="5"/>
+              <rect x="-22" y="-78" width="44" height="78" rx="5" fill="#CFE3F0" stroke="#4A3F35" stroke-width="5"/>
+              <path d="M-52 -48 L-39.5 -78 L-27 -48Z" fill="#5B8DB8" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <path d="M27 -48 L39.5 -78 L52 -48Z" fill="#5B8DB8" stroke="#4A3F35" stroke-width="5" stroke-linejoin="round"/>
+              <rect x="-8" y="-32" width="16" height="32" rx="4" fill="#E8756B" stroke="#4A3F35" stroke-width="5"/>
+              <text x="0" y="-48" font-size="19" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">123</text>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-104)"><g class="lbl"><rect x="-38" y="-15" width="76" height="24" rx="12" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.6"/><text y="3" font-size="14" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">数字王国</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(700,453)">
+          <g class="pop" style="--d:.62s"><g transform="scale(.68)"><g class="bob" style="--d:1.8s">
+            <g class="lift">
+              <ellipse cx="0" cy="4" rx="48" ry="12" fill="#6FAF6C" opacity=".4"/>
+              <rect x="-9" y="-60" width="18" height="60" rx="7" fill="#B98A5E" stroke="#4A3F35" stroke-width="5"/>
+              <g class="bush" style="animation-duration:7s">
+                <circle cx="-28" cy="-74" r="27" fill="#8FC98A" stroke="#4A3F35" stroke-width="5"/>
+                <circle cx="28" cy="-78" r="25" fill="#A8D5A2" stroke="#4A3F35" stroke-width="5"/>
+                <circle cx="0" cy="-100" r="28" fill="#9BD196" stroke="#4A3F35" stroke-width="5"/>
+              </g>
+              <rect x="-42" y="-64" width="32" height="40" rx="4" fill="#FFFDF7" stroke="#4A3F35" stroke-width="4.6"/>
+              <path d="M-34 -54 h16 M-34 -45 h16 M-34 -36 h12" stroke="#C9B7A0" stroke-width="4" stroke-linecap="round"/>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-102)"><g class="lbl"><rect x="-38" y="-15" width="76" height="24" rx="12" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.6"/><text y="3" font-size="14" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">古诗花园</text></g></g>
+        </g>
+
+        <!-- ===== 前排 ===== -->
+        <g class="spot" transform="translate(205,546)">
+          <g class="pop" style="--d:.14s"><g transform="scale(.95)"><g class="bob" style="--d:.2s">
+            <g class="lift">
+              <ellipse cx="0" cy="2" rx="56" ry="15" fill="#6FAF6C" opacity=".45"/>
+              <path d="M-50 0 L0 -80 L50 0Z" fill="#FFF9F0" stroke="#4A3F35" stroke-width="4.4" stroke-linejoin="round"/>
+              <path d="M-24 0 L0 -40 L24 0Z" fill="#F0A868" stroke="#4A3F35" stroke-width="4.4" stroke-linejoin="round"/>
+              <path d="M-50 0 L-37 -31 L-24 0Z" fill="#E8756B" stroke="#4A3F35" stroke-width="4.4" stroke-linejoin="round"/>
+              <path d="M50 0 L37 -31 L24 0Z" fill="#E8756B" stroke="#4A3F35" stroke-width="4.4" stroke-linejoin="round"/>
+              <g class="grass" style="animation-duration:3s"><path d="M0 -80 L0 -105 L23 -97 L0 -89" fill="#5B8DB8" stroke="#4A3F35" stroke-width="4" stroke-linejoin="round"/></g>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-134)"><g class="lbl"><rect x="-42" y="-16" width="84" height="26" rx="13" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.8"/><text y="4" font-size="15" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">看图识物</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(350,591)">
+          <g class="pop" style="--d:.22s"><g transform="scale(.95)"><g class="bob" style="--d:.65s">
+            <g class="lift">
+              <ellipse cx="0" cy="2" rx="54" ry="14" fill="#6FAF6C" opacity=".45"/>
+              <rect x="-40" y="-58" width="80" height="58" rx="9" fill="#FFF9F0" stroke="#4A3F35" stroke-width="4.4"/>
+              <path d="M-49 -58 L0 -98 L49 -58Z" fill="#8FC98A" stroke="#4A3F35" stroke-width="4.4" stroke-linejoin="round"/>
+              <g class="rays" style="animation-duration:14s"><circle cx="0" cy="-28" r="18" fill="#FFD98E" stroke="#4A3F35" stroke-width="4.2"/>
+                <path d="M0 -28 v-9 M0 -28 v9 M-9 -28 h9 M9 -28 h-9 M-6 -34 l-6 -6 M6 -34 l6 -6 M-6 -22 l-6 6 M6 -22 l6 6" stroke="#4A3F35" stroke-width="4.2" stroke-linecap="round" fill="none"/></g>
+              <circle cx="0" cy="-28" r="6.5" fill="#FFF9F0" stroke="#4A3F35" stroke-width="3.6"/>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-134)"><g class="lbl"><rect x="-42" y="-16" width="84" height="26" rx="13" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.8"/><text y="4" font-size="15" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">逻辑挑战</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(650,591)">
+          <g class="pop" style="--d:.30s"><g transform="scale(.95)"><g class="bob" style="--d:1.1s">
+            <g class="lift">
+              <ellipse cx="0" cy="2" rx="56" ry="15" fill="#6FAF6C" opacity=".45"/>
+              <rect x="-50" y="-44" width="100" height="44" rx="10" fill="#E8A0B4" stroke="#4A3F35" stroke-width="4.4"/>
+              <rect x="-42" y="-33" width="84" height="25" rx="6" fill="#FFF9F0" stroke="#4A3F35" stroke-width="3.8"/>
+              <path d="M-14 -36 V-76 M-14 -76 l34 -7 v33" stroke="#4A3F35" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+              <circle cx="-21" cy="-36" r="9" fill="#5B8DB8" stroke="#4A3F35" stroke-width="3.8"/>
+              <circle cx="13" cy="-43" r="9" fill="#5B8DB8" stroke="#4A3F35" stroke-width="3.8"/>
+            </g>
+            <g fill="#5B8DB8" stroke="#4A3F35" stroke-width="2.8">
+              <g transform="translate(-36,-88)"><g class="note" style="--d:0s">
+                <ellipse cx="0" cy="0" rx="7.5" ry="5.6" transform="rotate(-18)"/>
+                <path d="M6.5 -1.5 V-30 q0 -6 7 -7" fill="none" stroke-linecap="round"/>
+              </g></g>
+              <g transform="translate(-2,-102)"><g class="note" style="--d:1.2s">
+                <ellipse cx="0" cy="0" rx="7.5" ry="5.6" transform="rotate(-18)"/>
+                <path d="M6.5 -1.5 V-30 q0 -6 7 -7" fill="none" stroke-linecap="round"/>
+              </g></g>
+              <g transform="translate(30,-82)"><g class="note" style="--d:2.4s">
+                <ellipse cx="0" cy="0" rx="7.5" ry="5.6" transform="rotate(-18)"/>
+                <path d="M6.5 -1.5 V-30 q0 -6 7 -7" fill="none" stroke-linecap="round"/>
+              </g></g>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-134)"><g class="lbl"><rect x="-42" y="-16" width="84" height="26" rx="13" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.8"/><text y="4" font-size="15" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">儿歌点播</text></g></g>
+        </g>
+
+        <g class="spot" transform="translate(785,552)">
+          <g class="pop" style="--d:.38s"><g transform="scale(.95)"><g class="bob" style="--d:1.55s">
+            <g class="lift">
+              <ellipse cx="0" cy="2" rx="52" ry="14" fill="#6FAF6C" opacity=".45"/>
+              <path d="M-46 -6 Q-46 -46 0 -46 Q46 -46 46 -6Z" fill="#E8A0B4" stroke="#4A3F35" stroke-width="4.4"/>
+              <rect x="-46" y="-6" width="92" height="46" rx="9" fill="#F0BFCB" stroke="#4A3F35" stroke-width="4.4"/>
+              <rect x="-11" y="-12" width="22" height="27" rx="5" fill="#FFD98E" stroke="#4A3F35" stroke-width="4.2"/>
+              <circle cx="0" cy="1" r="4.2" fill="#4A3F35"/>
+              <g fill="#FFD98E" stroke="#4A3F35" stroke-width="3.4">
+                <g class="twinkle" style="--d:0s"><path d="M26 -56 l5.5 12 13 2 -9.5 9.5 2 13 -11 -6 -11 6 2 -13 -9.5 -9.5 13 -2Z"/></g>
+                <g class="twinkle" style="--d:-1.3s"><path d="M-28 -68 l4 8.5 9 1.5 -6.5 6.5 1.5 9 -8 -4.5 -8 4.5 1.5 -9 -6.5 -6.5 9 -1.5Z"/></g>
+              </g>
+            </g>
+          </g></g></g>
+          <g transform="translate(0,-134)"><g class="lbl"><rect x="-42" y="-16" width="84" height="26" rx="13" fill="#FFFDF7" stroke="#4A3F35" stroke-width="2.8"/><text y="4" font-size="15" font-weight="900" fill="#4A3F35" text-anchor="middle" font-family="system-ui,sans-serif">我的星星</text></g></g>
+        </g>
+
+        <!-- 吉祥物 -->
+        <g transform="translate(500,599) scale(.85)">
+          <ellipse cx="0" cy="6" rx="46" ry="13" fill="#6FAF6C" opacity=".45"/>
+          <g class="ear-l"><circle cx="-28" cy="-30" r="15" fill="#D89A5E" stroke="#4A3F35" stroke-width="5.2"/></g>
+          <g class="ear-r"><circle cx="28" cy="-30" r="15" fill="#D89A5E" stroke="#4A3F35" stroke-width="5.2"/></g>
+          <g class="bear-body">
+            <circle cx="0" cy="-2" r="42" fill="#E8B27C" stroke="#4A3F35" stroke-width="5.4"/>
+            <ellipse cx="0" cy="10" rx="22" ry="17" fill="#FFF3E0" stroke="#4A3F35" stroke-width="4.8"/>
+            <g class="eye"><circle cx="-14" cy="-12" r="4.8" fill="#4A3F35"/></g>
+            <g class="eye"><circle cx="14" cy="-12" r="4.8" fill="#4A3F35"/></g>
+            <ellipse cx="0" cy="6" rx="6.2" ry="4.8" fill="#4A3F35"/>
+            <path d="M-10 18 q10 9 20 0" stroke="#4A3F35" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+          </g>
+          <g class="bear-arm"><path d="M-42 4 q-18 -12 -13 -32" stroke="#4A3F35" stroke-width="5.6" fill="none" stroke-linecap="round"/></g>
+          <path d="M42 4 q18 -10 14 -30" stroke="#4A3F35" stroke-width="5.2" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+
+      <div class="hud">
+        <div class="hud-top">
+          <div class="hud-av">
+            <svg viewBox="0 0 100 100"><circle cx="22" cy="26" r="13" fill="#D89A5E" stroke="#4A3F35" stroke-width="6"/><circle cx="78" cy="26" r="13" fill="#D89A5E" stroke="#4A3F35" stroke-width="6"/><circle cx="50" cy="56" r="36" fill="#E8B27C" stroke="#4A3F35" stroke-width="6"/><circle cx="38" cy="50" r="4" fill="#4A3F35"/><circle cx="62" cy="50" r="4" fill="#4A3F35"/><ellipse cx="50" cy="62" rx="5.5" ry="4.5" fill="#4A3F35"/><path d="M42 72 q8 7 16 0" stroke="#4A3F35" stroke-width="4.5" fill="none" stroke-linecap="round"/></svg>
+          </div>
+          <div class="hud-hello">你好，宝宝！<small>今天想去哪儿玩？</small></div>
+          <div class="hud-star">
+            <svg viewBox="0 0 24 24"><path d="M12 2.6l2.9 6.1 6.7 1-4.8 4.7 1.1 6.6L12 17.9 6.1 21l1.1-6.6L2.4 9.7l6.7-1Z" fill="#FFB100" stroke="#4A3F35" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            12
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="cap"><h3>② 模块内页 · 英文乐园</h3><span>同一套动效语言</span></div>
+    <div class="page" data-choice="page" onclick="toggleSelect(this.closest('div'))">
+      <div class="tabs"><div class="tab on">认字母</div><div class="tab">学单词</div><div class="tab">考一考</div></div>
+      <div class="board">
+        <div class="badge"><svg viewBox="0 0 40 40"><circle cx="20" cy="25" r="14" fill="#E8756B" stroke="#4A3F35" stroke-width="3"/><path d="M20 12 q-2 -7 2 -9" stroke="#4A3F35" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M22 9 q6 -4 8 2 q-6 3 -8 -2Z" fill="#8FC98A" stroke="#4A3F35" stroke-width="2.6"/></svg></div>
+        <div class="bigA">A a</div>
+        <div class="hint">点一点卡片，听一听</div>
+      </div>
+      <div class="navrow"><div class="rbtn ghost">← 上一个</div><div class="count">1 / 26</div><div class="rbtn primary">下一个 →</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:26px">
+  <p class="label">这一屏跑了哪些动画</p>
+  <div class="motion-list">
+    <div><b>环境层（常驻·极慢·不抢注意力）</b></div>
+    <div>· 云朵横向漂移 ×3，周期 64/78/96s 错开</div>
+    <div>· 太阳光晕呼吸 5.5s；光芒缓慢自转 60s</div>
+    <div>· 飞鸟横穿天空 ×2，翅膀扇动 0.62s</div>
+    <div>· 海面高光带缓慢游移 11s</div>
+    <div>· 浪花左右摇摆 ×3，7.5/9/12s</div>
+    <div>· 水面闪光点 ×3，错峰眨眼</div>
+    <div>· 全岛极缓呼吸 13s（几乎察觉不到）</div>
+    <div>· 草丛/小花摇曳 ×8，3.6–5.4s 各自错开</div>
+    <div>· 灌木呼吸 ×2</div>
+    <div>· 9 个地点各自轻轻上下浮动，延迟 0–1.8s 全错开</div>
+    <div>· 小路上的虚线缓慢流动 7s</div>
+    <div><b>细节层（局部·有性格）</b></div>
+    <div>· 火箭尾焰抖动 0.34s</div>
+    <div>· 齿轮工坊的齿轮旋转 14s</div>
+    <div>· 音乐舞台飘出音符 ×3</div>
+    <div>· 宝箱星星闪烁 ×2</div>
+    <div>· 帐篷旗帜摆动、树上叶冠呼吸</div>
+    <div><b>角色层（吉祥物）</b></div>
+    <div>· 呼吸起伏 3.4s</div>
+    <div>· 眨眼 5.2s（每 5 秒眨一次）</div>
+    <div>· 耳朵抖动 4.4s（偶尔）</div>
+    <div>· 挥手 2.6s</div>
+    <div><b>交互层（快·弹·有反馈）</b></div>
+    <div>· 悬停：抬起 9px + 放大 1.07 + 名字牌弹出（回弹曲线）</div>
+    <div>· 按下：回缩到 0.97</div>
+    <div>· 入场：9 个地点从地面依次弹出，延迟 0.14–0.62s</div>
+    <div><b>内页</b></div>
+    <div>· 字母轻轻上下浮 3.2s；提示文字呼吸</div>
+    <div>· 苹果徽章跳动；「下一个」按钮呼吸光晕</div>
+    <div>· 按钮悬停浮起、按下位移</div>
+  </div>
+  <p style="margin-top:16px;line-height:1.8;opacity:.8;font-size:14px">
+    <b>关键取舍：</b>所有动画只用 <code>transform</code> / <code>opacity</code>（走合成器，不触发重排），且周期全部错开——不会出现"整屏一起动"的机械感。
+    另外已内置 <code>prefers-reduced-motion</code> 支持：系统开了「减少动态效果」就全部停掉。
+  </p>
+</div>
