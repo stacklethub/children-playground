@@ -8,7 +8,13 @@
 
 import { $t, i18n } from '#/locales';
 
-const TTS_ENABLED_KEY = 'child-study-tts-enabled';
+import { isAzureConfigured, speakAzure, stopAzure } from './tts-azure';
+import {
+  getTtsSettings,
+  saveTtsSettings,
+  type TtsLang,
+  type TtsSettings,
+} from './tts-settings';
 
 /**
  * 学习内容的朗读语言。
@@ -18,16 +24,15 @@ const TTS_ENABLED_KEY = 'child-study-tts-enabled';
  */
 export const CONTENT_TTS_LANG = 'zh-CN';
 
-/** 是否启用语音（独立于 store，避免循环依赖） */
+/** 是否启用语音（读写见 utils/tts-settings） */
 export function isTtsEnabled(): boolean {
-  return localStorage.getItem(TTS_ENABLED_KEY) !== '0';
+  return getTtsSettings().enabled;
 }
 
 export function setTtsEnabled(enabled: boolean) {
-  localStorage.setItem(TTS_ENABLED_KEY, enabled ? '1' : '0');
-  if (!enabled) {
-    stopSpeak();
-  }
+  const settings = getTtsSettings();
+  saveTtsSettings({ ...settings, enabled });
+  if (!enabled) stopSpeak();
 }
 
 /** 当前界面语言对应的朗读语言 */
@@ -36,19 +41,40 @@ function resolveTtsLang(): string {
   return locale?.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
 }
 
-/**
- * 系统语音列表在部分浏览器中是异步就绪的，这里做一次预热缓存，
- * 避免首次朗读时 getVoices() 返回空数组而退化成默认语音。
- */
-let cachedVoices: SpeechSynthesisVoice[] = [];
-
-function loadVoices() {
-  cachedVoices = window.speechSynthesis?.getVoices?.() ?? [];
+/** 内容层语言：中文内容固定 zh-CN，其余跟随界面语言 */
+function resolveContentLang(): TtsLang {
+  return resolveTtsLang().startsWith('en') ? 'en-US' : 'zh-CN';
 }
 
-if (typeof window !== 'undefined' && window.speechSynthesis) {
-  loadVoices();
-  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+/**
+ * 取当前可用音色。Edge 在页面加载瞬间返回 0 个，约 300ms 后才就绪，
+ * 所以要等到 voiceschanged 或超时，避免首次朗读挑不到音色。
+ */
+function readyVoices(timeoutMs = 600): Promise<SpeechSynthesisVoice[]> {
+  const synth = window.speechSynthesis;
+  const immediate = synth?.getVoices?.() ?? [];
+  if (immediate.length > 0) return Promise.resolve(immediate);
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      resolve(synth?.getVoices?.() ?? []);
+    };
+    synth?.addEventListener?.('voiceschanged', done, { once: true });
+    setTimeout(done, timeoutMs);
+  });
+}
+
+/** 系统语音是否覆盖该语言 */
+export function hasVoiceFor(lang: TtsLang): boolean {
+  const voices = window.speechSynthesis?.getVoices?.() ?? [];
+  return hasVoiceIn(voices, lang);
+}
+
+function hasVoiceIn(voices: SpeechSynthesisVoice[], lang: string): boolean {
+  const prefix = lang.slice(0, 2).toLowerCase();
+  return voices.some((voice) => voice.lang.toLowerCase().startsWith(prefix));
 }
 
 /**
@@ -131,20 +157,63 @@ export function speakEnglish(
 }
 
 /** 挑选与朗读语言匹配的系统语音，缺失时回退到同语系语音 */
-function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
-  const voices =
-    cachedVoices.length > 0
-      ? cachedVoices
-      : (window.speechSynthesis?.getVoices?.() ?? []);
+function pickVoice(lang: string, voices: SpeechSynthesisVoice[]) {
   const prefix = lang.slice(0, 2).toLowerCase();
   return (
-    voices.find((v) => v.lang === lang) ??
-    voices.find((v) => v.lang.toLowerCase().startsWith(prefix))
+    voices.find((voice) => voice.lang === lang) ??
+    voices.find((voice) => voice.lang.toLowerCase().startsWith(prefix))
   );
 }
 
+/** 走系统语音通道朗读 */
+function speakSystem(
+  text: string,
+  options: {
+    lang: TtsLang;
+    onEnd?: () => void;
+    rate?: number;
+    settings: TtsSettings;
+  },
+) {
+  stopAzure();
+  const synth = window.speechSynthesis;
+  if (!synth) {
+    options.onEnd?.();
+    return;
+  }
+  void readyVoices().then((voices) => {
+    try {
+      synth.cancel();
+      const { lang, settings } = options;
+      const utterance = new SpeechSynthesisUtterance(text);
+      const picked =
+        voices.find((voice) => voice.name === settings.voices[lang]) ??
+        pickVoice(lang, voices);
+      /**
+       * 只有真的挑到匹配语音时才声明 lang。
+       * 声明一个系统里并不存在的语言（例如未安装英文语音包时的 en-US），
+       * 浏览器会直接静默 —— 一个字都不读，而不是回退到默认语音。
+       * 挑不到就交给浏览器默认，至少能出声。
+       */
+      if (picked) {
+        utterance.voice = picked;
+        utterance.lang = picked.lang;
+      }
+      utterance.rate = options.rate ?? settings.rate;
+      // Web Speech 的 pitch 是倍率（1 为原调），设置里存的是百分比
+      utterance.pitch = 1 + settings.pitch / 100;
+      utterance.onend = () => options.onEnd?.();
+      utterance.onerror = () => options.onEnd?.();
+      synth.speak(utterance);
+    } catch {
+      options.onEnd?.();
+    }
+  });
+}
+
 /**
- * 朗读文本。语音未启用或浏览器不支持时静默降级。
+ * 朗读文本：按家长选定的语音源路由，选定源对该语言不可用时自动切到另一个源，
+ * 两个都不可用才静默（此时仍回调 onEnd，不让调用方卡住）。
  *
  * @param options.lang 显式指定朗读语言，省略时跟随界面语言。
  *   朗读内容层中文素材时传 CONTENT_TTS_LANG。
@@ -155,45 +224,60 @@ function pickVoice(lang: string): SpeechSynthesisVoice | undefined {
  */
 export function speak(
   text: string,
-  options: { lang?: string; onEnd?: () => void; rate?: number } = {},
+  options: { lang?: TtsLang; onEnd?: () => void; rate?: number } = {},
 ) {
-  stopEnglish();
-  if (!isTtsEnabled()) {
+  const settings = getTtsSettings();
+  const lang: TtsLang = options.lang ?? resolveContentLang();
+
+  if (!settings.enabled) {
+    stopSpeak();
     options.onEnd?.();
     return;
   }
-  const synth = window.speechSynthesis;
-  if (!synth) {
-    options.onEnd?.();
+
+  // 选定源优先；该源对该语言不可用时切到另一个源；两个都不行才静默。
+  // 注意「该语言不可用」不等于「没声音」：系统语音若没有 en-US 音色，
+  // 用它读英文会退化成中文音素念英文，那正是最初的 bug，必须判定为不可用。
+  const systemUsable = Boolean(window.speechSynthesis) && hasVoiceFor(lang);
+  const azureUsable = isAzureConfigured();
+  const preferred =
+    settings.source === 'system'
+      ? systemUsable
+        ? 'system'
+        : azureUsable
+          ? 'azure'
+          : null
+      : azureUsable
+        ? 'azure'
+        : systemUsable
+          ? 'system'
+          : null;
+
+  if (preferred === 'system') {
+    stopEnglish();
+    speakSystem(text, { ...options, lang, settings });
     return;
   }
-  try {
-    synth.cancel();
-    const lang = options.lang ?? resolveTtsLang();
-    const utterance = new SpeechSynthesisUtterance(text);
-    // 英文按词连读，语速略快于中文更自然
-    utterance.rate = options.rate ?? (lang === 'en-US' ? 0.9 : 0.85);
-    /**
-     * 只有真的挑到匹配语音时才声明 lang。
-     * 声明一个系统里并不存在的语言（例如未安装英文语音包时的 en-US），
-     * 浏览器会直接静默 —— 一个字都不读，而不是回退到默认语音。
-     * 挑不到就交给浏览器默认，至少能出声。
-     */
-    const voice = pickVoice(lang);
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    }
-    utterance.onend = () => options.onEnd?.();
-    utterance.onerror = () => options.onEnd?.();
-    synth.speak(utterance);
-  } catch {
-    options.onEnd?.();
+  if (preferred === 'azure') {
+    stopEnglish();
+    speakAzure(text, {
+      lang,
+      onEnd: options.onEnd,
+      pitch: settings.pitch,
+      // 调用点显式传的 rate 优先，否则用家长设置
+      rate: options.rate ?? settings.rate,
+      voice: settings.voices[lang],
+    });
+    return;
   }
+
+  stopSpeak();
+  options.onEnd?.();
 }
 
-/** 停止当前朗读（中英文都停） */
+/** 停止当前朗读（Azure 与系统语音两个通道都停） */
 export function stopSpeak() {
+  stopAzure();
   stopEnglish();
   try {
     window.speechSynthesis?.cancel();

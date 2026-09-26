@@ -1,6 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { speak, speakEnglish, stopSpeak } from '#/utils/tts';
+import {
+  hasVoiceFor,
+  setTtsEnabled,
+  speak,
+  speakEnglish,
+  stopSpeak,
+} from '#/utils/tts';
+import {
+  DEFAULT_SETTINGS,
+  getTtsSettings,
+  saveTtsSettings,
+} from '#/utils/tts-settings';
 
 /**
  * 英文发音走在线音频（不依赖系统英文语音包）。
@@ -185,5 +196,122 @@ describe('speakEnglish', () => {
     speak('点一点字母');
 
     expect(audio.paused).toBe(true);
+  });
+});
+
+describe('speak 路由与降级', () => {
+  /** 构造一个可控的假 speechSynthesis */
+  function stubSynth(voices: { lang: string; name: string }[]) {
+    const spoken: {
+      lang: string;
+      pitch: number;
+      rate: number;
+      text: string;
+      voice: string;
+    }[] = [];
+    vi.stubGlobal('speechSynthesis', {
+      addEventListener: () => {},
+      cancel: () => {},
+      getVoices: () => voices.map((v) => ({ ...v, localService: true })),
+      speak: (u: any) =>
+        spoken.push({
+          lang: u.lang,
+          pitch: u.pitch,
+          rate: u.rate,
+          text: u.text,
+          voice: u.voice?.name ?? '',
+        }),
+    });
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      class {
+        lang = '';
+        pitch = 1;
+        rate = 1;
+        text: string;
+        voice: any = null;
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    );
+    return spoken;
+  }
+
+  it('选定 azure 但未配置代理时，降级到系统语音而不是静默', async () => {
+    stubLocalStorage();
+    // 默认 source 就是 azure
+    const spoken = stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    vi.stubEnv('VITE_TTS_PROXY_URL', '');
+
+    speak('你好', { onEnd: vi.fn() });
+
+    await vi.waitFor(() => expect(spoken).toHaveLength(1));
+    expect(spoken[0]!.text).toBe('你好');
+  });
+
+  it('源为 system 且该语言有音色时，走系统语音并套用设置的语速/音调/音色', async () => {
+    stubLocalStorage();
+    saveTtsSettings({
+      ...DEFAULT_SETTINGS,
+      pitch: 20,
+      rate: 1.1,
+      source: 'system',
+      voices: { 'en-US': '', 'zh-CN': 'Xiaoxiao' },
+    });
+    const spoken = stubSynth([
+      { lang: 'zh-CN', name: 'Xiaoxiao' },
+      { lang: 'zh-CN', name: 'Huihui' },
+    ]);
+
+    speak('你好', { onEnd: vi.fn() });
+
+    await vi.waitFor(() => expect(spoken).toHaveLength(1));
+    expect(spoken[0]!.voice).toBe('Xiaoxiao');
+    // Web Speech 的 pitch 是倍率，设置里存的是百分比：20% → 1.2
+    expect(spoken[0]!.pitch).toBeCloseTo(1.2);
+    expect(spoken[0]!.rate).toBeCloseTo(1.1);
+  });
+
+  it('源为 system 但该语言无音色、且 azure 不可用时静默，绝不用中文音色念英文', () => {
+    stubLocalStorage();
+    saveTtsSettings({ ...DEFAULT_SETTINGS, source: 'system' });
+    // 只有中文音色，模拟本机 Chrome
+    const spoken = stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    vi.stubEnv('VITE_TTS_PROXY_URL', '');
+    const onEnd = vi.fn();
+
+    speak('apple', { lang: 'en-US', onEnd });
+
+    expect(spoken).toHaveLength(0);
+    expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('hasVoiceFor 反映系统音色的语言覆盖', () => {
+    stubLocalStorage();
+    stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    expect(hasVoiceFor('zh-CN')).toBe(true);
+    expect(hasVoiceFor('en-US')).toBe(false);
+  });
+
+  it('语音开关关闭时两个通道都不出声', () => {
+    stubLocalStorage();
+    saveTtsSettings({ ...DEFAULT_SETTINGS, enabled: false, source: 'system' });
+    const spoken = stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+    const onEnd = vi.fn();
+
+    speak('你好', { onEnd });
+
+    expect(spoken).toHaveLength(0);
+    expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('setTtsEnabled(false) 会写入配置并停掉两个通道', () => {
+    stubLocalStorage();
+    stubSynth([{ lang: 'zh-CN', name: 'Huihui' }]);
+
+    setTtsEnabled(false);
+
+    expect(getTtsSettings().enabled).toBe(false);
   });
 });
