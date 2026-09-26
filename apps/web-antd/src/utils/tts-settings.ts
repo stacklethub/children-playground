@@ -122,7 +122,8 @@ function migrateLegacy(): TtsSettings {
   const legacy = readStorage(LEGACY_ENABLED_KEY);
   if (legacy === null) return normalize(undefined);
   const settings = normalize({ enabled: legacy !== '0' });
-  saveTtsSettings(settings);
-  removeStorage(LEGACY_ENABLED_KEY);
+  // 只有写入成功才删旧键：写失败还删掉的话，家长的开关偏好就永久丢了，
+  // 下次读取会回落到默认的 enabled: true
+  if (saveTtsSettings(settings)) removeStorage(LEGACY_ENABLED_KEY);
   return settings;
 }

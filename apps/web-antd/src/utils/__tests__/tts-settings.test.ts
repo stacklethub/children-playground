@@ -102,6 +102,24 @@ describe('tts-settings', () => {
     expect(localStorage.getItem(SETTINGS_KEY)).not.toBeNull();
   });
 
+  it('旧键为 1 时迁移出 enabled: true 并删除旧键', () => {
+    localStorage.setItem(LEGACY_KEY, '1');
+    const settings = getTtsSettings();
+    expect(settings.enabled).toBe(true);
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+    expect(localStorage.getItem(SETTINGS_KEY)).not.toBeNull();
+  });
+
+  it('迁移时写入失败则保留旧键以便下次重试，且本次仍返回旧开关表达的值', () => {
+    const store = new Map<string, string>([[LEGACY_KEY, '0']]);
+    stubFailingWrites(store);
+
+    expect(() => getTtsSettings()).not.toThrow();
+    expect(getTtsSettings().enabled).toBe(false);
+    // 旧键必须留着：删掉而新键又没写成的话，家长的「语音已关闭」偏好就永久丢了
+    expect(localStorage.getItem(LEGACY_KEY)).toBe('0');
+  });
+
   it('已有新配置时旧键也会被清理，且新配置的值不被旧开关覆盖', () => {
     saveTtsSettings({ ...DEFAULT_SETTINGS, enabled: true, rate: 1.3 });
     localStorage.setItem(LEGACY_KEY, '0');
