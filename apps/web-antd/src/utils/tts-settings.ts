@@ -72,11 +72,12 @@ function readStorage(key: string): null | string {
   }
 }
 
-function writeStorage(key: string, value: string) {
+function writeStorage(key: string, value: string): boolean {
   try {
     localStorage.setItem(key, value);
+    return true;
   } catch {
-    // 隐私模式等场景下写入失败，忽略即可
+    return false;
   }
 }
 
@@ -91,6 +92,11 @@ function removeStorage(key: string) {
 export function getTtsSettings(): TtsSettings {
   const raw = readStorage(SETTINGS_KEY);
   if (raw === null) return migrateLegacy();
+  // 新键是权威来源：只要它在，旧键就是待清理的残留，
+  // 否则新键日后被清掉时残存的 '0' 会复活并再次关掉语音。
+  if (readStorage(LEGACY_ENABLED_KEY) !== null) {
+    removeStorage(LEGACY_ENABLED_KEY);
+  }
   try {
     return normalize(JSON.parse(raw));
   } catch {
@@ -98,8 +104,17 @@ export function getTtsSettings(): TtsSettings {
   }
 }
 
-export function saveTtsSettings(settings: TtsSettings): void {
-  writeStorage(SETTINGS_KEY, JSON.stringify(normalize(settings)));
+/**
+ * 写入设置。写入成功返回 `true`，失败（配额满、隐私模式、storage 被禁用）返回 `false`。
+ *
+ * 读路径的 try/catch 可以吞掉异常：读失败时回落默认值是可接受的降级，
+ * 调用方拿到一个能用的配置，行为与「从未设置过」一致。
+ * 写路径不能吞：写失败意味着家长改的值根本没落盘，若静默返回，
+ * UI 会显示新值、刷新后却回退到旧值，且没有任何痕迹可循；
+ * 因此把失败作为返回值暴露出去，由调用方决定是否提示家长。
+ */
+export function saveTtsSettings(settings: TtsSettings): boolean {
+  return writeStorage(SETTINGS_KEY, JSON.stringify(normalize(settings)));
 }
 
 /** 旧版本只有 child-study-tts-enabled 一个开关，首次读取时迁移过来并删除旧键 */

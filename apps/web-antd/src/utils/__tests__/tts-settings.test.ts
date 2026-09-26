@@ -10,13 +10,24 @@ const SETTINGS_KEY = 'child-study-tts-settings';
 const LEGACY_KEY = 'child-study-tts-enabled';
 
 /** happy-dom 不提供 localStorage，用内存版顶替 */
-function stubLocalStorage() {
-  const store = new Map<string, string>();
+function stubLocalStorage(store: Map<string, string> = new Map()) {
   vi.stubGlobal('localStorage', {
     clear: () => store.clear(),
     getItem: (key: string) => store.get(key) ?? null,
     removeItem: (key: string) => store.delete(key),
     setItem: (key: string, value: string) => store.set(key, value),
+  });
+}
+
+/** 写入抛错（配额满、隐私模式），读取照常可用的版本 */
+function stubFailingWrites(store: Map<string, string>) {
+  vi.stubGlobal('localStorage', {
+    clear: () => store.clear(),
+    getItem: (key: string) => store.get(key) ?? null,
+    removeItem: (key: string) => store.delete(key),
+    setItem: () => {
+      throw new Error('QuotaExceededError');
+    },
   });
 }
 
@@ -91,11 +102,34 @@ describe('tts-settings', () => {
     expect(localStorage.getItem(SETTINGS_KEY)).not.toBeNull();
   });
 
-  it('已有的新配置不会被旧开关覆盖', () => {
+  it('已有新配置时旧键也会被清理，且新配置的值不被旧开关覆盖', () => {
     saveTtsSettings({ ...DEFAULT_SETTINGS, enabled: true, rate: 1.3 });
     localStorage.setItem(LEGACY_KEY, '0');
     const settings = getTtsSettings();
     expect(settings.rate).toBe(1.3);
-    expect(localStorage.getItem(LEGACY_KEY)).not.toBeNull();
+    expect(settings.enabled).toBe(true);
+    expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+  });
+
+  it('保存成功时返回 true', () => {
+    expect(saveTtsSettings({ ...DEFAULT_SETTINGS, rate: 1.2 })).toBe(true);
+  });
+
+  it('写入失败时返回 false，且不抛错', () => {
+    stubFailingWrites(new Map());
+    expect(() => saveTtsSettings({ ...DEFAULT_SETTINGS, rate: 1.2 })).not.toThrow();
+    expect(saveTtsSettings({ ...DEFAULT_SETTINGS, rate: 1.2 })).toBe(false);
+  });
+
+  it('写入失败后仍能读回之前的值，而不是默认值', () => {
+    const store = new Map<string, string>();
+    stubLocalStorage(store);
+    saveTtsSettings({ ...DEFAULT_SETTINGS, rate: 1.2 });
+
+    stubFailingWrites(store);
+    saveTtsSettings({ ...DEFAULT_SETTINGS, rate: 1.4 });
+
+    expect(() => getTtsSettings()).not.toThrow();
+    expect(getTtsSettings().rate).toBe(1.2);
   });
 });
