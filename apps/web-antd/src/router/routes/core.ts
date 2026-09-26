@@ -78,6 +78,12 @@ const coreRoutes: RouteRecordRaw[] = [
         path: 'pinyin',
       },
       {
+        component: () => import('#/views/kid/poems/index.vue'),
+        meta: { title: $t('kid.modules.poems') },
+        name: 'KidPoems',
+        path: 'poems',
+      },
+      {
         component: () => import('#/views/kid/numbers/index.vue'),
         meta: { title: $t('kid.modules.numbers') },
         name: 'KidNumbers',

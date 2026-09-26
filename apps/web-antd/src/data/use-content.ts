@@ -1,4 +1,12 @@
-import type { KidCard, KidCategory, KidLetter, KidNumber, KidPinyin, KidSong } from './content';
+import type {
+  KidCard,
+  KidCategory,
+  KidLetter,
+  KidNumber,
+  KidPinyin,
+  KidPoem,
+  KidSong,
+} from './content';
 import type { TileKey } from './modules';
 
 import { computed } from 'vue';
@@ -11,11 +19,20 @@ import {
   kidLetters,
   kidNumbers,
   kidPinyin,
+  kidPoems,
   kidSongs,
 } from './content';
 import { useCollection } from './use-collection';
 
-export type { KidCard, KidCategory, KidLetter, KidNumber, KidPinyin, KidSong };
+export type {
+  KidCard,
+  KidCategory,
+  KidLetter,
+  KidNumber,
+  KidPinyin,
+  KidPoem,
+  KidSong,
+};
 export { useCollection } from './use-collection';
 export type { ContentItemBase, ContentPatch } from './use-collection';
 
@@ -34,7 +51,20 @@ export interface CardDraft {
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   cards: kidCards,
   pinyin: kidPinyin,
+  poems: kidPoems,
 };
+
+/**
+ * 诗句在家长端是一个 textarea（逐句换行），内置数据则是数组。
+ * 这里统一切成句数组，让页面对两种来源一视同仁。
+ */
+function toLines(value: unknown): string[] {
+  if (Array.isArray(value)) return value as string[];
+  return String(value ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 /** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
 export function builtinOf(key: TileKey): { id: string }[] {
@@ -58,6 +88,19 @@ export function useContent() {
     defaults: kidPinyin,
     key: 'pinyin',
   });
+
+  const poemCollection = useCollection<KidPoem>({
+    defaults: kidPoems,
+    key: 'poems',
+  });
+
+  /** 家长可能把诗句填成一个多行字符串，统一规范成句数组 */
+  const poems = computed<KidPoem[]>(() =>
+    poemCollection.items.value.map((poem) => ({
+      ...poem,
+      lines: toLines(poem.lines),
+    })),
+  );
 
   const categories = computed<KidCategory[]>(() => [...kidCategories]);
 
@@ -100,6 +143,7 @@ export function useContent() {
     letters,
     numbers,
     pinyinList: pinyinCollection.items,
+    poems,
     songs,
     updateCard,
   };

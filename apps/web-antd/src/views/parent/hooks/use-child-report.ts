@@ -3,21 +3,20 @@ import type { LearnRecordPayload } from '#/api';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { getLearnReportApi } from '#/api';
+import { MODULES } from '#/data/modules';
 import {
   type LearnModule,
+  MODULE_KEYS,
   useDeviceStore,
   useFamilyStore,
   useKidStore,
 } from '#/store';
 
+/** 报告页的模块配色由注册表派生，新增模块无需改动本文件 */
 export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
-  {
-    cards: { color: '#F97316', key: 'cards' },
-    letters: { color: '#3B82F6', key: 'letters' },
-    pinyin: { color: '#F43F5E', key: 'pinyin' },
-    numbers: { color: '#10B981', key: 'numbers' },
-    songs: { color: '#8B5CF6', key: 'songs' },
-  };
+  Object.fromEntries(
+    MODULE_KEYS.map((key) => [key, { color: MODULES[key].color, key }]),
+  ) as Record<LearnModule, { color: string; key: string }>;
 
 /**
  * 家长端学习报告数据：

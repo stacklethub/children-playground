@@ -14,6 +14,7 @@ const TILE_SNAPSHOT = [
   { bg: 'bg-orange-400', defaultGoal: 10, emoji: '🐘', key: 'cards', path: '/kid/cards' },
   { bg: 'bg-sky-400', defaultGoal: 6, emoji: '🔤', key: 'letters', path: '/kid/letters' },
   { bg: 'bg-rose-400', defaultGoal: 6, emoji: '🅰️', key: 'pinyin', path: '/kid/pinyin' },
+  { bg: 'bg-lime-500', defaultGoal: 1, emoji: '📜', key: 'poems', path: '/kid/poems' },
   { bg: 'bg-emerald-400', defaultGoal: 6, emoji: '🔢', key: 'numbers', path: '/kid/numbers' },
   { bg: 'bg-violet-400', defaultGoal: 2, emoji: '🎵', key: 'songs', path: '/kid/songs' },
   { bg: 'bg-amber-400', defaultGoal: 0, emoji: '⭐', key: 'rewards', path: '/kid/rewards' },
@@ -43,12 +44,14 @@ describe('模块注册表', () => {
     }
   });
 
-  it('每个磁贴都有首页展示所需的 emoji / bg / path', () => {
+  it('每个磁贴都有首页展示所需的 emoji / bg / path / color', () => {
     for (const key of TILE_KEYS) {
       const def = MODULES[key];
       expect(def.emoji).toBeTruthy();
       expect(def.bg).toMatch(/^bg-/);
       expect(def.path).toMatch(/^\/kid\//);
+      // 家长端报告页的图表配色也取自注册表
+      expect(def.color).toMatch(/^#[0-9A-F]{6}$/i);
     }
   });
 

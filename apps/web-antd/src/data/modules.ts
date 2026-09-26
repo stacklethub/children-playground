@@ -14,6 +14,7 @@ export const MODULE_KEYS = [
   'cards',
   'letters',
   'pinyin',
+  'poems',
   'numbers',
   'songs',
 ] as const;
@@ -56,6 +57,8 @@ export interface ModuleDef {
   path: string;
   /** 首页磁贴底色 class */
   bg: string;
+  /** 图表等场景用的十六进制主色，与 bg 同色系 */
+  color: string;
   kind: ModuleKind;
   /** 每日目标默认值；非学习入口为 0 */
   defaultGoal: number;
@@ -66,6 +69,7 @@ export interface ModuleDef {
 export const MODULES: Record<TileKey, ModuleDef> = {
   cards: {
     bg: 'bg-orange-400',
+    color: '#F97316',
     defaultGoal: 10,
     emoji: '🐘',
     fields: [
@@ -87,6 +91,7 @@ export const MODULES: Record<TileKey, ModuleDef> = {
   },
   letters: {
     bg: 'bg-sky-400',
+    color: '#3B82F6',
     defaultGoal: 6,
     emoji: '🔤',
     key: 'letters',
@@ -96,6 +101,7 @@ export const MODULES: Record<TileKey, ModuleDef> = {
   },
   numbers: {
     bg: 'bg-emerald-400',
+    color: '#10B981',
     defaultGoal: 6,
     emoji: '🔢',
     key: 'numbers',
@@ -105,6 +111,7 @@ export const MODULES: Record<TileKey, ModuleDef> = {
   },
   pinyin: {
     bg: 'bg-rose-400',
+    color: '#F43F5E',
     defaultGoal: 6,
     emoji: '🅰️',
     fields: [
@@ -116,8 +123,24 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     kind: 'content',
     path: '/kid/pinyin',
   },
+  poems: {
+    bg: 'bg-lime-500',
+    color: '#84CC16',
+    defaultGoal: 1,
+    emoji: '📜',
+    fields: [
+      { key: 'title', labelKey: 'poemTitle', required: true, type: 'text' },
+      { key: 'author', labelKey: 'author', type: 'text' },
+      { key: 'lines', labelKey: 'lines', required: true, type: 'textarea' },
+      { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
+    ],
+    key: 'poems',
+    kind: 'content',
+    path: '/kid/poems',
+  },
   songs: {
     bg: 'bg-violet-400',
+    color: '#8B5CF6',
     defaultGoal: 2,
     emoji: '🎵',
     key: 'songs',
@@ -126,6 +149,7 @@ export const MODULES: Record<TileKey, ModuleDef> = {
   },
   rewards: {
     bg: 'bg-amber-400',
+    color: '#F59E0B',
     defaultGoal: 0,
     emoji: '⭐',
     key: 'rewards',

@@ -56,6 +56,16 @@ export interface KidPinyin {
   pinyin: string;
 }
 
+/** 古诗：只点播朗读，不做答题 */
+export interface KidPoem {
+  author: string;
+  emoji: string;
+  id: string;
+  /** 正文，逐句一条；朗读与高亮按句推进 */
+  lines: string[];
+  title: string;
+}
+
 export const kidCategories: KidCategory[] = [
   { color: '#F97316', emoji: '🐘', id: 'animals', name: '动物世界' },
   { color: '#EF4444', emoji: '🍎', id: 'fruits', name: '好吃的水果' },
@@ -433,3 +443,115 @@ const PINYIN_YUNMU: KidPinyin[] = [
 ];
 
 export const kidPinyin: KidPinyin[] = [...PINYIN_SHENGMU, ...PINYIN_YUNMU];
+
+export const kidPoems: KidPoem[] = [
+  {
+    author: '李白',
+    emoji: '🌙',
+    id: 'poem-jingyesi',
+    lines: ['床前明月光，', '疑是地上霜。', '举头望明月，', '低头思故乡。'],
+    title: '静夜思',
+  },
+  {
+    author: '孟浩然',
+    emoji: '🌸',
+    id: 'poem-chunxiao',
+    lines: ['春眠不觉晓，', '处处闻啼鸟。', '夜来风雨声，', '花落知多少。'],
+    title: '春晓',
+  },
+  {
+    author: '骆宾王',
+    emoji: '🦢',
+    id: 'poem-yonge',
+    lines: ['鹅，鹅，鹅，', '曲项向天歌。', '白毛浮绿水，', '红掌拨清波。'],
+    title: '咏鹅',
+  },
+  {
+    author: '王之涣',
+    emoji: '🏯',
+    id: 'poem-dengque',
+    lines: ['白日依山尽，', '黄河入海流。', '欲穷千里目，', '更上一层楼。'],
+    title: '登鹳雀楼',
+  },
+  {
+    author: '李绅',
+    emoji: '🌾',
+    id: 'poem-minnong',
+    lines: ['锄禾日当午，', '汗滴禾下土。', '谁知盘中餐，', '粒粒皆辛苦。'],
+    title: '悯农',
+  },
+  {
+    author: '柳宗元',
+    emoji: '❄️',
+    id: 'poem-jiangxue',
+    lines: ['千山鸟飞绝，', '万径人踪灭。', '孤舟蓑笠翁，', '独钓寒江雪。'],
+    title: '江雪',
+  },
+  {
+    author: '王维',
+    emoji: '🖼️',
+    id: 'poem-hua',
+    lines: ['远看山有色，', '近听水无声。', '春去花还在，', '人来鸟不惊。'],
+    title: '画',
+  },
+  {
+    author: '杨万里',
+    emoji: '🪷',
+    id: 'poem-xiaochi',
+    lines: [
+      '泉眼无声惜细流，',
+      '树阴照水爱晴柔。',
+      '小荷才露尖尖角，',
+      '早有蜻蜓立上头。',
+    ],
+    title: '小池',
+  },
+  {
+    author: '高鼎',
+    emoji: '🪁',
+    id: 'poem-cunju',
+    lines: [
+      '草长莺飞二月天，',
+      '拂堤杨柳醉春烟。',
+      '儿童散学归来早，',
+      '忙趁东风放纸鸢。',
+    ],
+    title: '村居',
+  },
+  {
+    author: '李白',
+    emoji: '⛰️',
+    id: 'poem-pubu',
+    lines: [
+      '日照香炉生紫烟，',
+      '遥看瀑布挂前川。',
+      '飞流直下三千尺，',
+      '疑是银河落九天。',
+    ],
+    title: '望庐山瀑布',
+  },
+  {
+    author: '杜甫',
+    emoji: '🐦',
+    id: 'poem-jueju',
+    lines: [
+      '两个黄鹂鸣翠柳，',
+      '一行白鹭上青天。',
+      '窗含西岭千秋雪，',
+      '门泊东吴万里船。',
+    ],
+    title: '绝句',
+  },
+  {
+    author: '李白',
+    emoji: '🚣',
+    id: 'poem-zengwanglun',
+    lines: [
+      '李白乘舟将欲行，',
+      '忽闻岸上踏歌声。',
+      '桃花潭水深千尺，',
+      '不及汪伦送我情。',
+    ],
+    title: '赠汪伦',
+  },
+];
