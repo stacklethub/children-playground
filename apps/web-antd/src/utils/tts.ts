@@ -30,10 +30,12 @@ export function isTtsEnabled(): boolean {
   return getTtsSettings().enabled;
 }
 
-export function setTtsEnabled(enabled: boolean) {
+/** 写入成功返回 true；失败返回 false（设置页据此提示，别让保存静默失败） */
+export function setTtsEnabled(enabled: boolean): boolean {
   const settings = getTtsSettings();
-  saveTtsSettings({ ...settings, enabled });
+  const saved = saveTtsSettings({ ...settings, enabled });
   if (!enabled) stopSpeak();
+  return saved;
 }
 
 /** 当前界面语言对应的朗读语言 */

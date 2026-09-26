@@ -1,19 +1,18 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
-import { Button, Card, message, Popconfirm, Switch } from 'ant-design-vue';
+import { Button, Card, message, Popconfirm } from 'ant-design-vue';
 
 import { $t } from '#/locales';
 import { useDeviceStore, useFamilyStore, useKidStore } from '#/store';
-import { isTtsEnabled, setTtsEnabled } from '#/utils/tts';
 
 import KidSelector from '../components/kid-selector.vue';
+import VoiceSettings from '../components/voice-settings.vue';
 
 const familyStore = useFamilyStore();
 const deviceStore = useDeviceStore();
 const kidStore = useKidStore();
 
-const ttsEnabled = ref(isTtsEnabled());
 /** 本机数据统计/清理范围（'' = 全部孩子） */
 const scopeChildId = ref('');
 
@@ -31,13 +30,6 @@ const scopeName = computed(
     familyStore.findChild(scopeChildId.value)?.name ??
     $t('parent.settings.scopeAll'),
 );
-
-function onTtsChange(checked: boolean | number | string) {
-  setTtsEnabled(Boolean(checked));
-  message.success(
-    checked ? $t('parent.settings.ttsOn') : $t('parent.settings.ttsOff'),
-  );
-}
 
 function resetLocal() {
   kidStore.clearRecords(scopeChildId.value || undefined);
@@ -68,17 +60,10 @@ onMounted(() => {
         <p class="text-muted-foreground text-xs">
           {{ $t('parent.settings.deviceLearnerTip') }}
         </p>
-        <div class="flex items-center justify-between">
-          <span class="text-base">{{ $t('parent.settings.tts') }}</span>
-          <Switch
-            v-model:checked="ttsEnabled"
-            :checked-children="$t('parent.settings.on')"
-            :un-checked-children="$t('parent.settings.off')"
-            @change="onTtsChange"
-          />
-        </div>
       </div>
     </Card>
+
+    <VoiceSettings />
 
     <Card :title="$t('parent.settings.dataTitle')">
       <div class="flex flex-col gap-4">
