@@ -77,7 +77,9 @@
     "added": "Added",
     "saved": "Saved",
     "deleted": "Deleted",
-    "deleteConfirm": "Delete this card?"
+    "deleteConfirm": "Delete this card?",
+    "required": "Please fill in {field}",
+    "modules": "Learning modules"
   },
   "plan": {
     "title": "Daily goals",
@@ -87,7 +89,11 @@
     "save": "Save goals",
     "screenTitle": "Screen time",
     "screenLabel": "Rest reminder after (minutes) of continuous use",
-    "screenAdvice": "Recommended: kids aged 3-6 should not use a screen more than 20 minutes at a time, and 1 hour a day in total."
+    "screenAdvice": "Recommended: kids aged 3-6 should not use a screen more than 20 minutes at a time, and 1 hour a day in total.",
+    "moduleTitle": "Modules & difficulty",
+    "moduleTip": "A disabled module disappears from the kid home; the range controls how many items the kid sees",
+    "rangeLabel": "Range",
+    "rangeHint": "{min}-{max} (now {value})"
   },
   "settings": {
     "childTitle": "Profile",

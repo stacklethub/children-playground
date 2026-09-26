@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 
 import { $t } from '#/locales';
-import { type LearnModule, MODULE_KEYS, useKidStore } from '#/store';
+import { MODULE_KEYS, MODULES, useKidStore } from '#/store';
 import { speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
@@ -15,26 +15,23 @@ const kidStore = useKidStore();
 const { bound, childId, childName } = useCurrentChild();
 const { rewardBadges, rewardShow, rewardText } = useReward();
 
-const MODULE_EMOJI: Record<LearnModule, string> = {
-  cards: '🐘',
-  letters: '🔤',
-  numbers: '🔢',
-  songs: '🎵',
-};
-
 const stars = computed(() => kidStore.starsOf(childId.value));
 const streak = computed(() => kidStore.streakOf(childId.value));
 const todayCounts = computed(() => kidStore.todayCountsOf(childId.value));
 const badges = computed(() => kidStore.badgesOf(childId.value));
 
 const tasks = computed(() =>
-  MODULE_KEYS.map((module) => ({
-    count: todayCounts.value[module] ?? 0,
-    done: (todayCounts.value[module] ?? 0) >= kidStore.dailyGoals[module],
-    emoji: MODULE_EMOJI[module],
-    goal: kidStore.dailyGoals[module],
-    module,
-  })),
+  MODULE_KEYS.map((module) => {
+    const count = todayCounts.value[module] ?? 0;
+    const goal = kidStore.goalOf(module);
+    return {
+      count,
+      done: count >= goal,
+      emoji: MODULES[module].emoji,
+      goal,
+      module,
+    };
+  }),
 );
 
 const allDone = computed(() => tasks.value.every((t) => t.done));

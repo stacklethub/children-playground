@@ -1,4 +1,5 @@
 import type { KidCard, KidCategory, KidLetter, KidNumber, KidSong } from './content';
+import type { TileKey } from './modules';
 
 import { computed } from 'vue';
 
@@ -11,8 +12,11 @@ import {
   kidNumbers,
   kidSongs,
 } from './content';
+import { useCollection } from './use-collection';
 
 export type { KidCard, KidCategory, KidLetter, KidNumber, KidSong };
+export { useCollection } from './use-collection';
+export type { ContentItemBase, ContentPatch } from './use-collection';
 
 export interface CardDraft {
   categoryId: string;
@@ -23,32 +27,45 @@ export interface CardDraft {
 }
 
 /**
+ * 各模块的内置内容。
+ * 新增内容型模块时在这里补一行，家长端内容管理即可管理它。
+ */
+const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
+  cards: kidCards,
+};
+
+/** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
+export function builtinOf(key: TileKey): { id: string }[] {
+  return BUILTIN[key] ?? [];
+}
+
+/**
  * 内置内容 + 家长中心维护的覆盖项（增/改/删）合并后的响应式内容。
+ *
+ * 对外签名与多模块改造前保持一致，宝宝端与家长端调用方无需改动。
  */
 export function useContent() {
   const kidStore = useKidStore();
 
-  const categories = computed<KidCategory[]>(() => [...kidCategories]);
-
-  const cards = computed<KidCard[]>(() => {
-    const overrides = kidStore.contentOverrides;
-    const result: KidCard[] = [];
-    for (const card of kidCards) {
-      const patch = overrides[card.id];
-      if (patch?.deleted) continue;
-      result.push(patch ? { ...card, ...patch, id: card.id } : card);
-    }
-    // 家长新增的卡片
-    for (const [id, patch] of Object.entries(overrides)) {
-      if (patch?.added) {
-        result.push({ ...patch, id } as KidCard);
-      }
-    }
-    return result;
+  const cardCollection = useCollection<KidCard>({
+    defaults: kidCards,
+    key: 'cards',
   });
 
-  const letters = computed<KidLetter[]>(() => [...kidLetters]);
-  const numbers = computed<KidNumber[]>(() => [...kidNumbers]);
+  const categories = computed<KidCategory[]>(() => [...kidCategories]);
+
+  const cards = cardCollection.items;
+
+  /** 字母数量受家长端「难度范围」限制，学一学与考一考共用同一份数据 */
+  const letters = computed<KidLetter[]>(() =>
+    kidLetters.slice(0, kidStore.moduleRange('letters')),
+  );
+
+  /** 数字数量受家长端「难度范围」限制 */
+  const numbers = computed<KidNumber[]>(() =>
+    kidNumbers.slice(0, kidStore.moduleRange('numbers')),
+  );
+
   const songs = computed<KidSong[]>(() => [...kidSongs]);
 
   function cardsByCategory(categoryId: string): KidCard[] {
@@ -56,22 +73,15 @@ export function useContent() {
   }
 
   function addCard(draft: CardDraft) {
-    const id = `custom-${Date.now()}`;
-    kidStore.contentOverrides[id] = { ...draft, added: true };
+    cardCollection.add(draft);
   }
 
   function updateCard(id: string, patch: Partial<CardDraft>) {
-    const base = kidCards.find((c) => c.id === id);
-    kidStore.contentOverrides[id] = { ...(base ?? {}), ...patch, added: !base };
+    cardCollection.update(id, patch);
   }
 
   function deleteCard(id: string) {
-    const base = kidCards.find((c) => c.id === id);
-    if (base) {
-      kidStore.contentOverrides[id] = { deleted: true };
-    } else {
-      delete kidStore.contentOverrides[id];
-    }
+    cardCollection.remove(id);
   }
 
   return {

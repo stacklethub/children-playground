@@ -77,7 +77,9 @@
     "added": "已添加",
     "saved": "已保存",
     "deleted": "已删除",
-    "deleteConfirm": "确定删除这张卡片吗？"
+    "deleteConfirm": "确定删除这张卡片吗？",
+    "required": "请填写{field}",
+    "modules": "学习模块"
   },
   "plan": {
     "title": "每日学习目标",
@@ -87,7 +89,11 @@
     "save": "保存目标",
     "screenTitle": "护眼与时长",
     "screenLabel": "单次使用时长提醒（分钟），超过后宝宝端会弹出休息提醒",
-    "screenAdvice": "建议 3-6 岁儿童单次使用电子屏幕不超过 20 分钟，每天累计不超过 1 小时。"
+    "screenAdvice": "建议 3-6 岁儿童单次使用电子屏幕不超过 20 分钟，每天累计不超过 1 小时。",
+    "moduleTitle": "模块与难度",
+    "moduleTip": "关闭模块后宝宝端首页不再显示该入口；难度范围决定宝宝端出现的题目数量",
+    "rangeLabel": "难度范围",
+    "rangeHint": "{min}-{max}（当前 {value}）"
   },
   "settings": {
     "childTitle": "个人信息",

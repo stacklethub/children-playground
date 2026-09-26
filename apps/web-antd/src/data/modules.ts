@@ -26,6 +26,11 @@ export type TileKey = (typeof TILE_KEYS)[number];
  */
 export type ModuleKind = 'content' | 'fixed' | 'param';
 
+/** 该磁贴是否是可学习模块（rewards 等非学习入口返回 false） */
+export function isLearnModule(key: TileKey): key is LearnModule {
+  return (MODULE_KEYS as readonly string[]).includes(key);
+}
+
 /** 内容型模块在家长端表单里的字段声明 */
 export interface FieldDef {
   key: string;
