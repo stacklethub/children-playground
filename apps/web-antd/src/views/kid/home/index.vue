@@ -2,6 +2,9 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
+import type { ModuleDef } from '#/data/modules';
+
+import { MODULES, TILE_KEYS } from '#/data/modules';
 import { $t } from '#/locales';
 import { useKidStore } from '#/store';
 import { speak } from '#/utils/tts';
@@ -14,17 +17,12 @@ const router = useRouter();
 const kidStore = useKidStore();
 const { bound, childId, childName } = useCurrentChild();
 
-const tiles = [
-  { bg: 'bg-orange-400', emoji: '🐘', key: 'cards', path: '/kid/cards' },
-  { bg: 'bg-sky-400', emoji: '🔤', key: 'letters', path: '/kid/letters' },
-  { bg: 'bg-emerald-400', emoji: '🔢', key: 'numbers', path: '/kid/numbers' },
-  { bg: 'bg-violet-400', emoji: '🎵', key: 'songs', path: '/kid/songs' },
-  { bg: 'bg-amber-400', emoji: '⭐', key: 'rewards', path: '/kid/rewards' },
-];
+/** 首页磁贴由模块注册表派生，新增模块无需改动本文件 */
+const tiles = TILE_KEYS.map((key) => MODULES[key]);
 
-function go(path: string, key: string) {
-  speak($t(`kid.modules.${key}`));
-  router.push(path);
+function go(tile: ModuleDef) {
+  speak($t(`kid.modules.${tile.key}`));
+  router.push(tile.path);
 }
 
 onMounted(() => {
@@ -62,7 +60,7 @@ onMounted(() => {
         :desc="$t(`kid.tiles.${tile.key}Desc`)"
         :emoji="tile.emoji"
         :label="$t(`kid.modules.${tile.key}`)"
-        @tap="go(tile.path, tile.key)"
+        @tap="go(tile)"
       />
     </div>
   </div>
