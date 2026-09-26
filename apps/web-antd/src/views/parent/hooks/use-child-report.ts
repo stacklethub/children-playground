@@ -14,6 +14,7 @@ export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
   {
     cards: { color: '#F97316', key: 'cards' },
     letters: { color: '#3B82F6', key: 'letters' },
+    pinyin: { color: '#F43F5E', key: 'pinyin' },
     numbers: { color: '#10B981', key: 'numbers' },
     songs: { color: '#8B5CF6', key: 'songs' },
   };

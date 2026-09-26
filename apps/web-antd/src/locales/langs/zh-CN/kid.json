@@ -6,16 +6,25 @@
     "home": "学习岛",
     "cards": "看图识物",
     "letters": "字母乐园",
-    "numbers": "数字小屋",
+    "pinyin": "拼音乐园",
+    "numbers": "数字王国",
     "songs": "儿歌点播",
     "rewards": "我的星星"
   },
   "tiles": {
     "cardsDesc": "认一认身边的事物",
     "lettersDesc": "和字母做朋友",
-    "numbersDesc": "数一数有几个",
+    "pinyinDesc": "认一认拼音，听一听怎么读",
+    "numbersDesc": "数一数，算一算",
     "songsDesc": "听儿歌啦",
     "rewardsDesc": "看看我的奖励"
+  },
+  "pinyin": {
+    "learn": "学一学",
+    "wrongs": "错题本 {n}",
+    "replay": "再听一次",
+    "gotIt": "记住了",
+    "remaining": "还剩 {n} 张"
   },
   "home": {
     "greeting": "你好，{name}！",
@@ -93,9 +102,10 @@
   },
   "tts": {
     "welcome": "欢迎来到宝宝学堂，{name}！今天想玩什么呢？",
+    "pinyinIntro": "点一点屏幕，看看下一个怎么读吧！",
     "cardsIntro": "点一点卡片，听听它是什么？",
     "cardsCategory": "我们一起来认识{name}吧！",
-    "cardsNext": "看一看，这是什么呀？",
+    "cardsNext": "看一看，这是什么？",
     "cardsDone": "这个分类全部学完啦，你真棒！",
     "lettersIntro": "点一点字母，跟它打个招呼吧！",
     "lettersQuiz": "找一找，字母 {letter} 在哪里呀？",

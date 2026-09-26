@@ -46,6 +46,16 @@ export interface KidNumber {
   word: string;
 }
 
+/** 拼音卡：声母 / 韵母 / 整体认读 */
+export interface KidPinyin {
+  /** 例字，朗读就读它 —— 拼音字形是拉丁字母，中文语音会读成怪音 */
+  hanzi: string;
+  emoji: string;
+  id: string;
+  /** 拼音字形，只做视觉呈现 */
+  pinyin: string;
+}
+
 export const kidCategories: KidCategory[] = [
   { color: '#F97316', emoji: '🐘', id: 'animals', name: '动物世界' },
   { color: '#EF4444', emoji: '🍎', id: 'fruits', name: '好吃的水果' },
@@ -366,3 +376,60 @@ export const kidSongs: KidSong[] = [
     title: '数鸭子',
   },
 ];
+
+/** 声母 23 个 */
+const PINYIN_SHENGMU: KidPinyin[] = [
+  { emoji: '👨', hanzi: '爸爸', id: 'p-b', pinyin: 'b' },
+  { emoji: '🍎', hanzi: '苹果', id: 'p-p', pinyin: 'p' },
+  { emoji: '👩', hanzi: '妈妈', id: 'p-m', pinyin: 'm' },
+  { emoji: '✈️', hanzi: '飞机', id: 'p-f', pinyin: 'f' },
+  { emoji: '🐘', hanzi: '大象', id: 'p-d', pinyin: 'd' },
+  { emoji: '🐰', hanzi: '兔子', id: 'p-t', pinyin: 't' },
+  { emoji: '🥛', hanzi: '牛奶', id: 'p-n', pinyin: 'n' },
+  { emoji: '🐯', hanzi: '老虎', id: 'p-l', pinyin: 'l' },
+  { emoji: '👦', hanzi: '哥哥', id: 'p-g', pinyin: 'g' },
+  { emoji: '🚚', hanzi: '卡车', id: 'p-k', pinyin: 'k' },
+  { emoji: '🌸', hanzi: '花朵', id: 'p-h', pinyin: 'h' },
+  { emoji: '🥚', hanzi: '鸡蛋', id: 'p-j', pinyin: 'j' },
+  { emoji: '🎈', hanzi: '气球', id: 'p-q', pinyin: 'q' },
+  { emoji: '🍉', hanzi: '西瓜', id: 'p-x', pinyin: 'x' },
+  { emoji: '🕷️', hanzi: '蜘蛛', id: 'p-zh', pinyin: 'zh' },
+  { emoji: '🐛', hanzi: '虫子', id: 'p-ch', pinyin: 'ch' },
+  { emoji: '🦁', hanzi: '狮子', id: 'p-sh', pinyin: 'sh' },
+  { emoji: '☀️', hanzi: '太阳', id: 'p-r', pinyin: 'r' },
+  { emoji: '🪑', hanzi: '桌子', id: 'p-z', pinyin: 'z' },
+  { emoji: '🍓', hanzi: '草莓', id: 'p-c', pinyin: 'c' },
+  { emoji: '☂️', hanzi: '雨伞', id: 'p-s', pinyin: 's' },
+  { emoji: '🌙', hanzi: '月亮', id: 'p-y', pinyin: 'y' },
+  { emoji: '🧸', hanzi: '娃娃', id: 'p-w', pinyin: 'w' },
+];
+
+/** 韵母 24 个 */
+const PINYIN_YUNMU: KidPinyin[] = [
+  { emoji: '😮', hanzi: '啊', id: 'p-a', pinyin: 'a' },
+  { emoji: '🐔', hanzi: '喔', id: 'p-o', pinyin: 'o' },
+  { emoji: '🦢', hanzi: '鹅', id: 'p-e', pinyin: 'e' },
+  { emoji: '👕', hanzi: '衣服', id: 'p-i', pinyin: 'i' },
+  { emoji: '🐢', hanzi: '乌龟', id: 'p-u', pinyin: 'u' },
+  { emoji: '🐟', hanzi: '鱼', id: 'p-v', pinyin: 'ü' },
+  { emoji: '❤️', hanzi: '爱心', id: 'p-ai', pinyin: 'ai' },
+  { emoji: '☕', hanzi: '杯子', id: 'p-ei', pinyin: 'ei' },
+  { emoji: '🧣', hanzi: '围巾', id: 'p-ui', pinyin: 'ui' },
+  { emoji: '🐱', hanzi: '小猫', id: 'p-ao', pinyin: 'ao' },
+  { emoji: '🪷', hanzi: '藕', id: 'p-ou', pinyin: 'ou' },
+  { emoji: '📮', hanzi: '邮票', id: 'p-iu', pinyin: 'iu' },
+  { emoji: '🍃', hanzi: '树叶', id: 'p-ie', pinyin: 'ie' },
+  { emoji: '⛄', hanzi: '雪人', id: 'p-ve', pinyin: 'üe' },
+  { emoji: '👂', hanzi: '耳朵', id: 'p-er', pinyin: 'er' },
+  { emoji: '⛑️', hanzi: '安全帽', id: 'p-an', pinyin: 'an' },
+  { emoji: '🚪', hanzi: '门', id: 'p-en', pinyin: 'en' },
+  { emoji: '🐠', hanzi: '金鱼', id: 'p-in', pinyin: 'in' },
+  { emoji: '☁️', hanzi: '云', id: 'p-un', pinyin: 'un' },
+  { emoji: '👗', hanzi: '裙子', id: 'p-vn', pinyin: 'ün' },
+  { emoji: '🎂', hanzi: '蛋糕', id: 'p-ang', pinyin: 'ang' },
+  { emoji: '💡', hanzi: '台灯', id: 'p-eng', pinyin: 'eng' },
+  { emoji: '⭐', hanzi: '星星', id: 'p-ing', pinyin: 'ing' },
+  { emoji: '🕰️', hanzi: '钟', id: 'p-ong', pinyin: 'ong' },
+];
+
+export const kidPinyin: KidPinyin[] = [...PINYIN_SHENGMU, ...PINYIN_YUNMU];

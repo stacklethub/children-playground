@@ -6,16 +6,25 @@
     "home": "Learning Island",
     "cards": "Picture Cards",
     "letters": "Letter Land",
-    "numbers": "Number House",
+    "pinyin": "Pinyin Garden",
+    "numbers": "Number Kingdom",
     "songs": "Nursery Songs",
     "rewards": "My Stars"
   },
   "tiles": {
     "cardsDesc": "Know things around you",
     "lettersDesc": "Make friends with letters",
-    "numbersDesc": "Count and learn",
+    "pinyinDesc": "Meet pinyin and hear how it sounds",
+    "numbersDesc": "Count and do sums",
     "songsDesc": "Sing along",
     "rewardsDesc": "See my rewards"
+  },
+  "pinyin": {
+    "learn": "Learn",
+    "wrongs": "Wrong book {n}",
+    "replay": "Hear it again",
+    "gotIt": "Got it",
+    "remaining": "{n} left"
   },
   "home": {
     "greeting": "Hello, {name}!",
@@ -99,6 +108,7 @@
   },
   "tts": {
     "welcome": "Welcome to the Kids Academy, {name}! What shall we play today?",
+    "pinyinIntro": "Tap the screen to see how the next one sounds!",
     "cardsIntro": "Tap a card and listen to what it is.",
     "cardsCategory": "Let us learn about {name}!",
     "cardsNext": "Look, what is this?",

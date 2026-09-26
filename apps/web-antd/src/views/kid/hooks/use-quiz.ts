@@ -2,8 +2,10 @@ import { ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
+import { type LearnModule, useKidStore } from '#/store';
 import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
+import { useCurrentChild } from './use-current-child';
 import { useReward } from './use-reward';
 
 export interface QuizState<T extends number | string> {
@@ -13,6 +15,8 @@ export interface QuizState<T extends number | string> {
 
 /**
  * 「考一考」通用测验逻辑：随机出题、判分、答对加星后自动出下一题。
+ *
+ * 答错写入错题本、答对移出，与 pinyin-vue 的闭环一致（见 store 的 wrongBook）。
  */
 export function useQuiz<T extends number | string>(options: {
   /** 每答对一题获得的星星 */
@@ -22,9 +26,13 @@ export function useQuiz<T extends number | string>(options: {
   /** 朗读题目 */
   ask: (quiz: QuizState<T>) => void;
   /** 记录所属模块 */
-  module: 'letters' | 'numbers';
+  module: LearnModule;
+  /** 题目在错题本里的条目 id；默认取 answer 的字符串形式 */
+  itemIdOf?: (quiz: QuizState<T>) => string;
 }) {
   const { reward, wrong } = useReward();
+  const kidStore = useKidStore();
+  const { childId } = useCurrentChild();
   const quiz = ref<QuizState<T>>();
   const quizCount = ref(0);
 
@@ -38,15 +46,25 @@ export function useQuiz<T extends number | string>(options: {
   function pick(value: T) {
     const current = quiz.value;
     if (!current) return;
+    // 未绑定孩子时不写错题本（页面此时显示的是引导页）
+    const child = childId.value;
+    const itemId = options.itemIdOf?.(current) ?? `${current.answer}`;
+
     if (value === current.answer) {
+      if (child) {
+        kidStore.removeWrong(child, options.module, itemId);
+      }
       reward({
         detail: `${current.answer}`,
-        itemId: `${current.answer}`,
+        itemId,
         module: options.module,
         stars: options.stars ?? 2,
       });
       setTimeout(next, 1400);
     } else {
+      if (child) {
+        kidStore.addWrong(child, options.module, itemId);
+      }
       wrong();
     }
   }

@@ -1,4 +1,4 @@
-import type { KidCard, KidCategory, KidLetter, KidNumber, KidSong } from './content';
+import type { KidCard, KidCategory, KidLetter, KidNumber, KidPinyin, KidSong } from './content';
 import type { TileKey } from './modules';
 
 import { computed } from 'vue';
@@ -10,11 +10,12 @@ import {
   kidCategories,
   kidLetters,
   kidNumbers,
+  kidPinyin,
   kidSongs,
 } from './content';
 import { useCollection } from './use-collection';
 
-export type { KidCard, KidCategory, KidLetter, KidNumber, KidSong };
+export type { KidCard, KidCategory, KidLetter, KidNumber, KidPinyin, KidSong };
 export { useCollection } from './use-collection';
 export type { ContentItemBase, ContentPatch } from './use-collection';
 
@@ -32,6 +33,7 @@ export interface CardDraft {
  */
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
   cards: kidCards,
+  pinyin: kidPinyin,
 };
 
 /** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
@@ -50,6 +52,11 @@ export function useContent() {
   const cardCollection = useCollection<KidCard>({
     defaults: kidCards,
     key: 'cards',
+  });
+
+  const pinyinCollection = useCollection<KidPinyin>({
+    defaults: kidPinyin,
+    key: 'pinyin',
   });
 
   const categories = computed<KidCategory[]>(() => [...kidCategories]);
@@ -92,6 +99,7 @@ export function useContent() {
     deleteCard,
     letters,
     numbers,
+    pinyinList: pinyinCollection.items,
     songs,
     updateCard,
   };

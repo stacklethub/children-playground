@@ -10,7 +10,13 @@
 import { kidCategories } from './content';
 
 /** 可学习模块：参与每日目标、学习记录与星星统计 */
-export const MODULE_KEYS = ['cards', 'letters', 'numbers', 'songs'] as const;
+export const MODULE_KEYS = [
+  'cards',
+  'letters',
+  'pinyin',
+  'numbers',
+  'songs',
+] as const;
 
 export type LearnModule = (typeof MODULE_KEYS)[number];
 
@@ -96,6 +102,19 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     kind: 'param',
     path: '/kid/numbers',
     range: { default: 10, max: 10, min: 5 },
+  },
+  pinyin: {
+    bg: 'bg-rose-400',
+    defaultGoal: 6,
+    emoji: '🅰️',
+    fields: [
+      { key: 'pinyin', labelKey: 'pinyin', required: true, type: 'text' },
+      { key: 'hanzi', labelKey: 'hanzi', type: 'text' },
+      { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
+    ],
+    key: 'pinyin',
+    kind: 'content',
+    path: '/kid/pinyin',
   },
   songs: {
     bg: 'bg-violet-400',
