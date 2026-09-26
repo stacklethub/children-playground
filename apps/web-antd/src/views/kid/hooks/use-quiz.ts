@@ -145,9 +145,11 @@ export function useLetterPractice() {
   }
 
   /**
-   * speak() 每次调用都会先 cancel() 掉正在播放的内容（utils/tts.ts:87），
-   * 所以「先英文、后中文」必须在 onEnd 里串起来 —— 连着调两次的话，
-   * 第一句会被第二句当场掐掉，听感就是「只读了中文」。
+   * 「先英文、后中文」必须串成一条链，两个原因：
+   * 1. speak() 默认会先 cancel()，连着调两次的话第一句会被当场掐掉；
+   * 2. 但也不能简单地在 onEnd 里再调一次默认的 speak() —— 在 onend 回调中
+   *    执行 cancel() 会让 Chrome 的语音引擎卡死且不报错，所以续读要传
+   *    interrupt: false。
    * seq 用于丢弃过期回调：快速连点卡片时，旧链的尾巴不该再出声。
    */
   let saySeq = 0;
@@ -165,6 +167,7 @@ export function useLetterPractice() {
       onEnd: () => {
         if (seq !== saySeq) return;
         speak($t('kid.tts.lettersSay', { word: item.word, zh: item.zh }), {
+          interrupt: false,
           lang: CONTENT_TTS_LANG,
         });
       },
@@ -178,7 +181,7 @@ export function useLetterPractice() {
       lang: 'en-US',
       onEnd: () => {
         if (seq !== saySeq) return;
-        speak(item.zh, { lang: CONTENT_TTS_LANG });
+        speak(item.zh, { interrupt: false, lang: CONTENT_TTS_LANG });
       },
     });
   }
