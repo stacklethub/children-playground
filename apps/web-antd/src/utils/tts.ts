@@ -87,12 +87,18 @@ export function speak(
     synth.cancel();
     const lang = options.lang ?? resolveTtsLang();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
     // 英文按词连读，语速略快于中文更自然
     utterance.rate = options.rate ?? (lang === 'en-US' ? 0.9 : 0.85);
+    /**
+     * 只有真的挑到匹配语音时才声明 lang。
+     * 声明一个系统里并不存在的语言（例如未安装英文语音包时的 en-US），
+     * 浏览器会直接静默 —— 一个字都不读，而不是回退到默认语音。
+     * 挑不到就交给浏览器默认，至少能出声。
+     */
     const voice = pickVoice(lang);
     if (voice) {
       utterance.voice = voice;
+      utterance.lang = voice.lang;
     }
     utterance.onend = () => options.onEnd?.();
     utterance.onerror = () => options.onEnd?.();
