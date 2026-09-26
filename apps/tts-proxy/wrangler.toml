@@ -1,0 +1,10 @@
+name = "child-study-tts"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://your-app-domain.example"
+
+# secret 用命令写入，不要写在这里：
+#   wrangler secret put AZURE_SPEECH_KEY
+#   wrangler secret put AZURE_SPEECH_REGION
