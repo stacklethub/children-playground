@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-
 import type { LogicKind } from '#/data/content';
+import type { LearnModule } from '#/store';
+
+import { onMounted, ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
-import { type LearnModule } from '#/store';
 import { CONTENT_TTS_LANG, speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
@@ -28,10 +28,10 @@ const kind = ref<LogicKind>('pattern');
 const meta = ref({ id: '', prompt: '' });
 
 const tabs = [
-  { key: 'pattern', label: $t('kid.logic.pattern') },
-  { key: 'sort', label: $t('kid.logic.sort') },
-  { key: 'compare', label: $t('kid.logic.compare') },
-  { key: 'match', label: $t('kid.logic.match') },
+  { label: $t('kid.logic.pattern'), value: 'pattern' },
+  { label: $t('kid.logic.sort'), value: 'sort' },
+  { label: $t('kid.logic.compare'), value: 'compare' },
+  { label: $t('kid.logic.match'), value: 'match' },
 ];
 
 const { next, pick, quiz, quizCount } = useQuiz<string>({
@@ -65,12 +65,7 @@ onMounted(() => {
   <BindGuard v-if="!bound" />
 
   <KidPage v-else emoji="🧩" title-key="kid.modules.logic">
-    <KidTabs
-      v-model:model="kind"
-      active-class="bg-cyan-500"
-      :items="tabs"
-      @change="onKindChange"
-    />
+    <KidTabs v-model="kind" accent="sun" :items="tabs" @change="onKindChange" />
 
     <template v-if="quiz && quiz.options.length > 0">
       <p class="mb-8 text-center text-4xl font-black text-slate-700">

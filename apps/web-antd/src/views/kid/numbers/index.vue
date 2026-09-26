@@ -102,9 +102,9 @@ const {
 });
 
 const tabs = [
-  { key: 'learn', label: $t('kid.numbers.learn') },
-  { key: 'arith', label: $t('kid.numbers.arithmetic') },
-  { key: 'count', label: $t('kid.numbers.quiz') },
+  { label: $t('kid.numbers.learn'), value: 'learn' },
+  { label: $t('kid.numbers.arithmetic'), value: 'arith' },
+  { label: $t('kid.numbers.quiz'), value: 'count' },
 ];
 
 function onModeChange(key: string) {
@@ -127,8 +127,8 @@ onMounted(() => {
 
   <KidPage v-else emoji="🔢" title-key="kid.modules.numbers">
     <KidTabs
-      v-model:model="mode"
-      active-class="bg-emerald-400"
+      v-model="mode"
+      accent="lilac"
       :items="tabs"
       @change="onModeChange"
     />

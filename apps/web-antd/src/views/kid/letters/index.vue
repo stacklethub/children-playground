@@ -41,9 +41,9 @@ const meta = ref<{ itemId: string; mode: 'letter' | 'word'; word: string }>({
 });
 
 const tabs = [
-  { key: 'learn', label: $t('kid.letters.learn') },
-  { key: 'word', label: $t('kid.letters.word') },
-  { key: 'quiz', label: $t('kid.letters.quiz') },
+  { label: $t('kid.letters.learn'), value: 'learn' },
+  { label: $t('kid.letters.word'), value: 'word' },
+  { label: $t('kid.letters.quiz'), value: 'quiz' },
 ];
 
 const {
@@ -115,12 +115,7 @@ onMounted(() => {
   <BindGuard v-if="!bound" />
 
   <KidPage v-else emoji="🔤" title-key="kid.modules.letters">
-    <KidTabs
-      v-model:model="mode"
-      active-class="bg-sky-400"
-      :items="tabs"
-      @change="onModeChange"
-    />
+    <KidTabs v-model="mode" accent="sky" :items="tabs" @change="onModeChange" />
 
     <!-- 认字母 / 学单词：一进来就是一张大卡片，左右翻页 -->
     <template v-if="isFlipMode && current">

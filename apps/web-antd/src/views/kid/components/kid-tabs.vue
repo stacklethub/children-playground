@@ -1,41 +1,74 @@
 <script setup lang="ts">
+import type { KidColorName } from '#/data/kid-palette';
+
 import { computed } from 'vue';
 
+/**
+ * 模块内 Tab 胶囊。
+ *
+ * 由旧的 kid-tabs（模块内多 Tab）与 mode-tabs（learn/quiz 二选一）合并而来 ——
+ * 两者本是同一个控件，分家导致样式各写一份、行为不一致。
+ *
+ * accent 用显式映射而非模板字符串拼接：Tailwind 靠扫描源码生成类名，
+ * 动态拼出的 `bg-kid-${accent}` 不会被扫描到，运行时样式会丢。
+ */
 const props = withDefaults(
   defineProps<{
-    activeClass?: string;
-    /** 页签项；key 交给调用方解释（如 'learn' / 'quiz' / 题型 key） */
-    items: { emoji?: string; key: string; label: string }[];
+    accent?: KidColorName;
+    items: Array<{ label: string; value: string }>;
   }>(),
-  { activeClass: 'bg-sky-400' },
+  { accent: 'sky' },
 );
 
-const emit = defineEmits<{ change: [key: string] }>();
+const emit = defineEmits<{ change: [value: string] }>();
 
-const model = defineModel<string>('model');
+const ACCENT_CLASS: Partial<Record<KidColorName, string>> = {
+  apricot: 'bg-kid-apricot',
+  berry: 'bg-kid-berry',
+  blush: 'bg-kid-blush',
+  coral: 'bg-kid-coral',
+  gold: 'bg-kid-gold',
+  leaf: 'bg-kid-leaf',
+  lilac: 'bg-kid-lilac',
+  sky: 'bg-kid-sky',
+  sun: 'bg-kid-sun',
+};
 
-const active = computed(() => model.value ?? props.items[0]?.key ?? '');
+const accentClass = computed(() => ACCENT_CLASS[props.accent] ?? 'bg-kid-sky');
 
-function pick(key: string) {
-  model.value = key;
-  emit('change', key);
+const model = defineModel<string>({ required: true });
+
+function pick(value: string) {
+  if (value === model.value) return;
+  model.value = value;
+  emit('change', value);
 }
 </script>
 
 <template>
-  <div class="mb-8 flex flex-wrap gap-3 rounded-full bg-white/70 p-2">
+  <div
+    class="mb-6 flex w-max gap-2 rounded-kid-pill border-kid-ink bg-kid-paper p-1.5 shadow-kid-hard"
+  >
     <button
       v-for="item in items"
-      :key="item.key"
-      class="min-h-20 rounded-full px-8 py-3 text-2xl font-bold transition"
+      :key="item.value"
+      class="kid-tab rounded-kid-pill px-6 font-black transition-colors duration-[220ms]"
       :class="
-        active === item.key
-          ? `${activeClass} text-white shadow`
-          : 'text-slate-500'
+        model === item.value
+          ? `${accentClass} text-white`
+          : 'bg-transparent text-kid-ink-soft'
       "
-      @click="pick(item.key)"
+      type="button"
+      @click="pick(item.value)"
     >
-      <span v-if="item.emoji">{{ item.emoji }} </span>{{ item.label }}
+      {{ item.label }}
     </button>
   </div>
 </template>
+
+<style scoped>
+.kid-tab {
+  min-height: 56px;
+  border-width: 0;
+}
+</style>

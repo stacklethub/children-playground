@@ -57,14 +57,14 @@ const isCardMode = computed(() => mode.value !== 'quiz');
 /** 错题本页签只在有错题时出现 */
 const tabs = computed(() => {
   const list = [
-    { key: 'learn', label: $t('kid.pinyin.learn') },
-    { key: 'hanzi', label: $t('kid.pinyin.hanzi') },
-    { key: 'quiz', label: $t('kid.pinyin.quiz') },
+    { label: $t('kid.pinyin.learn'), value: 'learn' },
+    { label: $t('kid.pinyin.hanzi'), value: 'hanzi' },
+    { label: $t('kid.pinyin.quiz'), value: 'quiz' },
   ];
   if (wrongItems.value.length > 0) {
     list.push({
-      key: 'wrongs',
       label: $t('kid.pinyin.wrongs', { n: wrongItems.value.length }),
+      value: 'wrongs',
     });
   }
   return list;
@@ -184,8 +184,8 @@ onMounted(() => {
 
   <KidPage v-else emoji="🅰️" title-key="kid.modules.pinyin">
     <KidTabs
-      v-model:model="mode"
-      active-class="bg-rose-400"
+      v-model="mode"
+      accent="coral"
       :items="tabs"
       @change="onModeChange"
     />
