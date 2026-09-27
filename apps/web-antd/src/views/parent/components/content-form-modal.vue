@@ -60,17 +60,40 @@ watch(open, (value) => {
 });
 
 /**
- * 中文乐园：填了汉字就带出完整拼音（「苹果」→「píng guǒ」），省去家长自己查。
- *
- * 带出来的是整词拼音，家长看着改成教学内容即可 —— 声母条目填 `p`、
- * 韵母条目填 `ai`，cnchar 判断不了该教哪个，只能由家长定。
+ * 中文乐园「认汉字」条目：填了汉字就自动带出完整拼音（「苹果」→「píng guǒ」），
+ * 省去家长自己查。学拼音条目要教的是声母/韵母字形（`b`、`ai`），cnchar
+ * 判断不了该教哪个，不能自动转，只能由家长手填。
  * 同步 flush 是为了让上面的灌数据能挡住这次触发。
  */
 watch(
   () => form.hanzi,
   (hanzi) => {
     if (hydrating || props.moduleKey !== 'pinyin' || !hanzi) return;
+    if (form.kind !== 'hanzi') return;
     form.pinyin = pinyinOf(String(hanzi));
+  },
+  { flush: 'sync' },
+);
+
+/** 中文乐园里「认汉字」条目的拼音由汉字自动转出，表单里不暴露、避免手填冲突 */
+const isPinyinAuto = computed(
+  () => props.moduleKey === 'pinyin' && form.kind === 'hanzi',
+);
+
+/**
+ * 切换条目类型时校正拼音：
+ * 切到「认汉字」→ 若已填汉字则立刻带出完整拼音；
+ * 切回「学拼音」→ 清空自动带出的整词拼音，让家长重填声母/韵母。
+ */
+watch(
+  () => form.kind,
+  (kind) => {
+    if (hydrating || props.moduleKey !== 'pinyin') return;
+    if (kind === 'hanzi') {
+      if (form.hanzi) form.pinyin = pinyinOf(String(form.hanzi));
+    } else {
+      form.pinyin = '';
+    }
   },
   { flush: 'sync' },
 );
@@ -99,6 +122,12 @@ function submit() {
     fields.value.map((field) => [field.key, form[field.key]]),
   );
 
+  // 认汉字条目的拼音完全由汉字派生：表单里没有拼音输入，这里兜底补上，
+  // 保证 watch 未触发（如极端时序）时也能写出完整拼音。
+  if (props.moduleKey === 'pinyin' && (draft.kind ?? 'pinyin') === 'hanzi') {
+    draft.pinyin = pinyinOf(String(draft.hanzi ?? '').trim());
+  }
+
   // 跨字段约束（如「正确答案必须属于选项」）由模块自己声明
   const error = MODULES[props.moduleKey].validate?.(draft);
   if (error) {
@@ -124,7 +153,13 @@ function submit() {
         :label="$t(`parent.content.${field.labelKey}`)"
         :required="field.required"
       >
-        <Select v-if="field.type === 'select'" v-model:value="form[field.key]">
+        <!-- 认汉字条目的拼音由汉字自动转出，表单里整项隐藏，不要求家长填 -->
+        <template v-if="field.key === 'pinyin' && isPinyinAuto"></template>
+
+        <Select
+          v-else-if="field.type === 'select'"
+          v-model:value="form[field.key]"
+        >
           <Select.Option
             v-for="option in field.options?.() ?? []"
             :key="option.value"

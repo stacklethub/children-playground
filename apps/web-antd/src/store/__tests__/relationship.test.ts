@@ -1,29 +1,35 @@
 import type { ChildApi } from '#/api';
 
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { getBindToken } from '#/utils/bind-token';
 
 import { useDeviceStore, useFamilyStore, useKidStore } from '..';
 
 /**
- * 回归测试：家长账号 与 幼儿（设备学习者）的对应关系。
+ * 回归测试：家长 与 幼儿（设备学习者）的对应关系。
  *
  * 保护的不变量（曾经全部被违反，导致"宝宝端默认就是某个幼儿"）：
- * 1. 登录家长账号、拉取孩子列表 **不** 决定设备的学习者；
+ * 1. 浏览、拉取孩子列表 **不** 决定设备的学习者；
  * 2. 新建 / 删除孩子 不会隐式改变设备的学习者；
- * 3. 设备学习者只能由家长显式绑定产生；
- * 4. 家长退出登录 **不** 清空设备绑定与本机学习记录；
+ * 3. 设备学习者只能由家长显式绑定产生（**唯一例外**：首次运行由
+ *    `ensureDefaultChild` 一次性预置默认孩子并绑定，见文件末尾用例）；
+ * 4. 家长退出（$reset）**不** 清空设备绑定与本机学习记录；
  * 5. 只能切换到本机绑定过的孩子。
+ *
+ * 无后端模式：孩子档案与学习记录本机存储（IndexedDB），
+ * 绑定关系用 localStorage（bind-token 退化为 childId 集合）。
  */
+
+/* oxlint-disable unicorn/prefer-dom-node-remove -- family store 的业务方法 removeChild
+   （删孩子档案）与 DOM Node.removeChild 同名，规则只按名字判断，在本文件全部调用处误报。 */
 
 const childA: ChildApi.ChildProfile = {
   avatar: '👧',
   createdAt: 1,
   id: 'child-a',
   name: '小星星',
-  parentId: 'vben',
 };
 
 const childB: ChildApi.ChildProfile = {
@@ -31,35 +37,23 @@ const childB: ChildApi.ChildProfile = {
   createdAt: 2,
   id: 'child-b',
   name: '小月亮',
-  parentId: 'vben',
 };
 
-const api = vi.hoisted(() => ({
-  bindChildApi: vi.fn(),
-  createChildApi: vi.fn(),
-  deleteChildApi: vi.fn(),
-  getChildrenApi: vi.fn(),
-  updateChildApi: vi.fn(),
-}));
-
-vi.mock('#/api', () => api);
-
-describe('家长账号 与 设备学习者 的关系', () => {
+describe('家长 与 设备学习者 的关系', () => {
   beforeEach(() => {
     localStorage.clear();
     setActivePinia(createPinia());
-    vi.clearAllMocks();
   });
 
-  it('登录家长账号并拉取孩子列表，不会把设备学习者默认成列表第一个孩子', async () => {
+  it('拉取孩子列表，不会把设备学习者默认成列表第一个孩子', async () => {
     const family = useFamilyStore();
     const device = useDeviceStore();
 
-    api.getChildrenApi.mockResolvedValue([childA, childB]);
-    await family.fetchChildren();
+    await family.addChild({ name: childA.name });
+    await family.addChild({ name: childB.name });
 
     expect(family.children).toHaveLength(2);
-    // 关键：家长只是登录/浏览，设备的学习者仍然为空
+    // 关键：家长只是浏览，设备的学习者仍然为空
     expect(device.bound).toBe(false);
     expect(device.boundChildId).toBeUndefined();
     expect(device.knownChildren).toHaveLength(0);
@@ -69,64 +63,53 @@ describe('家长账号 与 设备学习者 的关系', () => {
     const family = useFamilyStore();
     const device = useDeviceStore();
 
-    api.createChildApi.mockResolvedValue(childA);
     await family.addChild({ name: childA.name });
 
     expect(family.children).toHaveLength(1);
     expect(device.bound).toBe(false);
-    expect(api.bindChildApi).not.toHaveBeenCalled();
   });
 
-  it('只有家长显式绑定，才会产生设备学习者与上报令牌', async () => {
+  it('只有家长显式绑定，才会产生设备学习者与绑定标记', async () => {
     const device = useDeviceStore();
 
-    api.bindChildApi.mockResolvedValue({ bindToken: 'token-a', child: childA });
     await device.bindChild(childA);
 
     expect(device.bound).toBe(true);
     expect(device.boundChildId).toBe(childA.id);
     expect(device.knownChildren.map((c) => c.id)).toEqual([childA.id]);
-    expect(getBindToken(childA.id)).toBe('token-a');
+    expect(getBindToken(childA.id)).toBe('local');
   });
 
-  it('家长退出登录不会清空设备绑定与本机学习记录', async () => {
+  it('家长退出不会清空设备绑定与本机学习记录', async () => {
     const device = useDeviceStore();
     const family = useFamilyStore();
     const kid = useKidStore();
 
-    api.bindChildApi.mockResolvedValue({ bindToken: 'token-a', child: childA });
-    api.getChildrenApi.mockResolvedValue([childA]);
-    await family.fetchChildren();
+    await family.addChild({ name: childA.name });
     await device.bindChild(childA);
     kid.addRecord({
       childId: childA.id,
       itemId: 'a1',
       module: 'cards',
-      parentId: childA.parentId,
       stars: 2,
     });
 
-    // 模拟 resetAllStores()（家长 logout 时触发）
+    // 模拟家长退出（resetAllStores）
     family.$reset();
     device.$reset();
     kid.$reset();
 
-    expect(family.children).toHaveLength(0); // 家长数据随登出清空
+    expect(family.children).toHaveLength(0); // 家长数据随退出清空
     expect(device.boundChildId).toBe(childA.id); // 设备学习者保留
     expect(kid.records).toHaveLength(1); // 本机学习记录保留
-    expect(getBindToken(childA.id)).toBe('token-a'); // 上报令牌保留
+    expect(getBindToken(childA.id)).toBe('local'); // 绑定标记保留
   });
 
-  it('删除设备当前学习者时解除绑定并清理令牌', async () => {
+  it('删除设备当前学习者时解除绑定并清理标记', async () => {
     const family = useFamilyStore();
     const device = useDeviceStore();
 
-    api.bindChildApi.mockResolvedValue({ bindToken: 'token-a', child: childA });
-    api.getChildrenApi.mockResolvedValue([childA]);
-    api.deleteChildApi.mockResolvedValue(undefined);
-    api.updateChildApi.mockResolvedValue(childA);
-
-    await family.fetchChildren();
+    await family.addChild({ name: childA.name });
     await device.bindChild(childA);
 
     await family.removeChild(childA.id);
@@ -140,11 +123,8 @@ describe('家长账号 与 设备学习者 的关系', () => {
     const device = useDeviceStore();
     const family = useFamilyStore();
 
-    api.bindChildApi.mockResolvedValue({ bindToken: 'token-a', child: childA });
-    api.getChildrenApi.mockResolvedValue([childA, childB]);
-    api.deleteChildApi.mockResolvedValue(undefined);
-
-    await family.fetchChildren();
+    await family.addChild({ name: childA.name });
+    await family.addChild({ name: childB.name });
     await device.bindChild(childA);
     await family.removeChild(childB.id);
 
@@ -155,16 +135,13 @@ describe('家长账号 与 设备学习者 的关系', () => {
     const family = useFamilyStore();
     const kid = useKidStore();
 
-    api.getChildrenApi.mockResolvedValue([childA, childB]);
-    api.deleteChildApi.mockResolvedValue(undefined);
-
-    await family.fetchChildren();
+    await family.addChild({ name: childA.name });
+    await family.addChild({ name: childB.name });
     for (const child of [childA, childB]) {
       kid.addRecord({
         childId: child.id,
         itemId: 'a1',
         module: 'cards',
-        parentId: child.parentId,
         stars: 1,
       });
     }
@@ -178,10 +155,6 @@ describe('家长账号 与 设备学习者 的关系', () => {
 
   it('多孩子时可在本机切换，且不能切到未绑定过的孩子', async () => {
     const device = useDeviceStore();
-
-    api.bindChildApi
-      .mockResolvedValueOnce({ bindToken: 'token-a', child: childA })
-      .mockResolvedValueOnce({ bindToken: 'token-b', child: childB });
 
     await device.bindChild(childA);
     await device.bindChild(childB);
@@ -200,13 +173,65 @@ describe('家长账号 与 设备学习者 的关系', () => {
     const device = useDeviceStore();
     const family = useFamilyStore();
 
-    api.bindChildApi.mockResolvedValue({ bindToken: 'token-a', child: childA });
-    api.updateChildApi.mockResolvedValue({ ...childA, name: '新名字' });
-
-    await device.bindChild(childA);
-    await family.editChild(childA.id, { name: '新名字' });
+    const saved = await family.addChild({ name: childA.name });
+    await device.bindChild(saved);
+    await family.editChild(saved.id, { name: '新名字' });
 
     expect(device.boundChild?.name).toBe('新名字');
     expect(device.knownChildren[0]?.name).toBe('新名字');
+  });
+
+  /**
+   * 首次运行预置：系统自动建一个默认孩子并绑定到本机，首页开箱即可学习。
+   * 这是「显式绑定」唯一的一次性例外，故单独锁定行为边界。
+   */
+  describe('首次运行预置默认孩子', () => {
+    it('预置一个默认孩子并绑定到本机', () => {
+      const family = useFamilyStore();
+      const device = useDeviceStore();
+
+      family.ensureDefaultChild();
+
+      expect(family.children).toHaveLength(1);
+      const child = family.children[0];
+      if (!child) throw new Error('ensureDefaultChild 未预置孩子');
+      expect(child.name.length).toBeGreaterThan(0);
+      expect(device.bound).toBe(true);
+      expect(device.boundChildId).toBe(child.id);
+      expect(getBindToken(child.id)).toBe('local');
+    });
+
+    it('重复调用不会重复预置', () => {
+      const family = useFamilyStore();
+
+      family.ensureDefaultChild();
+      family.ensureDefaultChild();
+
+      expect(family.children).toHaveLength(1);
+    });
+
+    it('已有孩子档案时不预置，也不改变其绑定关系', async () => {
+      const family = useFamilyStore();
+      const device = useDeviceStore();
+
+      await family.addChild({ name: childA.name });
+      family.ensureDefaultChild();
+
+      expect(family.children).toHaveLength(1);
+      expect(family.children[0]?.name).toBe(childA.name);
+      expect(device.bound).toBe(false);
+    });
+
+    it('家长删光孩子后不会再次自动补默认孩子', async () => {
+      const family = useFamilyStore();
+
+      family.ensureDefaultChild();
+      const child = family.children[0];
+      if (!child) throw new Error('ensureDefaultChild 未预置孩子');
+      await family.removeChild(child.id);
+      family.ensureDefaultChild();
+
+      expect(family.children).toHaveLength(0);
+    });
   });
 });

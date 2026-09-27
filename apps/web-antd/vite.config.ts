@@ -1,20 +1,48 @@
+import type { PluginOption } from 'vite';
+
+import { env } from 'node:process';
+
 import { defineConfig } from '@vben/vite-config';
 
+import { viteSingleFile } from 'vite-plugin-singlefile';
+
 export default defineConfig(async () => {
+  const scriptName = env.npm_lifecycle_event;
+  const isSingle = scriptName === 'build:singlefile';
+  const plugins: PluginOption[] = [];
+  if (isSingle) {
+    plugins.push(
+      viteSingleFile({
+        useRecommendedBuildConfig: false,
+        removeViteModuleLoader: true,
+      }),
+    );
+  }
+
   return {
-    application: {},
+    application: {
+      nitroMock: false,
+      archiver: !isSingle,
+      compress: false,
+      extraAppConfig: !isSingle,
+      pwa: !isSingle,
+    },
     vite: {
-      server: {
-        proxy: {
-          '/api': {
-            changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
-            // mock代理目标地址
-            target: 'http://localhost:5320/api',
-            ws: true,
-          },
-        },
-      },
+      plugins,
+      ...(isSingle
+        ? {
+            base: './',
+            build: {
+              assetsInlineLimit: Number.MAX_SAFE_INTEGER,
+              cssCodeSplit: false,
+              rolldownOptions: {
+                output: {
+                  codeSplitting: false,
+                },
+              },
+            },
+          }
+        : {}),
     },
   };
 });

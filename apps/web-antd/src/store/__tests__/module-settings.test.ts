@@ -1,15 +1,10 @@
 import type { LearnModule } from '#/data/modules';
 
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { MODULES } from '#/data/modules';
 import { useKidStore } from '#/store';
-
-vi.mock('#/api', () => ({
-  submitLearnRecordApi: vi.fn(),
-  syncLearnRecordsApi: vi.fn(),
-}));
 
 /** 注册表声明的难度区间默认值；只对声明了区间的模块调用 */
 function rangeDefault(module: LearnModule): number {

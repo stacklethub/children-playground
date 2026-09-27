@@ -1,14 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useKidStore } from '#/store';
 
 import { useLetterSession } from '../use-letter-session';
-
-vi.mock('#/api', () => ({
-  submitLearnRecordApi: vi.fn(),
-  syncLearnRecordsApi: vi.fn(),
-}));
 
 /** A-Z 全集；会话取的是它的前 N 个（N 由家长端难度范围决定） */
 const ALL = Array.from({ length: 26 }, (_, i) => String.fromCodePoint(65 + i));

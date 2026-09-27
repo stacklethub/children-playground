@@ -31,7 +31,8 @@ export function useSongPlayer(
     playing.value = true;
     let i = 0;
     const speakLine = () => {
-      if (i >= current.lines.length) {
+      const line = current.lines[i];
+      if (i >= current.lines.length || line === undefined) {
         stop();
         const key = `${current.id}-${new Date().toDateString()}`;
         if (listenedKeys.has(key)) {
@@ -39,7 +40,6 @@ export function useSongPlayer(
         } else {
           listenedKeys.add(key);
           reward({
-            detail: current.title,
             itemId: current.id,
             module: 'songs',
             stars: 2,
@@ -49,7 +49,7 @@ export function useSongPlayer(
       }
       activeLine.value = i;
       // 歌词属于内容层中文素材（不参与 i18n），固定中文语音朗读
-      speak(current.lines[i]!, {
+      speak(line, {
         lang: CONTENT_TTS_LANG,
         onEnd: () => {
           i += 1;

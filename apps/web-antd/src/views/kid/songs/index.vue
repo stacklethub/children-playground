@@ -37,34 +37,36 @@ function openSong(id: string, title: string) {
     <!-- 儿歌列表 -->
     <div
       v-if="!song"
-      class="grid w-full max-w-3xl grid-cols-2 gap-6 sm:grid-cols-3"
+      class="grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-6"
     >
       <button
         v-for="item in songs"
         :key="item.id"
-        class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-6 shadow-lg transition hover:-translate-y-1 active:scale-95"
+        class="flex flex-col items-center gap-2 rounded-3xl bg-white/90 p-4 shadow-lg transition hover:-translate-y-1 active:scale-95 sm:p-6"
         data-star-anchor
         @click="openSong(item.id, item.title)"
       >
         <span
-          class="flex h-24 w-24 items-center justify-center rounded-full bg-violet-100 text-6xl"
+          class="flex h-20 w-20 items-center justify-center rounded-full bg-violet-100 text-5xl sm:h-24 sm:w-24 sm:text-6xl"
         >
           {{ item.emoji }}
         </span>
-        <span class="text-2xl font-bold text-slate-700">{{ item.title }}</span>
+        <span class="text-lg font-bold text-slate-700 sm:text-2xl">
+          {{ item.title }}
+        </span>
       </button>
     </div>
 
     <!-- 儿歌播放 -->
     <template v-else>
       <div
-        class="flex w-full max-w-2xl flex-col gap-3 rounded-[2.5rem] bg-white/95 p-10 shadow-2xl"
+        class="flex w-full max-w-2xl flex-col gap-3 rounded-[2rem] border border-white/60 bg-white/55 p-5 shadow-lg backdrop-blur-xl sm:p-10"
         data-star-anchor
       >
         <p
           v-for="(line, i) in song.lines"
           :key="i"
-          class="cursor-pointer rounded-2xl py-2 text-center text-3xl font-bold transition"
+          class="cursor-pointer rounded-2xl py-2 text-center text-2xl font-bold transition sm:text-3xl"
           :class="
             i === activeLine
               ? 'bg-violet-100 text-violet-600'
@@ -76,9 +78,9 @@ function openSong(id: string, title: string) {
         </p>
       </div>
 
-      <div class="mt-8 flex gap-6">
+      <div class="mt-6 flex flex-wrap justify-center gap-3 sm:mt-8 sm:gap-6">
         <button
-          class="rounded-full bg-violet-400 px-14 py-4 text-3xl font-bold text-white shadow-lg transition active:scale-95"
+          class="min-h-16 rounded-full bg-violet-400 px-8 text-2xl font-bold text-white shadow-lg transition active:scale-95 sm:px-14 sm:text-3xl"
           @click="
             stop();
             play();
@@ -87,7 +89,7 @@ function openSong(id: string, title: string) {
           ▶️ {{ $t('kid.songs.play') }}
         </button>
         <button
-          class="rounded-full bg-slate-300 px-10 py-4 text-3xl font-bold text-slate-600 shadow-lg transition active:scale-95"
+          class="min-h-16 rounded-full bg-slate-300 px-6 text-2xl font-bold text-slate-600 shadow-lg transition active:scale-95 sm:px-10 sm:text-3xl"
           @click="
             stop();
             router.push('/kid/songs');

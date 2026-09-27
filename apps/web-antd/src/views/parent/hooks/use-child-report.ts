@@ -1,11 +1,9 @@
-import type { LearnRecordPayload } from '#/api';
+import type { LearnModule } from '#/store';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
-import { getLearnReportApi } from '#/api';
 import { MODULES } from '#/data/modules';
 import {
-  type LearnModule,
   MODULE_KEYS,
   useDeviceStore,
   useFamilyStore,
@@ -20,7 +18,7 @@ export const MODULE_META: Record<LearnModule, { color: string; key: string }> =
 
 /**
  * 家长端学习报告数据：
- * 数据来源 = 云端（当前家长名下、按所选孩子过滤）+ 本机待同步记录（去重合并）。
+ * 无后端模式，数据来源 = 本机学习记录（按所选孩子过滤）。
  */
 export function useChildReport() {
   const familyStore = useFamilyStore();
@@ -30,24 +28,16 @@ export function useChildReport() {
   /** 数据范围：'' 表示全部孩子 */
   const selectedChildId = ref<string>('');
   const loading = ref(false);
-  const serverRecords = ref<LearnRecordPayload[]>([]);
 
-  /** 本机待同步记录（未上传成功的那部分） */
+  /** 本机待同步记录（无后端模式下恒为空，保留字段兼容 UI） */
   const localPending = computed(() =>
     kidStore.pendingOf(selectedChildId.value || undefined),
   );
 
-  /** 云端 + 本机合并去重（按记录 id），并按时间倒序 */
-  const allRecords = computed(() => {
-    const map = new Map<string, LearnRecordPayload>();
-    for (const record of serverRecords.value) {
-      map.set(record.id, record);
-    }
-    for (const record of localPending.value) {
-      map.set(record.id, record);
-    }
-    return [...map.values()].sort((a, b) => b.createdAt - a.createdAt);
-  });
+  /** 全部记录（本机），按时间倒序 */
+  const allRecords = computed(() =>
+    kidStore.recordsOf(selectedChildId.value || undefined),
+  );
 
   const totalStars = computed(() =>
     allRecords.value.reduce((sum, r) => sum + (r.stars ?? 0), 0),
@@ -107,42 +97,13 @@ export function useChildReport() {
       .filter((item) => item.value > 0),
   );
 
-  /**
-   * 请求代次：切换孩子与 init 都可能并发发起请求，
-   * 且 init 的请求在 syncPending() 之后、数据更完整。
-   * 只让最后发起的那次写入结果，避免先返回的旧数据覆盖掉它。
-   */
-  let loadSeq = 0;
-
-  async function load() {
-    const seq = ++loadSeq;
-    loading.value = true;
-    try {
-      const report = await getLearnReportApi({
-        childId: selectedChildId.value || undefined,
-        range: 'week',
-      });
-      if (seq !== loadSeq) return;
-      serverRecords.value = report.records ?? [];
-    } catch {
-      if (seq !== loadSeq) return;
-      // 云端不可用时仅展示本机数据
-      serverRecords.value = [];
-    } finally {
-      if (seq === loadSeq) loading.value = false;
-    }
-  }
-
-  /** 进入家长中心时：拉孩子列表 + 补传离线记录 + 拉报告 */
+  /** 进入家长中心时：拉孩子列表 + 默认关注本机学习者 */
   async function init() {
     await familyStore.fetchChildren();
     // 默认关注本机学习者（查看范围可随时切换，不影响宝宝端归属）
     selectedChildId.value = deviceStore.boundChildId ?? '';
-    await kidStore.syncPending();
-    await load();
   }
 
-  watch(selectedChildId, load);
   onMounted(init);
 
   return {
@@ -154,7 +115,6 @@ export function useChildReport() {
     localPending,
     moduleDist,
     selectedChildId,
-    serverRecords,
     streakDays,
     totalStars,
   };

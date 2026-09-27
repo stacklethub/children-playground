@@ -1,10 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('#/api', () => ({
-  submitLearnRecordApi: vi.fn(),
-  syncLearnRecordsApi: vi.fn(),
-}));
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { MODULES } from '#/data/modules';
 import { useKidStore } from '#/store';

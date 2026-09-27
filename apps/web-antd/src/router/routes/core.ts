@@ -1,11 +1,8 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { LOGIN_PATH } from '@vben/constants';
-
 import { $t } from '#/locales';
 
 const BasicLayout = () => import('#/layouts/basic.vue');
-const AuthPageLayout = () => import('#/layouts/auth.vue');
 /** 宝宝端布局：全屏、无菜单，带回家按钮与家长门禁 */
 const KidLayout = () => import('#/layouts/kid.vue');
 /** 全局404页面 */
@@ -63,7 +60,7 @@ const coreRoutes: RouteRecordRaw[] = [
         component: () => import('#/views/kid/cards/index.vue'),
         meta: { title: $t('kid.modules.cards') },
         name: 'KidCards',
-        path: 'cards/:categoryId?',
+        path: 'cards',
       },
       {
         component: () => import('#/views/kid/letters/index.vue'),
@@ -112,60 +109,6 @@ const coreRoutes: RouteRecordRaw[] = [
         meta: { title: $t('kid.modules.rewards') },
         name: 'KidRewards',
         path: 'rewards',
-      },
-    ],
-  },
-  {
-    component: AuthPageLayout,
-    meta: {
-      hideInTab: true,
-      title: 'Authentication',
-    },
-    name: 'Authentication',
-    path: '/auth',
-    redirect: LOGIN_PATH,
-    children: [
-      {
-        name: 'Login',
-        path: 'login',
-        component: () => import('#/views/_core/authentication/login.vue'),
-        meta: {
-          title: $t('page.auth.login'),
-        },
-      },
-      {
-        name: 'CodeLogin',
-        path: 'code-login',
-        component: () => import('#/views/_core/authentication/code-login.vue'),
-        meta: {
-          title: $t('page.auth.codeLogin'),
-        },
-      },
-      {
-        name: 'QrCodeLogin',
-        path: 'qrcode-login',
-        component: () =>
-          import('#/views/_core/authentication/qrcode-login.vue'),
-        meta: {
-          title: $t('page.auth.qrcodeLogin'),
-        },
-      },
-      {
-        name: 'ForgetPassword',
-        path: 'forget-password',
-        component: () =>
-          import('#/views/_core/authentication/forget-password.vue'),
-        meta: {
-          title: $t('page.auth.forgetPassword'),
-        },
-      },
-      {
-        name: 'Register',
-        path: 'register',
-        component: () => import('#/views/_core/authentication/register.vue'),
-        meta: {
-          title: $t('page.auth.register'),
-        },
       },
     ],
   },

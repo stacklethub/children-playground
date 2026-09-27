@@ -1,7 +1,9 @@
+import type { KidBadge, LearnModule } from '#/store';
+
 import { ref } from 'vue';
 
 import { $t } from '#/locales';
-import { type KidBadge, type LearnModule, useKidStore } from '#/store';
+import { useKidStore } from '#/store';
 import { speak, speakEncourage, speakPraise } from '#/utils/tts';
 
 import { useCurrentChild } from './use-current-child';
@@ -12,7 +14,7 @@ import { useCurrentChild } from './use-current-child';
  */
 export function useReward() {
   const kidStore = useKidStore();
-  const { childId, parentId } = useCurrentChild();
+  const { childId } = useCurrentChild();
 
   const rewardShow = ref(false);
   const rewardText = ref('');
@@ -47,13 +49,12 @@ export function useReward() {
   }) {
     const stars = options.stars ?? 1;
     let badges: KidBadge[] = [];
-    if (childId.value && parentId.value) {
+    if (childId.value) {
       badges = kidStore.addRecord({
         childId: childId.value,
         detail: options.detail,
         itemId: options.itemId,
         module: options.module,
-        parentId: parentId.value,
         result: options.result ?? 'right',
         stars,
       });

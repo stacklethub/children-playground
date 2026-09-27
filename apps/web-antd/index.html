@@ -7,9 +7,14 @@
     <meta name="description" content="A Modern Back-end Management System" />
     <meta name="keywords" content="Vben Admin Vue3 Vite" />
     <meta name="author" content="Vben" />
+    <!--
+      viewport-fit=cover：让页面延伸到刘海屏 / 灵动岛区域，
+      否则 env(safe-area-inset-*) 恒为 0，宝宝端的顶部 HUD 会被状态栏压住。
+      安全区由 layouts/kid.vue 用 env() 主动留出，家长端不受影响。
+    -->
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0"
+      content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=0,viewport-fit=cover"
     />
     <!-- 由 vite 注入 VITE_APP_TITLE 变量，在 .env 文件内配置 -->
     <title>%VITE_APP_TITLE%</title>

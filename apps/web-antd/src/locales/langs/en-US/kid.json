@@ -19,8 +19,8 @@
     "hanzi": "Characters",
     "quiz": "Quiz",
     "wrongs": "Wrong book {n}",
-    "replay": "Hear it again",
     "gotIt": "Got it",
+    "tapHint": "Tap to listen",
     "prev": "Prev",
     "next": "Next",
     "quizPickHanzi": "Which character is this pinyin?",
@@ -37,7 +37,8 @@
     "sort": "Sorting",
     "compare": "Comparing",
     "match": "Matching",
-    "questionNo": "Question {n}",
+    "prev": "Prev",
+    "next": "Next",
     "empty": "No questions for this type yet"
   },
   "adventure": {
@@ -55,16 +56,21 @@
   },
   "cards": {
     "tapHint": "Tap to listen",
+    "prev": "Prev",
     "next": "Next",
     "count": "{count} cards"
+  },
+  "pig": {
+    "fly": "Pink pig"
   },
   "letters": {
     "learn": "Learn",
     "word": "Words",
     "quiz": "Quiz",
+    "wrongs": "Wrong book {n}",
+    "gotIt": "Got it",
     "quizPrompt": "Where is letter {letter}?",
     "wordQuizPrompt": "What does \"{word}\" mean?",
-    "questionNo": "Question {n}",
     "prev": "Prev",
     "next": "Next"
   },
@@ -73,7 +79,6 @@
     "arithmetic": "Sums",
     "quiz": "Play",
     "quizPrompt": "How many are there?",
-    "questionNo": "Question {n}",
     "prev": "Prev",
     "next": "Next"
   },

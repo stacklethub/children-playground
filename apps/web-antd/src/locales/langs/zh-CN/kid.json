@@ -19,8 +19,8 @@
     "hanzi": "认汉字",
     "quiz": "考一考",
     "wrongs": "错题本 {n}",
-    "replay": "再听一次",
     "gotIt": "记住了",
+    "tapHint": "点一点，听一听",
     "prev": "上一个",
     "next": "下一个",
     "quizPickHanzi": "这个拼音是哪个字呀？",
@@ -37,7 +37,8 @@
     "sort": "分类归类",
     "compare": "比较排序",
     "match": "配对空间",
-    "questionNo": "第 {n} 题",
+    "prev": "上一个",
+    "next": "下一个",
     "empty": "这个题型还没有题目哦"
   },
   "adventure": {
@@ -55,16 +56,21 @@
   },
   "cards": {
     "tapHint": "点一点，听一听",
+    "prev": "上一个",
     "next": "下一个",
     "count": "{count} 张卡片"
+  },
+  "pig": {
+    "fly": "粉色小猪"
   },
   "letters": {
     "learn": "认字母",
     "word": "学单词",
     "quiz": "考一考",
+    "wrongs": "错题本 {n}",
+    "gotIt": "记住了",
     "quizPrompt": "字母 {letter} 藏在哪里？",
     "wordQuizPrompt": "「{word}」是什么意思？",
-    "questionNo": "第 {n} 题",
     "prev": "上一个",
     "next": "下一个"
   },
@@ -73,7 +79,6 @@
     "arithmetic": "算一算",
     "quiz": "玩一玩",
     "quizPrompt": "数一数，有几个？",
-    "questionNo": "第 {n} 题",
     "prev": "上一个",
     "next": "下一个"
   },
@@ -133,7 +138,7 @@
   "tts": {
     "welcome": "欢迎来到幼儿学堂，{name}！今天想玩什么呢？",
     "pinyinIntro": "点一点屏幕，看看下一个怎么读吧！",
-    "poemsIntro": "选一首诗，我们一起听一听吧！",
+    "poemsIntro": "我们开始学古诗吧！",
     "logicIntro": "动动小脑筋，选一选答案吧！",
     "adventureIntro": "闯关开始啦，一起加油吧！",
     "adventureWin": "太棒了，这一关通过啦！",

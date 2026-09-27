@@ -13,6 +13,8 @@ import { ACCENT_CLASS, KID_TABS_RESTING_FG } from './kid-tabs-accent';
  *
  * 配色见 `kid-tabs-accent.ts`：选中态是成对的 {底色, 文字色}，逐色算过对比度，
  * 不能统一成一个文字色（sky 必须白字，其余必须暖棕）。
+ * 外壳用毛玻璃（半透明白 + backdrop-blur + 柔和描边 + 柔投影），
+ * 选中态仍是实色主题胶囊保证对比度。
  */
 const props = withDefaults(
   defineProps<{
@@ -39,12 +41,12 @@ function pick(value: string) {
 
 <template>
   <div
-    class="kid-tabs mb-6 flex max-w-full flex-wrap justify-center gap-2 rounded-kid-pill border-kid-ink bg-kid-paper p-1.5 shadow-kid-hard"
+    class="kid-tabs mb-4 flex max-w-full flex-wrap justify-center gap-1.5 rounded-full border border-white/60 bg-white/55 p-1.5 shadow-lg backdrop-blur-xl sm:mb-6 sm:gap-2"
   >
     <button
       v-for="item in items"
       :key="item.value"
-      class="kid-tab rounded-kid-pill px-6 text-2xl font-black transition-colors duration-[220ms]"
+      class="kid-tab rounded-full px-4 text-xl font-black transition-colors duration-[220ms] sm:px-6 sm:text-2xl"
       :class="
         model === item.value
           ? `${accent.bg} ${accent.fg}`
@@ -59,15 +61,11 @@ function pick(value: string) {
 </template>
 
 <style scoped>
-/* 与 kid-card / kid-button 同款：3px 暖棕描边 + 硬投影。
-   preflight 把 `*` 的 border-width 清零了，只给 border-kid-ink 只上色不出线。 */
-.kid-tabs {
-  border-width: 3px;
-}
-
-/* text-2xl(24px) + font-black 才落进 WCAG「大文本」，3:1 门槛才成立；
-   掉回正文档就要 4.5:1，现有配色里 coral(3.50) / berry(3.34) / sky(3.53)
-   都过不了。64px 是项目自己的可点区域下限。 */
+/* 对比度门槛：配色逐色算过，coral(3.50) / berry(3.34) / sky(3.53) 只过得了
+   WCAG「大文本」的 3:1，过不了正文的 4.5:1。所以字号不能掉出「大文本」——
+   WCAG 定义「大文本」为 ≥24px，或 **≥18.66px 的粗体**。font-black(900)
+   让移动端的 text-xl(20px) 仍算大文本，门槛继续成立；再往下就违规了。
+   64px 是项目自己的可点区域下限，小屏也不放宽。 */
 .kid-tab {
   min-height: 64px;
   border-width: 0;

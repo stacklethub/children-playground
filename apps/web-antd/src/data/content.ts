@@ -51,13 +51,15 @@ export interface KidNumber {
   word: string;
 }
 
-/** 拼音卡：声母 / 韵母 / 整体认读 */
+/** 拼音卡：声母 / 韵母 / 整体认读；kind 为 hanzi 时是「认汉字」条目 */
 export interface KidPinyin {
-  /** 例字，朗读就读它 —— 拼音字形是拉丁字母，中文语音会读成怪音 */
+  /** 例字 / 汉字，朗读就读它 —— 拼音字形是拉丁字母，中文语音会读成怪音 */
   hanzi: string;
   emoji: string;
   id: string;
-  /** 拼音字形，只做视觉呈现 */
+  /** 学拼音（声母/韵母字形）还是认汉字（完整汉字拼音），缺省视为 pinyin */
+  kind?: 'hanzi' | 'pinyin';
+  /** 拼音字形，只做视觉呈现；认汉字条目由家长端用 cnchar 按汉字自动转出 */
   pinyin: string;
 }
 
@@ -323,32 +325,214 @@ export const kidCards: KidCard[] = [
 ];
 
 export const kidLetters: KidLetter[] = [
-  { emoji: '🍎', letter: 'A', lower: 'a', sentence: 'I eat an apple every day.', word: 'apple', zh: '苹果' },
-  { emoji: '🐻', letter: 'B', lower: 'b', sentence: 'The bear is big and brown.', word: 'bear', zh: '熊' },
-  { emoji: '🐱', letter: 'C', lower: 'c', sentence: 'The cat is sleeping on the sofa.', word: 'cat', zh: '猫' },
-  { emoji: '🐶', letter: 'D', lower: 'd', sentence: 'The dog can run very fast.', word: 'dog', zh: '狗' },
-  { emoji: '🥚', letter: 'E', lower: 'e', sentence: 'I have an egg for breakfast.', word: 'egg', zh: '鸡蛋' },
-  { emoji: '🐟', letter: 'F', lower: 'f', sentence: 'The fish swims in the water.', word: 'fish', zh: '鱼' },
-  { emoji: '👧', letter: 'G', lower: 'g', sentence: 'The girl is singing a song.', word: 'girl', zh: '女孩' },
-  { emoji: '🏠', letter: 'H', lower: 'h', sentence: 'We live in a big house.', word: 'house', zh: '房子' },
-  { emoji: '🍦', letter: 'I', lower: 'i', sentence: 'I like ice cream in summer.', word: 'ice cream', zh: '冰淇淋' },
-  { emoji: '🧃', letter: 'J', lower: 'j', sentence: 'She drinks orange juice.', word: 'juice', zh: '果汁' },
-  { emoji: '🪁', letter: 'K', lower: 'k', sentence: 'The kite flies high in the sky.', word: 'kite', zh: '风筝' },
-  { emoji: '🦁', letter: 'L', lower: 'l', sentence: 'The lion is the king of animals.', word: 'lion', zh: '狮子' },
-  { emoji: '🌙', letter: 'M', lower: 'm', sentence: 'The moon is bright tonight.', word: 'moon', zh: '月亮' },
-  { emoji: '🪹', letter: 'N', lower: 'n', sentence: 'The bird lives in a nest.', word: 'nest', zh: '鸟窝' },
-  { emoji: '🐄', letter: 'O', lower: 'o', sentence: 'The ox works on the farm.', word: 'ox', zh: '牛' },
-  { emoji: '🐷', letter: 'P', lower: 'p', sentence: 'The pig is pink and round.', word: 'pig', zh: '猪' },
-  { emoji: '👑', letter: 'Q', lower: 'q', sentence: 'The queen wears a golden crown.', word: 'queen', zh: '女王' },
-  { emoji: '🌈', letter: 'R', lower: 'r', sentence: 'I see a rainbow after the rain.', word: 'rainbow', zh: '彩虹' },
-  { emoji: '☀️', letter: 'S', lower: 's', sentence: 'The sun gives us light.', word: 'sun', zh: '太阳' },
-  { emoji: '🌳', letter: 'T', lower: 't', sentence: 'There is a tall tree in the park.', word: 'tree', zh: '树' },
-  { emoji: '☂️', letter: 'U', lower: 'u', sentence: 'Take an umbrella, it is raining.', word: 'umbrella', zh: '雨伞' },
-  { emoji: '🎻', letter: 'V', lower: 'v', sentence: 'She plays the violin very well.', word: 'violin', zh: '小提琴' },
-  { emoji: '💧', letter: 'W', lower: 'w', sentence: 'Please drink more water.', word: 'water', zh: '水' },
-  { emoji: '📦', letter: 'X', lower: 'x', sentence: 'The gift is in the box.', word: 'box', zh: '盒子' },
-  { emoji: '🟡', letter: 'Y', lower: 'y', sentence: 'The banana is yellow.', word: 'yellow', zh: '黄色' },
-  { emoji: '🦓', letter: 'Z', lower: 'z', sentence: 'The zebra has black and white stripes.', word: 'zebra', zh: '斑马' },
+  {
+    emoji: '🍎',
+    letter: 'A',
+    lower: 'a',
+    sentence: 'I eat an apple every day.',
+    word: 'apple',
+    zh: '苹果',
+  },
+  {
+    emoji: '🐻',
+    letter: 'B',
+    lower: 'b',
+    sentence: 'The bear is big and brown.',
+    word: 'bear',
+    zh: '熊',
+  },
+  {
+    emoji: '🐱',
+    letter: 'C',
+    lower: 'c',
+    sentence: 'The cat is sleeping on the sofa.',
+    word: 'cat',
+    zh: '猫',
+  },
+  {
+    emoji: '🐶',
+    letter: 'D',
+    lower: 'd',
+    sentence: 'The dog can run very fast.',
+    word: 'dog',
+    zh: '狗',
+  },
+  {
+    emoji: '🥚',
+    letter: 'E',
+    lower: 'e',
+    sentence: 'I have an egg for breakfast.',
+    word: 'egg',
+    zh: '鸡蛋',
+  },
+  {
+    emoji: '🐟',
+    letter: 'F',
+    lower: 'f',
+    sentence: 'The fish swims in the water.',
+    word: 'fish',
+    zh: '鱼',
+  },
+  {
+    emoji: '👧',
+    letter: 'G',
+    lower: 'g',
+    sentence: 'The girl is singing a song.',
+    word: 'girl',
+    zh: '女孩',
+  },
+  {
+    emoji: '🏠',
+    letter: 'H',
+    lower: 'h',
+    sentence: 'We live in a big house.',
+    word: 'house',
+    zh: '房子',
+  },
+  {
+    emoji: '🍦',
+    letter: 'I',
+    lower: 'i',
+    sentence: 'I like ice cream in summer.',
+    word: 'ice cream',
+    zh: '冰淇淋',
+  },
+  {
+    emoji: '🧃',
+    letter: 'J',
+    lower: 'j',
+    sentence: 'She drinks orange juice.',
+    word: 'juice',
+    zh: '果汁',
+  },
+  {
+    emoji: '🪁',
+    letter: 'K',
+    lower: 'k',
+    sentence: 'The kite flies high in the sky.',
+    word: 'kite',
+    zh: '风筝',
+  },
+  {
+    emoji: '🦁',
+    letter: 'L',
+    lower: 'l',
+    sentence: 'The lion is the king of animals.',
+    word: 'lion',
+    zh: '狮子',
+  },
+  {
+    emoji: '🌙',
+    letter: 'M',
+    lower: 'm',
+    sentence: 'The moon is bright tonight.',
+    word: 'moon',
+    zh: '月亮',
+  },
+  {
+    emoji: '🪹',
+    letter: 'N',
+    lower: 'n',
+    sentence: 'The bird lives in a nest.',
+    word: 'nest',
+    zh: '鸟窝',
+  },
+  {
+    emoji: '🐄',
+    letter: 'O',
+    lower: 'o',
+    sentence: 'The ox works on the farm.',
+    word: 'ox',
+    zh: '牛',
+  },
+  {
+    emoji: '🐷',
+    letter: 'P',
+    lower: 'p',
+    sentence: 'The pig is pink and round.',
+    word: 'pig',
+    zh: '猪',
+  },
+  {
+    emoji: '👑',
+    letter: 'Q',
+    lower: 'q',
+    sentence: 'The queen wears a golden crown.',
+    word: 'queen',
+    zh: '女王',
+  },
+  {
+    emoji: '🌈',
+    letter: 'R',
+    lower: 'r',
+    sentence: 'I see a rainbow after the rain.',
+    word: 'rainbow',
+    zh: '彩虹',
+  },
+  {
+    emoji: '☀️',
+    letter: 'S',
+    lower: 's',
+    sentence: 'The sun gives us light.',
+    word: 'sun',
+    zh: '太阳',
+  },
+  {
+    emoji: '🌳',
+    letter: 'T',
+    lower: 't',
+    sentence: 'There is a tall tree in the park.',
+    word: 'tree',
+    zh: '树',
+  },
+  {
+    emoji: '☂️',
+    letter: 'U',
+    lower: 'u',
+    sentence: 'Take an umbrella, it is raining.',
+    word: 'umbrella',
+    zh: '雨伞',
+  },
+  {
+    emoji: '🎻',
+    letter: 'V',
+    lower: 'v',
+    sentence: 'She plays the violin very well.',
+    word: 'violin',
+    zh: '小提琴',
+  },
+  {
+    emoji: '💧',
+    letter: 'W',
+    lower: 'w',
+    sentence: 'Please drink more water.',
+    word: 'water',
+    zh: '水',
+  },
+  {
+    emoji: '📦',
+    letter: 'X',
+    lower: 'x',
+    sentence: 'The gift is in the box.',
+    word: 'box',
+    zh: '盒子',
+  },
+  {
+    emoji: '🟡',
+    letter: 'Y',
+    lower: 'y',
+    sentence: 'The banana is yellow.',
+    word: 'yellow',
+    zh: '黄色',
+  },
+  {
+    emoji: '🦓',
+    letter: 'Z',
+    lower: 'z',
+    sentence: 'The zebra has black and white stripes.',
+    word: 'zebra',
+    zh: '斑马',
+  },
 ];
 
 export const kidNumbers: KidNumber[] = [
@@ -480,42 +664,186 @@ export const kidPinyin: KidPinyin[] = [...PINYIN_SHENGMU, ...PINYIN_YUNMU];
 
 /** 找规律 */
 const LOGIC_PATTERN: KidLogicItem[] = [
-  { answer: '🍎', id: 'lg-p1', kind: 'pattern', options: ['🍎', '🍌', '🍇'], prompt: '🍎🍌🍎🍌，后面是什么？' },
-  { answer: '🔴', id: 'lg-p2', kind: 'pattern', options: ['🔴', '🔵', '🟡'], prompt: '🔴🔵🔴🔵，后面是什么？' },
-  { answer: '🐶', id: 'lg-p3', kind: 'pattern', options: ['🐶', '🐱', '🐭'], prompt: '🐶🐱🐶🐱，后面是什么？' },
-  { answer: '⭐', id: 'lg-p4', kind: 'pattern', options: ['⭐', '🌙', '☀️'], prompt: '⭐🌙⭐🌙，后面是什么？' },
-  { answer: '🔺', id: 'lg-p5', kind: 'pattern', options: ['🔺', '🔻', '⬛'], prompt: '🔺🔻🔺🔻，后面是什么？' },
-  { answer: '🍇', id: 'lg-p6', kind: 'pattern', options: ['🍓', '🍇', '🍊'], prompt: '🍓🍓🍇🍓🍓，后面是什么？' },
+  {
+    answer: '🍎',
+    id: 'lg-p1',
+    kind: 'pattern',
+    options: ['🍎', '🍌', '🍇'],
+    prompt: '🍎🍌🍎🍌，后面是什么？',
+  },
+  {
+    answer: '🔴',
+    id: 'lg-p2',
+    kind: 'pattern',
+    options: ['🔴', '🔵', '🟡'],
+    prompt: '🔴🔵🔴🔵，后面是什么？',
+  },
+  {
+    answer: '🐶',
+    id: 'lg-p3',
+    kind: 'pattern',
+    options: ['🐶', '🐱', '🐭'],
+    prompt: '🐶🐱🐶🐱，后面是什么？',
+  },
+  {
+    answer: '⭐',
+    id: 'lg-p4',
+    kind: 'pattern',
+    options: ['⭐', '🌙', '☀️'],
+    prompt: '⭐🌙⭐🌙，后面是什么？',
+  },
+  {
+    answer: '🔺',
+    id: 'lg-p5',
+    kind: 'pattern',
+    options: ['🔺', '🔻', '⬛'],
+    prompt: '🔺🔻🔺🔻，后面是什么？',
+  },
+  {
+    answer: '🍇',
+    id: 'lg-p6',
+    kind: 'pattern',
+    options: ['🍓', '🍇', '🍊'],
+    prompt: '🍓🍓🍇🍓🍓，后面是什么？',
+  },
 ];
 
 /** 分类归类 */
 const LOGIC_SORT: KidLogicItem[] = [
-  { answer: '🚗', id: 'lg-s1', kind: 'sort', options: ['🍎', '🚗', '🍌'], prompt: '哪一个不是水果？' },
-  { answer: '🌸', id: 'lg-s2', kind: 'sort', options: ['🐶', '🐱', '🌸'], prompt: '哪一个不是动物？' },
-  { answer: '👟', id: 'lg-s3', kind: 'sort', options: ['🍞', '🍎', '👟'], prompt: '哪一个不能吃？' },
-  { answer: '🍎', id: 'lg-s4', kind: 'sort', options: ['🚗', '✈️', '🍎'], prompt: '哪一个不是交通工具？' },
-  { answer: '🌳', id: 'lg-s5', kind: 'sort', options: ['👀', '👂', '🌳'], prompt: '哪一个不是身体的一部分？' },
-  { answer: '🐟', id: 'lg-s6', kind: 'sort', options: ['🐦', '✈️', '🐟'], prompt: '哪一个不会飞？' },
+  {
+    answer: '🚗',
+    id: 'lg-s1',
+    kind: 'sort',
+    options: ['🍎', '🚗', '🍌'],
+    prompt: '哪一个不是水果？',
+  },
+  {
+    answer: '🌸',
+    id: 'lg-s2',
+    kind: 'sort',
+    options: ['🐶', '🐱', '🌸'],
+    prompt: '哪一个不是动物？',
+  },
+  {
+    answer: '👟',
+    id: 'lg-s3',
+    kind: 'sort',
+    options: ['🍞', '🍎', '👟'],
+    prompt: '哪一个不能吃？',
+  },
+  {
+    answer: '🍎',
+    id: 'lg-s4',
+    kind: 'sort',
+    options: ['🚗', '✈️', '🍎'],
+    prompt: '哪一个不是交通工具？',
+  },
+  {
+    answer: '🌳',
+    id: 'lg-s5',
+    kind: 'sort',
+    options: ['👀', '👂', '🌳'],
+    prompt: '哪一个不是身体的一部分？',
+  },
+  {
+    answer: '🐟',
+    id: 'lg-s6',
+    kind: 'sort',
+    options: ['🐦', '✈️', '🐟'],
+    prompt: '哪一个不会飞？',
+  },
 ];
 
 /** 比较与排序 */
 const LOGIC_COMPARE: KidLogicItem[] = [
-  { answer: '🐘', id: 'lg-c1', kind: 'compare', options: ['🐘', '🐭', '🐱'], prompt: '哪一个最大？' },
-  { answer: '🐭', id: 'lg-c2', kind: 'compare', options: ['🐘', '🐭', '🐱'], prompt: '哪一个最小？' },
-  { answer: '🐍', id: 'lg-c3', kind: 'compare', options: ['🐍', '🐰', '🐦'], prompt: '哪一个最长？' },
-  { answer: '🌳', id: 'lg-c4', kind: 'compare', options: ['🌳', '🌱', '🍀'], prompt: '哪一个最高？' },
-  { answer: '🍎🍎🍎', id: 'lg-c5', kind: 'compare', options: ['🍎🍎🍎', '🍎', '🍎🍎'], prompt: '哪一边最多？' },
-  { answer: '🐆', id: 'lg-c6', kind: 'compare', options: ['🐆', '🐢', '🐌'], prompt: '哪一个跑得最快？' },
+  {
+    answer: '🐘',
+    id: 'lg-c1',
+    kind: 'compare',
+    options: ['🐘', '🐭', '🐱'],
+    prompt: '哪一个最大？',
+  },
+  {
+    answer: '🐭',
+    id: 'lg-c2',
+    kind: 'compare',
+    options: ['🐘', '🐭', '🐱'],
+    prompt: '哪一个最小？',
+  },
+  {
+    answer: '🐍',
+    id: 'lg-c3',
+    kind: 'compare',
+    options: ['🐍', '🐰', '🐦'],
+    prompt: '哪一个最长？',
+  },
+  {
+    answer: '🌳',
+    id: 'lg-c4',
+    kind: 'compare',
+    options: ['🌳', '🌱', '🍀'],
+    prompt: '哪一个最高？',
+  },
+  {
+    answer: '🍎🍎🍎',
+    id: 'lg-c5',
+    kind: 'compare',
+    options: ['🍎🍎🍎', '🍎', '🍎🍎'],
+    prompt: '哪一边最多？',
+  },
+  {
+    answer: '🐆',
+    id: 'lg-c6',
+    kind: 'compare',
+    options: ['🐆', '🐢', '🐌'],
+    prompt: '哪一个跑得最快？',
+  },
 ];
 
 /** 配对与空间 */
 const LOGIC_MATCH: KidLogicItem[] = [
-  { answer: '🐟', id: 'lg-m1', kind: 'match', options: ['🐟', '🐦', '🐰'], prompt: '谁住在水里？' },
-  { answer: '🐦', id: 'lg-m2', kind: 'match', options: ['🐦', '🐟', '🐶'], prompt: '谁在天上飞？' },
-  { answer: '🐼', id: 'lg-m3', kind: 'match', options: ['🐼', '🐶', '🐱'], prompt: '谁最爱吃竹子？' },
-  { answer: '☂️', id: 'lg-m4', kind: 'match', options: ['☂️', '👟', '🎈'], prompt: '下雨了要用什么？' },
-  { answer: '🌙', id: 'lg-m5', kind: 'match', options: ['🌙', '☀️', '🌈'], prompt: '天黑了会看到什么？' },
-  { answer: '💧', id: 'lg-m6', kind: 'match', options: ['💧', '🍞', '⚽'], prompt: '口渴了要喝什么？' },
+  {
+    answer: '🐟',
+    id: 'lg-m1',
+    kind: 'match',
+    options: ['🐟', '🐦', '🐰'],
+    prompt: '谁住在水里？',
+  },
+  {
+    answer: '🐦',
+    id: 'lg-m2',
+    kind: 'match',
+    options: ['🐦', '🐟', '🐶'],
+    prompt: '谁在天上飞？',
+  },
+  {
+    answer: '🐼',
+    id: 'lg-m3',
+    kind: 'match',
+    options: ['🐼', '🐶', '🐱'],
+    prompt: '谁最爱吃竹子？',
+  },
+  {
+    answer: '☂️',
+    id: 'lg-m4',
+    kind: 'match',
+    options: ['☂️', '👟', '🎈'],
+    prompt: '下雨了要用什么？',
+  },
+  {
+    answer: '🌙',
+    id: 'lg-m5',
+    kind: 'match',
+    options: ['🌙', '☀️', '🌈'],
+    prompt: '天黑了会看到什么？',
+  },
+  {
+    answer: '💧',
+    id: 'lg-m6',
+    kind: 'match',
+    options: ['💧', '🍞', '⚽'],
+    prompt: '口渴了要喝什么？',
+  },
 ];
 
 export const kidLogicItems: KidLogicItem[] = [
@@ -527,8 +855,20 @@ export const kidLogicItems: KidLogicItem[] = [
 
 /** 闯关冒险：按顺序解锁，通关前一关才开下一关 */
 export const kidLevels: KidLevel[] = [
-  { emoji: '🌱', id: 'lv1', modules: ['logic'], questionCount: 3, title: '小小起步' },
-  { emoji: '🔢', id: 'lv2', modules: ['numbers'], questionCount: 4, title: '数字山谷' },
+  {
+    emoji: '🌱',
+    id: 'lv1',
+    modules: ['logic'],
+    questionCount: 3,
+    title: '小小起步',
+  },
+  {
+    emoji: '🔢',
+    id: 'lv2',
+    modules: ['numbers'],
+    questionCount: 4,
+    title: '数字山谷',
+  },
   {
     emoji: '🧩',
     id: 'lv3',

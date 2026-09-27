@@ -18,6 +18,7 @@
   "scripts": {
     "build": "pnpm vite build --mode production",
     "build:analyze": "pnpm vite build --mode analyze",
+    "build:singlefile": "pnpm vite build --mode production",
     "dev": "pnpm vite --mode development",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit --skipLibCheck",
@@ -27,6 +28,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@fontsource/baloo-2": "^5.3.0",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -45,8 +47,13 @@
     "ant-design-vue": "catalog:",
     "cnchar": "^3.2.6",
     "dayjs": "catalog:",
+    "gsap": "^3.15.0",
+    "lxgw-wenkai-screen-webfont": "^1.7.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"
+  },
+  "devDependencies": {
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

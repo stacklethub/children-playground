@@ -1,0 +1,62 @@
+<template>
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse
+      cx="50"
+      cy="86"
+      fill="#8fc98a"
+      opacity=".45"
+      rx="32"
+      ry="8"
+      stroke="none"
+    />
+    <rect
+      x="22"
+      y="42"
+      width="56"
+      height="42"
+      rx="6"
+      fill="#fff9f0"
+      stroke="#4a3f35"
+      stroke-width="3"
+    />
+    <path
+      d="M12 42 L50 14 L88 42Z"
+      fill="#d96a5f"
+      stroke="#4a3f35"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <rect
+      x="40"
+      y="60"
+      width="20"
+      height="24"
+      rx="4"
+      fill="#e8a0b4"
+      stroke="#4a3f35"
+      stroke-width="3"
+    />
+    <rect
+      x="62"
+      y="46"
+      width="22"
+      height="18"
+      rx="4"
+      fill="#ffd98e"
+      stroke="#4a3f35"
+      stroke-width="3"
+    />
+    <text
+      x="73"
+      y="60"
+      fill="#4a3f35"
+      font-family="system-ui, sans-serif"
+      font-size="13"
+      font-weight="900"
+      stroke="none"
+      text-anchor="middle"
+    >
+      中
+    </text>
+  </svg>
+</template>

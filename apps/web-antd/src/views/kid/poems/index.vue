@@ -6,6 +6,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { useContent } from '#/data/use-content';
 import { $t } from '#/locales';
+import { pinyinOf } from '#/utils/pinyin';
 import { CONTENT_TTS_LANG, speak, stopSpeak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
@@ -61,7 +62,6 @@ function startPoem() {
   if (!learned.value.includes(poem.id)) {
     learned.value = [...learned.value, poem.id];
     reward({
-      detail: poem.title,
       itemId: poem.id,
       module: MODULE,
       praise: false,
@@ -89,6 +89,24 @@ function tapLine(lineIndex: number) {
   if (line) speak(line, { lang: CONTENT_TTS_LANG });
 }
 
+/** 给一句诗逐字转拼音（只取汉字，剥离标点，拼音用空格分开） */
+function pinyinOfLine(line: string): string {
+  return pinyinOf(line.replaceAll(/[^\u4E00-\u9FA5]/g, ''));
+}
+
+/**
+ * 把一句诗拆成「字 + 拼音」逐字对齐的序列，标点处拼音为空占位，
+ * 保证每个拼音正好落在对应汉字正上方。
+ */
+function spellChars(line: string): { char: string; py: string }[] {
+  const pys = pinyinOfLine(line).split(' ');
+  let pyIndex = 0;
+  return [...line].map((char) => {
+    const isHanzi = /[\u4E00-\u9FA5]/.test(char);
+    return { char, py: isHanzi ? (pys[pyIndex++] ?? '') : '' };
+  });
+}
+
 onMounted(() => {
   guide('kid.tts.poemsIntro');
 });
@@ -106,18 +124,24 @@ onBeforeUnmount(() => {
     <!-- 一进来就是一首诗，左右翻页换诗 -->
     <template v-if="current">
       <div
-        class="relative flex min-h-[50vh] w-full max-w-4xl flex-col items-center justify-center gap-3 rounded-[3rem] bg-white/95 p-6 shadow-2xl"
+        class="relative flex min-h-[45vh] w-full max-w-xl flex-col items-center justify-center gap-3 rounded-[2rem] border border-white/60 bg-white/55 p-4 pt-12 shadow-lg backdrop-blur-xl sm:min-h-[50vh] sm:p-6 sm:pt-12"
         data-star-anchor
       >
-        <span class="absolute left-8 top-8 text-4xl">{{ current.emoji }}</span>
-        <h2 class="text-4xl font-black text-lime-600">{{ current.title }}</h2>
-        <p class="text-xl text-slate-400">{{ current.author }}</p>
+        <span
+          class="absolute left-4 top-4 text-3xl sm:left-8 sm:top-8 sm:text-4xl"
+        >
+          {{ current.emoji }}
+        </span>
+        <h2 class="text-3xl font-black text-lime-600 sm:text-4xl">
+          {{ current.title }}
+        </h2>
+        <p class="text-lg text-slate-400 sm:text-xl">{{ current.author }}</p>
 
-        <div class="mt-2 flex flex-col items-center gap-2">
+        <div class="mt-2 flex flex-col items-center gap-2 sm:gap-3">
           <button
             v-for="(line, lineIndex) in current.lines"
             :key="lineIndex"
-            class="min-h-14 rounded-2xl px-6 text-4xl font-black leading-relaxed transition"
+            class="flex min-h-16 flex-col items-center justify-center rounded-2xl px-3 transition sm:px-6"
             :class="
               lineIndex === activeLine
                 ? 'bg-lime-200 text-lime-800'
@@ -125,31 +149,48 @@ onBeforeUnmount(() => {
             "
             @click="tapLine(lineIndex)"
           >
-            {{ line }}
+            <span class="flex items-end justify-center gap-x-1">
+              <span
+                v-for="(ch, ci) in spellChars(line)"
+                :key="ci"
+                class="flex min-w-6 flex-col items-center sm:min-w-8"
+              >
+                <span
+                  class="whitespace-nowrap text-sm leading-none text-amber-500 sm:text-base"
+                >
+                  {{ ch.py }}
+                </span>
+                <span
+                  class="mt-0.5 text-[clamp(1.75rem,7vw,2.25rem)] font-black leading-tight"
+                >
+                  {{ ch.char }}
+                </span>
+              </span>
+            </span>
           </button>
         </div>
       </div>
 
       <button
-        class="mt-4 min-h-14 rounded-full bg-lime-500 px-8 text-2xl font-bold text-white shadow transition active:scale-90"
+        class="mt-4 min-h-16 rounded-full bg-lime-500 px-6 text-xl font-bold text-white shadow transition active:scale-90 sm:px-8 sm:text-2xl"
         @click="startPoem"
       >
         🔊 {{ $t('kid.poems.readAll') }}
       </button>
 
-      <nav class="mt-4 flex items-center gap-6">
+      <nav class="mt-4 flex items-center gap-3 sm:gap-6">
         <button
-          class="rounded-full bg-white/90 px-8 py-4 text-2xl font-bold text-slate-600 shadow transition active:scale-95 disabled:opacity-40"
+          class="min-h-16 rounded-full bg-white/90 px-5 py-3 text-xl font-bold text-slate-600 shadow transition active:scale-95 disabled:opacity-40 sm:px-8 sm:py-4 sm:text-2xl"
           :disabled="atStart"
           @click="step(-1)"
         >
           ← {{ $t('kid.poems.prev') }}
         </button>
-        <span class="text-2xl font-bold text-slate-600">
+        <span class="text-xl font-bold text-slate-600 sm:text-2xl">
           {{ index + 1 }} / {{ total }}
         </span>
         <button
-          class="rounded-full bg-lime-500 px-8 py-4 text-2xl font-bold text-white shadow-lg transition active:scale-95 disabled:opacity-40"
+          class="min-h-16 rounded-full bg-lime-500 px-5 py-3 text-xl font-bold text-white shadow-lg transition active:scale-95 disabled:opacity-40 sm:px-8 sm:py-4 sm:text-2xl"
           :disabled="atEnd"
           @click="step(1)"
         >

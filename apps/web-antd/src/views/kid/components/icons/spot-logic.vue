@@ -1,0 +1,51 @@
+<template>
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse
+      cx="50"
+      cy="86"
+      fill="#8fc98a"
+      opacity=".45"
+      rx="30"
+      ry="8"
+      stroke="none"
+    />
+    <rect
+      x="22"
+      y="48"
+      width="56"
+      height="38"
+      rx="7"
+      fill="#fff9f0"
+      stroke="#4a3f35"
+      stroke-width="3"
+    />
+    <path
+      d="M16 48 L50 20 L84 48Z"
+      fill="#8fc98a"
+      stroke="#4a3f35"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <circle
+      cx="50"
+      cy="68"
+      fill="#ffd98e"
+      r="13"
+      stroke="#4a3f35"
+      stroke-width="3"
+    />
+    <circle
+      cx="50"
+      cy="68"
+      fill="#fff9f0"
+      r="4.5"
+      stroke="#4a3f35"
+      stroke-width="2.6"
+    />
+    <g stroke="#4a3f35" stroke-linecap="round" stroke-width="3">
+      <path
+        d="M50 52 v-6 M50 84 v6 M34 68 h-6 M66 68 h6 M39 57 l-4 -4 M61 57 l4 -4 M39 79 l-4 4 M61 79 l4 4"
+      />
+    </g>
+  </svg>
+</template>

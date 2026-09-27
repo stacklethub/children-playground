@@ -6,21 +6,20 @@ import { $t } from '#/locales';
 import { speak } from '#/utils/tts';
 
 import BindGuard from '../components/bind-guard.vue';
+import KidFlashCard from '../components/kid-flash-card.vue';
 import KidPage from '../components/kid-page.vue';
+import KidPager from '../components/kid-pager.vue';
 import KidTabs from '../components/kid-tabs.vue';
 import OptionGrid from '../components/option-grid.vue';
 import StarToast from '../components/star-toast.vue';
 import { useCurrentChild } from '../hooks/use-current-child';
-import {
-  useArithmeticPractice,
-  useNumberPractice,
-  useQuiz,
-} from '../hooks/use-quiz';
+import { useArithmeticPractice, useNumberPractice } from '../hooks/use-quiz';
 import { useReward } from '../hooks/use-reward';
 
 const { bound } = useCurrentChild();
 const { numbers } = useContent();
-const { rewardBadges, rewardShow, rewardText, guide, reward } = useReward();
+const { rewardBadges, rewardShow, rewardText, guide, reward, wrong } =
+  useReward();
 
 const mode = ref('learn');
 
@@ -46,7 +45,6 @@ function tapNumber(item: { num: number; word: string }) {
   if (learned.value.includes(item.num)) return;
   learned.value = [...learned.value, item.num];
   reward({
-    detail: `${item.num}`,
     itemId: `${item.num}`,
     module: 'numbers',
     praise: false,
@@ -55,51 +53,138 @@ function tapNumber(item: { num: number; word: string }) {
 
 // ---------- 玩一玩：数一数有几个 ----------
 const { askQuiz, createQuiz, sayNumber } = useNumberPractice();
-const quizEmoji = ref('⭐');
 
-const {
-  next: nextCount,
-  pick: pickCount,
-  quiz: countQuiz,
-  quizCount: countNo,
-} = useQuiz<number>({
-  ask: askQuiz,
-  create: () => {
+interface CountCard {
+  answer: number;
+  emoji: string;
+  options: number[];
+  solved: boolean;
+}
+
+const countCards = ref<CountCard[]>([]);
+const countIndex = ref(0);
+const countCurrent = computed(() => countCards.value[countIndex.value]);
+const countAtStart = computed(() => countIndex.value <= 0);
+const countAtEnd = computed(
+  () => countIndex.value >= countCards.value.length - 1,
+);
+
+/** 生成一组「数一数」题，支持上一个/下一个回看 */
+function buildCountQuiz() {
+  countCards.value = numbers.value.map(() => {
     const created = createQuiz();
-    quizEmoji.value = created.emoji;
-    return { answer: created.answer, options: created.options };
-  },
-  module: 'numbers',
-});
+    return {
+      answer: created.answer,
+      emoji: created.emoji,
+      options: created.options,
+      solved: false,
+    };
+  });
+  countIndex.value = 0;
+}
+
+/** 点题干：朗读「数一数有几个」 */
+function sayCountPrompt() {
+  askQuiz();
+}
+
+/** 判分：答对记星并锁定，答错语音鼓励；不再自动跳题 */
+function answerCount(value: number) {
+  const card = countCurrent.value;
+  if (!card || card.solved) return;
+  if (value === card.answer) {
+    card.solved = true;
+    reward({
+      detail: `${card.answer}`,
+      itemId: `${card.answer}`,
+      module: 'numbers',
+      stars: 2,
+    });
+  } else {
+    wrong();
+  }
+}
+
+function countStep(delta: number) {
+  const target = countIndex.value + delta;
+  if (target < 0 || target >= countCards.value.length) return false;
+  countIndex.value = target;
+  return true;
+}
 
 // ---------- 算一算：10 以内加减 ----------
 const { createQuiz: createArith } = useArithmeticPractice();
-const arithMeta = ref({ expr: '', isMinus: false, left: 0, right: 0 });
 
-const {
-  next: nextArith,
-  pick: pickArith,
-  quiz: arithQuiz,
-  quizCount: arithNo,
-} = useQuiz<number>({
-  ask: () => {
-    const { isMinus, left, right } = arithMeta.value;
-    speak(
-      $t(isMinus ? 'kid.tts.arithMinus' : 'kid.tts.arithPlus', { left, right }),
-    );
-  },
-  create: () => {
+interface ArithCard {
+  answer: number;
+  expr: string;
+  isMinus: boolean;
+  left: number;
+  right: number;
+  options: number[];
+  solved: boolean;
+}
+
+const arithCards = ref<ArithCard[]>([]);
+const arithIndex = ref(0);
+const arithCurrent = computed(() => arithCards.value[arithIndex.value]);
+const arithAtStart = computed(() => arithIndex.value <= 0);
+const arithAtEnd = computed(
+  () => arithIndex.value >= arithCards.value.length - 1,
+);
+
+/** 生成一组加减题，支持上一个/下一个回看 */
+function buildArithQuiz() {
+  arithCards.value = numbers.value.map(() => {
     const created = createArith();
-    arithMeta.value = {
+    return {
+      answer: created.answer,
       expr: created.expr,
       isMinus: created.isMinus,
       left: created.left,
+      options: created.options,
       right: created.right,
+      solved: false,
     };
-    return { answer: created.answer, options: created.options };
-  },
-  module: 'numbers',
-});
+  });
+  arithIndex.value = 0;
+}
+
+/** 点题干：朗读算式 */
+function sayArithPrompt() {
+  const card = arithCurrent.value;
+  if (!card) return;
+  speak(
+    $t(card.isMinus ? 'kid.tts.arithMinus' : 'kid.tts.arithPlus', {
+      left: card.left,
+      right: card.right,
+    }),
+  );
+}
+
+/** 判分：答对记星并锁定，答错语音鼓励；不再自动跳题 */
+function answerArith(value: number) {
+  const card = arithCurrent.value;
+  if (!card || card.solved) return;
+  if (value === card.answer) {
+    card.solved = true;
+    reward({
+      detail: card.expr,
+      itemId: card.expr,
+      module: 'numbers',
+      stars: 2,
+    });
+  } else {
+    wrong();
+  }
+}
+
+function arithStep(delta: number) {
+  const target = arithIndex.value + delta;
+  if (target < 0 || target >= arithCards.value.length) return false;
+  arithIndex.value = target;
+  return true;
+}
 
 const tabs = [
   { label: $t('kid.numbers.learn'), value: 'learn' },
@@ -111,9 +196,9 @@ function onModeChange(key: string) {
   if (key === 'learn') {
     guide('kid.tts.numbersIntro');
   } else if (key === 'arith') {
-    nextArith();
+    buildArithQuiz();
   } else {
-    nextCount();
+    buildCountQuiz();
   }
 }
 
@@ -135,85 +220,111 @@ onMounted(() => {
 
     <!-- 认一认：一进来就是一个数字大卡片，左右翻页 -->
     <template v-if="mode === 'learn' && currentNumber">
-      <button
-        class="relative flex min-h-[50vh] w-full max-w-xl flex-col items-center justify-center gap-4 rounded-[3rem] bg-white/95 p-10 shadow-2xl transition hover:-translate-y-1 active:scale-95"
-        data-star-anchor
-        @click="tapNumber(currentNumber)"
-      >
+      <KidFlashCard @tap="tapNumber(currentNumber)">
         <span
-          class="absolute left-6 top-6 flex max-w-[calc(100%-3rem)] flex-wrap text-3xl leading-none"
+          class="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap text-2xl leading-none sm:left-6 sm:top-6 sm:max-w-[calc(100%-3rem)] sm:text-3xl"
         >
           <span v-for="n in currentNumber.count" :key="n">
             {{ currentNumber.emoji }}
           </span>
         </span>
-        <span class="text-[9rem] leading-none font-black text-emerald-500">
+        <span
+          class="text-[clamp(4rem,20vw,9rem)] leading-none font-black text-emerald-500"
+        >
           {{ currentNumber.num }}
         </span>
-        <span class="text-3xl font-bold text-slate-500">
+        <span class="text-2xl font-bold text-slate-500 sm:text-3xl">
           {{ currentNumber.word }}
         </span>
-      </button>
+      </KidFlashCard>
 
-      <nav class="mt-8 flex items-center gap-6">
-        <button
-          class="rounded-full bg-white/90 px-8 py-4 text-2xl font-bold text-slate-600 shadow transition active:scale-95 disabled:opacity-40"
-          :disabled="atStart"
-          @click="step(-1)"
-        >
-          ← {{ $t('kid.numbers.prev') }}
-        </button>
-        <span class="text-2xl font-bold text-slate-600">
-          {{ index + 1 }} / {{ total }}
-        </span>
-        <button
-          class="rounded-full bg-emerald-400 px-8 py-4 text-2xl font-bold text-white shadow-lg transition active:scale-95 disabled:opacity-40"
-          :disabled="atEnd"
-          @click="step(1)"
-        >
-          {{ $t('kid.numbers.next') }} →
-        </button>
-      </nav>
+      <KidPager
+        accent="lilac"
+        :at-end="atEnd"
+        :at-start="atStart"
+        :current="index"
+        :total="total"
+        @next="step(1)"
+        @prev="step(-1)"
+      >
+        <template #prev>{{ $t('kid.numbers.prev') }}</template>
+        <template #next>{{ $t('kid.numbers.next') }}</template>
+      </KidPager>
     </template>
 
-    <!-- 算一算 -->
-    <template v-else-if="mode === 'arith'">
-      <template v-if="arithQuiz">
-        <p class="mb-6 text-7xl font-black text-emerald-500">
-          {{ arithMeta.expr }}
-        </p>
-        <OptionGrid
-          active-class="text-emerald-500"
-          :options="arithQuiz.options"
-          @pick="pickArith"
-        />
-        <p class="mt-8 text-xl text-slate-400">
-          {{ $t('kid.numbers.questionNo', { n: arithNo }) }}
-        </p>
-      </template>
+    <!-- 算一算：题干可点朗读 + 点选项判分 + 翻页 -->
+    <template v-else-if="mode === 'arith' && arithCurrent">
+      <button
+        class="mb-4 flex items-center gap-4 sm:mb-6"
+        data-star-anchor
+        type="button"
+        @click="sayArithPrompt"
+      >
+        <span
+          class="text-[clamp(2.5rem,12vw,4.5rem)] font-black text-emerald-500"
+        >
+          {{ arithCurrent.expr }}
+        </span>
+      </button>
+      <OptionGrid
+        active-class="text-emerald-500"
+        :options="arithCurrent.options"
+        @pick="answerArith"
+      />
+      <KidPager
+        accent="lilac"
+        :at-end="arithAtEnd"
+        :at-start="arithAtStart"
+        :current="arithIndex"
+        :total="arithCards.length"
+        @next="arithStep(1)"
+        @prev="arithStep(-1)"
+      >
+        <template #prev>{{ $t('kid.numbers.prev') }}</template>
+        <template #next>{{ $t('kid.numbers.next') }}</template>
+      </KidPager>
     </template>
 
     <!-- 玩一玩：数一数有几个 -->
-    <template v-else-if="countQuiz">
-      <p class="mb-6 text-3xl font-bold text-slate-600">
-        {{ $t('kid.numbers.quizPrompt') }}
-      </p>
-      <div
-        class="mb-8 flex max-w-xl flex-wrap items-center justify-center gap-3 rounded-3xl bg-white/95 p-8 shadow-xl"
+    <template v-else-if="mode === 'count' && countCurrent">
+      <button
+        class="mb-4 flex items-center gap-4 sm:mb-6"
         data-star-anchor
+        type="button"
+        @click="sayCountPrompt"
       >
-        <span v-for="n in countQuiz.answer" :key="n" class="text-7xl">
-          {{ quizEmoji }}
+        <span class="text-2xl font-bold text-slate-600 sm:text-3xl">
+          {{ $t('kid.numbers.quizPrompt') }}
+        </span>
+      </button>
+      <div
+        class="mb-6 flex max-w-xl flex-wrap items-center justify-center gap-2 rounded-3xl border border-white/60 bg-white/55 p-5 shadow-lg backdrop-blur-xl sm:mb-8 sm:gap-3 sm:p-8"
+      >
+        <span
+          v-for="n in countCurrent.answer"
+          :key="n"
+          class="text-4xl sm:text-7xl"
+        >
+          {{ countCurrent.emoji }}
         </span>
       </div>
       <OptionGrid
         active-class="text-emerald-500"
-        :options="countQuiz.options"
-        @pick="pickCount"
+        :options="countCurrent.options"
+        @pick="answerCount"
       />
-      <p class="mt-8 text-xl text-slate-400">
-        {{ $t('kid.numbers.questionNo', { n: countNo }) }}
-      </p>
+      <KidPager
+        accent="lilac"
+        :at-end="countAtEnd"
+        :at-start="countAtStart"
+        :current="countIndex"
+        :total="countCards.length"
+        @next="countStep(1)"
+        @prev="countStep(-1)"
+      >
+        <template #prev>{{ $t('kid.numbers.prev') }}</template>
+        <template #next>{{ $t('kid.numbers.next') }}</template>
+      </KidPager>
     </template>
 
     <StarToast :badges="rewardBadges" :show="rewardShow" :text="rewardText" />

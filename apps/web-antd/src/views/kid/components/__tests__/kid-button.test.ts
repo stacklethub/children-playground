@@ -20,15 +20,15 @@ describe('kidButton', () => {
     expect(wrapper.emitted('tap')).toBeUndefined();
   });
 
-  it('默认用主色，variant=ghost 时改用纸白', () => {
+  it('默认用主色，variant=ghost 时改用半透明白（毛玻璃）', () => {
     const primary = mount(KidButton, { slots: { default: 'x' } });
-    expect(primary.get('button').classes()).toContain('bg-kid-apricot');
+    expect(primary.get('button').classes()).toContain('bg-kid-apricot/80');
 
     const ghost = mount(KidButton, {
       props: { variant: 'ghost' },
       slots: { default: 'x' },
     });
-    expect(ghost.get('button').classes()).toContain('bg-kid-paper');
+    expect(ghost.get('button').classes()).toContain('bg-white/55');
   });
 
   it('主按钮文字用暖棕而非白色（白字对比度仅 2.00:1，不达标）', () => {

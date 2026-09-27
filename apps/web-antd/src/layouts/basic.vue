@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
-import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { useWatermark } from '@vben/hooks';
 import { BasicLayout, LockScreen, UserDropdown } from '@vben/layouts';
 import { preferences, usePreferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
-import { useAuthStore } from '#/store';
-import LoginForm from '#/views/_core/authentication/login.vue';
+import { $t, i18n } from '#/locales';
+import { emojiAvatar } from '#/utils/avatar';
+import { clearParentGate } from '#/utils/parent-gate';
 
+const router = useRouter();
 const userStore = useUserStore();
-const authStore = useAuthStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const { isDark } = usePreferences();
@@ -20,8 +21,76 @@ const avatar = computed(() => {
   return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
 });
 
+/**
+ * 无后端模式：家长中心用本地门禁替代账号登录。
+ * 这里注入一个本地家长用户与静态菜单，让 vben 的 BasicLayout 正常渲染。
+ * 菜单 name 直接存翻译后的文本（vben 菜单组件原样渲染 name），
+ * 并在 locale 变化时重新注入，保证切换语言后菜单标题同步更新。
+ */
+function injectLocalUser() {
+  userStore.setUserInfo({
+    // 必须是可以当 <img src> 用的值：直接放 emoji 会加载失败，VbenAvatar 会退化
+    // 成渲染 alt（= 昵称）的兜底文本，导致下拉面板里出现两个「家长」。见 utils/avatar.ts
+    avatar: emojiAvatar('🧑'),
+    homePath: '/parent/dashboard',
+    realName: $t('parent.common.localParent'),
+    roles: [],
+    userId: 'local-parent',
+    username: 'local-parent',
+  });
+}
+
+function injectAccessMenus() {
+  accessStore.setAccessMenus([
+    {
+      icon: 'lucide:user-cog',
+      name: $t('parent.nav.dashboard'),
+      path: '/parent',
+      children: [
+        {
+          icon: 'lucide:bar-chart-3',
+          name: $t('parent.nav.dashboard'),
+          path: '/parent/dashboard',
+        },
+        {
+          icon: 'lucide:baby',
+          name: $t('parent.nav.children'),
+          path: '/parent/children',
+        },
+        {
+          icon: 'lucide:images',
+          name: $t('parent.nav.content'),
+          path: '/parent/content',
+        },
+        {
+          icon: 'lucide:calendar-check',
+          name: $t('parent.nav.plan'),
+          path: '/parent/plan',
+        },
+        {
+          icon: 'lucide:settings',
+          name: $t('parent.nav.settings'),
+          path: '/parent/settings',
+        },
+      ],
+    },
+  ]);
+}
+
+onMounted(() => {
+  injectLocalUser();
+  injectAccessMenus();
+});
+
+// 语言切换不刷新页面，菜单 name 是模块顶层一次性求值，需手动重新注入
+watch(i18n.global.locale, () => {
+  injectAccessMenus();
+});
+
+/** 无后端模式：退出家长中心 = 清除门禁标记 + 回到宝宝端首页 */
 async function handleLogout() {
-  await authStore.logout(false);
+  clearParentGate();
+  await router.replace('/kid/home');
 }
 
 watch(
@@ -78,14 +147,6 @@ watch(
         @clear-preferences-and-logout="handleLogout"
         @logout="handleLogout"
       />
-    </template>
-    <template #extra>
-      <AuthenticationLoginExpiredModal
-        v-model:open="accessStore.loginExpired"
-        :avatar
-      >
-        <LoginForm />
-      </AuthenticationLoginExpiredModal>
     </template>
     <template #lock-screen>
       <LockScreen :avatar @to-login="handleLogout" />

@@ -1,10 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('#/api', () => ({
-  submitLearnRecordApi: vi.fn(),
-  syncLearnRecordsApi: vi.fn(),
-}));
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useKidStore } from '#/store';
 
@@ -59,8 +54,12 @@ describe('错题本', () => {
     const kid = useKidStore();
     kid.addWrong('child-a', 'cards', 'a1');
     kid.addWrong('child-b', 'cards', 'a2');
-    expect(kid.wrongOf('child-a', 'cards').map((w) => w.itemId)).toEqual(['a1']);
-    expect(kid.wrongOf('child-b', 'cards').map((w) => w.itemId)).toEqual(['a2']);
+    expect(kid.wrongOf('child-a', 'cards').map((w) => w.itemId)).toEqual([
+      'a1',
+    ]);
+    expect(kid.wrongOf('child-b', 'cards').map((w) => w.itemId)).toEqual([
+      'a2',
+    ]);
   });
 
   it('清空可按模块或整体', () => {

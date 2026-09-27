@@ -6,6 +6,7 @@ import { Button, Card, message, Popconfirm } from 'ant-design-vue';
 import { $t } from '#/locales';
 import { useDeviceStore, useFamilyStore, useKidStore } from '#/store';
 
+import DataManager from '../components/data-manager.vue';
 import KidSelector from '../components/kid-selector.vue';
 import VoiceSettings from '../components/voice-settings.vue';
 
@@ -64,6 +65,8 @@ onMounted(() => {
     </Card>
 
     <VoiceSettings />
+
+    <DataManager />
 
     <Card :title="$t('parent.settings.dataTitle')">
       <div class="flex flex-col gap-4">

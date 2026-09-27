@@ -4,7 +4,6 @@ import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import { bindChildApi } from '#/api';
 import { clearBindToken, getBindToken, setBindToken } from '#/utils/bind-token';
 
 /**
@@ -12,8 +11,9 @@ import { clearBindToken, getBindToken, setBindToken } from '#/utils/bind-token';
  *
  * 与「家长账号状态」（`store/family.ts`）严格分离，这是亲子关系的核心约定：
  * - 登录家长账号 **不等于** 选择了这台设备的学习者；
- * - 本设备的学习者只能由家长在家长中心**显式绑定**产生，任何列表顺序、
- *   新建/删除孩子都不会隐式改变它；
+ * - 本设备的学习者只由两个来源产生：① **首次运行**时系统预置的默认孩子
+ *   （一次性，见 `family.ts` 的 `ensureDefaultChild`）；② 家长在家长中心的
+ *   **显式绑定**。除此之外，任何列表顺序、新建/删除孩子都不会隐式改变它；
  * - 家长退出登录不会清空本状态与宝宝端的本地记录（设备级数据）。
  */
 export const useDeviceStore = defineStore(
@@ -39,18 +39,13 @@ export const useDeviceStore = defineStore(
 
     /**
      * 显式绑定：把某个孩子设为这台设备的学习者（家长在家长中心操作）。
-     * 每次重新签发上报令牌，避免复用已失效的旧令牌。
+     * 无后端模式：直接在本机记录绑定关系，不再签发上报令牌。
      */
     async function bindChild(child: ChildApi.ChildProfile) {
-      const result = await bindChildApi(child.id);
-      setBindToken({
-        childId: result.child.id,
-        parentId: result.child.parentId,
-        token: result.bindToken,
-      });
-      remember(result.child);
-      boundChild.value = result.child;
-      return result.child;
+      setBindToken({ childId: child.id });
+      remember(child);
+      boundChild.value = child;
+      return child;
     }
 
     /** 切换本机学习者（仅限已在本机绑定过的孩子） */

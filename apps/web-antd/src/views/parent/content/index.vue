@@ -28,9 +28,16 @@ const activeModule = ref<TileKey>(
 
 const activeFields = computed(() => MODULES[activeModule.value].fields ?? []);
 
-/** 当前模块是否有「分类」字段；有才显示分类筛选（沿用改造前的筛选能力） */
-const categoryField = computed(() =>
-  activeFields.value.find((field) => field.key === 'categoryId'),
+/**
+ * 当前模块是否有可筛选的 select 字段（看图识物的「分类」、中文乐园的「类型」）；
+ * 有才显示筛选下拉。
+ */
+const filterField = computed(() =>
+  activeFields.value.find(
+    (field) =>
+      field.type === 'select' &&
+      (field.key === 'categoryId' || field.key === 'kind'),
+  ),
 );
 
 /**
@@ -50,7 +57,8 @@ const list = computed(() =>
   filterCategory.value
     ? collection.items.value.filter(
         (item) =>
-          (item as Record<string, any>).categoryId === filterCategory.value,
+          (item as Record<string, any>)[filterField.value?.key ?? ''] ===
+          filterCategory.value,
       )
     : collection.items.value,
 );
@@ -151,14 +159,14 @@ function remove(id: string) {
       </div>
       <div class="flex items-center gap-3">
         <Select
-          v-if="categoryField"
+          v-if="filterField"
           v-model:value="filterCategory"
           :placeholder="$t('parent.content.allCategories')"
           allow-clear
           class="w-48"
         >
           <Select.Option
-            v-for="option in categoryField.options?.() ?? []"
+            v-for="option in filterField.options?.() ?? []"
             :key="option.value"
             :value="option.value"
           >
@@ -184,7 +192,7 @@ function remove(id: string) {
         </template>
         <template v-else-if="column.key === 'categoryId'">
           <span class="whitespace-pre-line">
-            {{ formatValue(categoryField, record) }}
+            {{ formatValue(filterField, record) }}
           </span>
         </template>
         <template v-else-if="column.key === 'actions'">

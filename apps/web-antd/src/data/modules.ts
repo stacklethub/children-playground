@@ -219,13 +219,30 @@ export const MODULES: Record<TileKey, ModuleDef> = {
     defaultGoal: 6,
     emoji: '🅰️',
     fields: [
-      { key: 'pinyin', labelKey: 'pinyin', required: true, type: 'text' },
-      // 例字是朗读与加星文案的来源，不能为空
+      {
+        key: 'kind',
+        labelKey: 'pinyinKind',
+        // 认汉字 vs 学拼音是同一模块的两种条目，共用一张表与表单
+        options: () => [
+          { label: '学拼音', value: 'pinyin' },
+          { label: '认汉字', value: 'hanzi' },
+        ],
+        type: 'select',
+      },
+      // 学拼音要教的声母/韵母字形；认汉字条目的拼音由汉字自动转出，表单里不显示
+      { key: 'pinyin', labelKey: 'pinyin', type: 'text' },
+      // 例字 / 汉字：认汉字条目朗读与加星文案的来源，不能为空
       { key: 'hanzi', labelKey: 'hanzi', required: true, type: 'text' },
       { key: 'emoji', labelKey: 'emoji', type: 'emoji' },
     ],
     key: 'pinyin',
     path: '/kid/pinyin',
+    // 学拼音必须有拼音字形；认汉字的拼音由汉字派生，无需校验
+    validate: (draft) =>
+      (draft.kind ?? 'pinyin') === 'pinyin' &&
+      !String(draft.pinyin ?? '').trim()
+        ? { key: 'parent.content.pinyinRequired' }
+        : undefined,
   },
   poems: {
     bg: 'bg-lime-500',

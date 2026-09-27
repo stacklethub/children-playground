@@ -1,23 +1,19 @@
 import type { LearnRecordPayload } from '#/api';
 import type { LearnModule } from '#/data/modules';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { defineStore } from 'pinia';
 
-import { submitLearnRecordApi, syncLearnRecordsApi } from '#/api';
+import { saveContentOverrides } from '#/data/content-repo';
 import { migrateContentOverrides } from '#/data/migrate-content-overrides';
 import { MODULE_KEYS, MODULES } from '#/data/modules';
-import { getBindToken } from '#/utils/bind-token';
 
 export type { LearnModule };
 /** 模块元信息以 `#/data/modules` 为单一事实源，这里只做再导出，调用方路径不变 */
 export { MODULE_KEYS, MODULES };
 
-export interface LearnRecordItem extends LearnRecordPayload {
-  /** 是否已同步到云端 */
-  synced: boolean;
-}
+export type LearnRecordItem = LearnRecordPayload;
 
 export interface KidBadge {
   /** i18n key，如 kid.badges.star10 */
@@ -69,7 +65,7 @@ export interface ModuleSetting {
 
 /**
  * 学习数据状态：记录按「孩子」归属，星星与徽章由记录派生。
- * 本地优先（断网可玩），联网后由 syncPending() 补传。
+ * 无后端模式：全部本地持久化，断网可玩。
  */
 export const useKidStore = defineStore(
   'kid',
@@ -88,6 +84,20 @@ export const useKidStore = defineStore(
     const moduleSettings = ref<Partial<Record<LearnModule, ModuleSetting>>>({});
     /** 闯关冒险进度：孩子 id → 已通关的关卡 id 列表 */
     const adventureProgress = ref<Record<string, string[]>>({});
+
+    // 题库覆盖项变化时同步落 IndexedDB（题库主副本），供导入/导出/绑定文件使用。
+    // 防抖一下，避免连续编辑时频繁写库。
+    let overrideTimer: ReturnType<typeof setTimeout> | undefined;
+    watch(
+      contentOverrides,
+      (value) => {
+        if (overrideTimer) clearTimeout(overrideTimer);
+        overrideTimer = setTimeout(() => {
+          void saveContentOverrides(value);
+        }, 300);
+      },
+      { deep: true },
+    );
 
     // ---------- 派生数据 ----------
     function recordsOf(childId?: string) {
@@ -123,10 +133,9 @@ export const useKidStore = defineStore(
       return moduleSettings.value[module]?.range ?? def.default;
     }
 
-    function pendingOf(childId?: string) {
-      return childId
-        ? records.value.filter((r) => r.childId === childId && !r.synced)
-        : records.value.filter((r) => !r.synced);
+    function pendingOf(_childId?: string) {
+      // 无后端模式：所有记录即视为已同步，不再有「待补传」状态
+      return [];
     }
 
     /** 今天 0 点时间戳 */
@@ -191,7 +200,6 @@ export const useKidStore = defineStore(
       detail?: string;
       itemId: string;
       module: LearnModule;
-      parentId: string;
       result?: 'learn' | 'right' | 'wrong';
       stars?: number;
     }) {
@@ -208,75 +216,14 @@ export const useKidStore = defineStore(
         id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
         itemId: options.itemId,
         module: options.module,
-        parentId: options.parentId,
         result: options.result ?? 'right',
         stars: options.stars ?? 1,
-        synced: false,
       };
       records.value = [record, ...records.value].slice(0, 3000);
-      void pushToServer(record);
 
       const after = badgesOf(options.childId).filter((b) => b.earned);
       const newBadges = after.filter((b) => !before.has(b.id));
       return newBadges;
-    }
-
-    async function pushToServer(record: LearnRecordItem) {
-      // 没有该孩子的设备绑定令牌时仅保留本地记录，等待家长绑定后补传
-      const token = getBindToken(record.childId);
-      if (!token) return;
-      try {
-        await submitLearnRecordApi(stripLocal(record), token);
-        markSynced([record.id]);
-      } catch {
-        // 离线或服务异常：保留本地记录，等待 syncPending
-      }
-    }
-
-    function stripLocal(record: LearnRecordItem): LearnRecordPayload {
-      const { synced: _synced, ...payload } = record;
-      return payload;
-    }
-
-    function markSynced(ids: string[]) {
-      const idSet = new Set(ids);
-      records.value = records.value.map((r) =>
-        idSet.has(r.id) ? { ...r, synced: true } : r,
-      );
-    }
-
-    /** 补传离线期间的记录（按孩子分组，凭各自的绑定令牌，幂等） */
-    async function syncPending() {
-      const pending = pendingOf();
-      if (pending.length === 0) return 0;
-
-      const groups = new Map<string, LearnRecordItem[]>();
-      for (const record of pending) {
-        const token = getBindToken(record.childId);
-        if (!token) continue;
-        const group = groups.get(record.childId) ?? [];
-        group.push(record);
-        groups.set(record.childId, group);
-      }
-
-      let synced = 0;
-      for (const [childId, group] of groups) {
-        const token = getBindToken(childId);
-        // 只有拿到令牌的记录才会进 groups，这里的空值检查只为类型收窄
-        if (!token) continue;
-        const batch = group.slice(0, 200);
-        try {
-          await syncLearnRecordsApi(
-            batch.map((record) => stripLocal(record)),
-            token,
-          );
-          markSynced(batch.map((r) => r.id));
-          synced += batch.length;
-        } catch {
-          // 该孩子本次补传失败，下次再试
-        }
-      }
-      return synced;
     }
 
     /** 记一次答错；同一题累加次数并置顶 */
@@ -383,7 +330,6 @@ export const useKidStore = defineStore(
       screenLimitMin,
       starsOf,
       streakOf,
-      syncPending,
       todayCountsOf,
       todayRecordsOf,
       wrongBook,

@@ -1,14 +1,9 @@
-import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
-
 import type { TileKey } from '#/data/modules';
 
-// store/kid.ts 会在导入时拉取 #/api；这里只关心集合语义，故整体替换。
-vi.mock('#/api', () => ({
-  submitLearnRecordApi: vi.fn(),
-  syncLearnRecordsApi: vi.fn(),
-}));
+import { ref } from 'vue';
+
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useCollection } from '#/data/use-collection';
 
@@ -71,8 +66,9 @@ describe('useCollection', () => {
   it('删除自定义项后彻底移除，不留空壳', () => {
     const { add, items, remove } = setup();
     add({ name: '长颈鹿' });
-    const id = items.value[2]!.id;
-    remove(id);
+    const added = items.value[2];
+    if (!added) throw new Error('新增项未出现在列表末尾');
+    remove(added.id);
     expect(items.value).toEqual(DEFAULTS);
   });
 

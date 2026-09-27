@@ -146,39 +146,44 @@ onMounted(() => {
       <button
         v-for="(level, index) in levels"
         :key="level.id"
-        class="flex min-h-32 items-center gap-4 rounded-3xl p-5 text-left shadow-md transition"
+        class="flex min-h-24 items-center gap-3 rounded-3xl p-4 text-left shadow-md transition sm:min-h-32 sm:gap-4 sm:p-5"
         data-star-anchor
         :class="
           unlockedAt(index)
-            ? 'bg-white/95 hover:-translate-y-1 active:scale-95'
+            ? 'bg-white/60 backdrop-blur-xl hover:-translate-y-1 active:scale-95'
             : 'bg-white/40 opacity-60'
         "
         :disabled="!unlockedAt(index)"
         @click="unlockedAt(index) && enter(level)"
       >
-        <span class="text-5xl" :class="unlockedAt(index) ? '' : 'grayscale'">
+        <span
+          class="shrink-0 text-4xl sm:text-5xl"
+          :class="unlockedAt(index) ? '' : 'grayscale'"
+        >
           {{ unlockedAt(index) ? level.emoji : '🔒' }}
         </span>
-        <span class="flex flex-col">
-          <span class="text-2xl font-black text-slate-700">{{
-            level.title
-          }}</span>
-          <span class="text-base text-slate-400">
+        <span class="flex min-w-0 flex-col">
+          <span class="truncate text-lg font-black text-slate-700 sm:text-2xl">
+            {{ level.title }}
+          </span>
+          <span class="text-sm text-slate-400 sm:text-base">
             {{ $t('kid.adventure.levelMeta', { n: level.questionCount }) }}
           </span>
         </span>
-        <span v-if="isCleared(level.id)" class="ml-auto text-4xl">⭐</span>
+        <span v-if="isCleared(level.id)" class="ml-auto text-3xl sm:text-4xl">
+          ⭐
+        </span>
       </button>
     </div>
 
     <!-- 本关结算 -->
-    <div v-else-if="done" class="flex flex-col items-center gap-6">
-      <span class="text-8xl">🎉</span>
-      <p class="text-4xl font-black text-fuchsia-600">
+    <div v-else-if="done" class="flex flex-col items-center gap-4 sm:gap-6">
+      <span class="text-6xl sm:text-8xl">🎉</span>
+      <p class="text-center text-2xl font-black text-fuchsia-600 sm:text-4xl">
         {{ $t('kid.adventure.win', { title: active.title }) }}
       </p>
       <button
-        class="min-h-20 rounded-full bg-fuchsia-500 px-10 text-2xl font-bold text-white shadow transition active:scale-90"
+        class="min-h-20 rounded-full bg-fuchsia-500 px-8 text-2xl font-bold text-white shadow transition active:scale-90 sm:px-10"
         @click="backToMap"
       >
         {{ $t('kid.adventure.back') }}
@@ -186,19 +191,19 @@ onMounted(() => {
     </div>
 
     <!-- 失败：温和回落，不弹错误框 -->
-    <div v-else-if="failed" class="flex flex-col items-center gap-6">
-      <span class="text-8xl">💪</span>
-      <p class="text-3xl font-black text-slate-600">
+    <div v-else-if="failed" class="flex flex-col items-center gap-4 sm:gap-6">
+      <span class="text-6xl sm:text-8xl">💪</span>
+      <p class="text-center text-xl font-black text-slate-600 sm:text-3xl">
         {{ $t('kid.adventure.retryTip') }}
       </p>
       <button
-        class="min-h-20 rounded-full bg-fuchsia-500 px-10 text-2xl font-bold text-white shadow transition active:scale-90"
+        class="min-h-20 rounded-full bg-fuchsia-500 px-8 text-2xl font-bold text-white shadow transition active:scale-90 sm:px-10"
         @click="retry"
       >
         {{ $t('kid.adventure.retry') }}
       </button>
       <button
-        class="min-h-20 rounded-full bg-white/90 px-8 text-2xl font-bold text-slate-600 shadow transition active:scale-90"
+        class="min-h-20 rounded-full bg-white/90 px-6 text-2xl font-bold text-slate-600 shadow transition active:scale-90 sm:px-8"
         @click="backToMap"
       >
         {{ $t('kid.adventure.back') }}
@@ -211,13 +216,13 @@ onMounted(() => {
       class="flex w-full max-w-4xl flex-col items-center"
       data-star-anchor
     >
-      <div class="mb-6 flex items-center gap-6">
-        <span class="text-3xl">
+      <div class="mb-4 flex items-center gap-3 sm:mb-6 sm:gap-6">
+        <span class="text-2xl sm:text-3xl">
           <span v-for="n in HEARTS" :key="n">{{
             n <= hearts ? '❤️' : '🤍'
           }}</span>
         </span>
-        <span class="text-xl font-bold text-slate-500">
+        <span class="text-lg font-bold text-slate-500 sm:text-xl">
           {{
             $t('kid.adventure.progress', {
               done: solved,

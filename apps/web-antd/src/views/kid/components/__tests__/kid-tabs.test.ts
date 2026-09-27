@@ -17,7 +17,7 @@ const ITEMS = [
 /** 非调色板来源的原生色名；调色板里的色一律从 KID_PALETTE 推导，不抄十六进制。 */
 const WHITE = '#ffffff';
 
-/** 大文本门槛（页签是 text-2xl + font-black） */
+/** 大文本门槛（页签是 text-xl / sm:text-2xl + font-black，两档都算大文本） */
 const LARGE_TEXT_MIN = 3;
 /** 静息态门槛：不得比改造前 `text-slate-500` on 白底（约 4.76:1）更差 */
 const RESTING_MIN = 4.5;
@@ -152,6 +152,12 @@ describe('kidTabs 对比度', () => {
     const wrapper = mount(KidTabs, {
       props: { items: ITEMS, modelValue: 'learn' },
     });
-    expect(wrapper.get('button:first-child').classes()).toContain('text-2xl');
+    const classes = wrapper.get('button:first-child').classes();
+    // 移动端档位 text-xl(20px) + font-black(900)：WCAG 里「粗体 ≥18.66px」即算大文本，
+    // 宽屏回到 text-2xl(24px) 同样是大文本。两档都在门槛内，但都不可去掉 ——
+    // 一旦掉回正文档，KID_TABS_RESTING_FG / 主题色的对比度就要按 4.5:1 重算。
+    expect(classes).toContain('text-xl');
+    expect(classes).toContain('sm:text-2xl');
+    expect(classes).toContain('font-black');
   });
 });

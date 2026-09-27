@@ -21,6 +21,9 @@ const props = defineProps<{
 const anchor = ref<{ left: number; top: number }>();
 let lastAnchor: Element | null = null;
 
+/** 星星半径（含少量余量的半宽，单位 px）：用于把落点夹在视口内 */
+const STAR_HALF = 48;
+
 function rememberAnchor(event: Event) {
   const target = event.target;
   lastAnchor =
@@ -38,7 +41,13 @@ function locate() {
     return;
   }
   const rect = el.getBoundingClientRect();
-  anchor.value = { left: rect.right, top: rect.top };
+  // 卡片可能贴着右边缘，星星又是 -50% 平移，直接取 rect.right 会有一半落到屏幕外。
+  // 夹在视口内，保证在窄屏上完整可见。
+  const left = Math.min(
+    Math.max(rect.right, STAR_HALF),
+    window.innerWidth - STAR_HALF,
+  );
+  anchor.value = { left, top: rect.top };
 }
 
 onMounted(() => {
@@ -69,21 +78,28 @@ watch(() => props.show, locate);
               : undefined
           "
         >
-          <div class="star-pop text-[4.5rem] leading-none">⭐</div>
-          <div class="mt-1 text-3xl font-black text-amber-500 drop-shadow">
+          <div class="star-pop text-[clamp(3rem,14vw,4.5rem)] leading-none">
+            ⭐
+          </div>
+          <div
+            class="mt-1 text-2xl font-black text-amber-500 drop-shadow sm:text-3xl"
+          >
             {{ text ?? '+1' }}
           </div>
         </div>
 
-        <!-- 徽章比星星宽得多，跟着跑去角落会在窄屏上被裁掉，单独贴顶居中 -->
-        <div class="absolute inset-x-0 top-6 flex flex-col items-center gap-4">
+        <!-- 徽章比星星宽得多，跟着跑去角落会在窄屏上被裁掉，单独贴顶居中。
+             顶部额外让出刘海屏安全区（fixed 定位不受 .kid-layout 的 padding 影响）。 -->
+        <div
+          class="absolute inset-x-0 top-[calc(1.5rem_+_env(safe-area-inset-top))] flex flex-col items-center gap-3 px-4 sm:gap-4"
+        >
           <div
             v-for="(badge, i) in badges ?? []"
             :key="badge.name"
-            class="star-pop flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-2xl font-bold text-amber-600 shadow-lg"
+            class="star-pop flex max-w-full items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-lg font-bold text-amber-600 shadow-lg sm:px-6 sm:py-3 sm:text-2xl"
             :style="{ animationDelay: `${i * 0.3}s` }"
           >
-            <span class="text-3xl">{{ badge.emoji }}</span>
+            <span class="shrink-0 text-2xl sm:text-3xl">{{ badge.emoji }}</span>
             {{ $t('kid.badges.got', { name: badge.name }) }}
           </div>
         </div>

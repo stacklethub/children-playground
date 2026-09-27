@@ -1,16 +1,21 @@
 import type { RouteRecordRaw } from 'vue-router';
 
+import { BasicLayout } from '#/layouts';
 import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
+    component: BasicLayout,
     meta: {
       icon: 'lucide:user-cog',
+      // 无后端模式：家长中心不再走账号登录，改为家长门禁（见 router/guard.ts）
+      ignoreAccess: true,
       order: 10,
       title: $t('parent.nav.dashboard'),
     },
     name: 'Parent',
     path: '/parent',
+    redirect: '/parent/dashboard',
     children: [
       {
         name: 'ParentDashboard',
