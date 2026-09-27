@@ -68,3 +68,6 @@ datalog
 # 本地工具与构建产物
 .workbuddy/
 apps/tts-proxy/.wrangler/
+
+# 本地视觉验证用的临时截图（不提交）
+.shots/

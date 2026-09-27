@@ -2,7 +2,7 @@
 import type { IslandSpot } from '#/data/island-spots';
 import type { TileKey } from '#/data/modules';
 
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useElementSize } from '@vueuse/core';
@@ -15,6 +15,9 @@ import { useKidStore } from '#/store';
 import { speak } from '#/utils/tts';
 
 import KidSpot from './kid-spot.vue';
+
+/** 首页在全屏布局下也挂载它：已展示则跳过入场动画，避免每次切回都重播 */
+const props = defineProps<{ shown?: boolean }>();
 
 const emit = defineEmits<{ select: [key: TileKey] }>();
 
@@ -47,11 +50,28 @@ const SCENE_RATIO = ISLAND_VIEWBOX.width / ISLAND_VIEWBOX.height;
  * 因此岛与名字牌都会明显变小。这是「7 座岛全可见」的必然代价 —— 想要大岛
  * 就得裁切左右两端。横过来（横屏）观感最好。
  */
-const fit = computed<'meet' | 'slice'>(() => {
-  const w = stageWidth.value;
-  const h = stageHeight.value;
-  if (!w || !h) return 'slice';
-  return w / h >= SCENE_RATIO ? 'slice' : 'meet';
+/**
+ * 舞台尺寸 → 适配模式。
+ *
+ * ## 为什么用 `window` 尺寸做同步初值
+ *
+ * 只用 `useElementSize` 时**首帧量不到**（`stageWidth`/`stageHeight` 为 0），
+ * 会先按 `'slice'` 渲染，等 ResizeObserver 回调到达再切到 `'meet'` ——
+ * 竖屏下就是肉眼可见的一次「海景铺满 → 跳成等比缩小」，与本页「树一闪而过」
+ * 是同一类首帧闪烁 bug（见 home/index.vue 的注释）。
+ *
+ * 舞台是「宽盖高」条件渲染的竖屏容器，此时它与视口同尺寸，所以可以用
+ * `window` 尺寸**同步**算出初值，判定不再有空窗。窗口 resize（含旋转）后
+ * 由下方 watch 修正。
+ */
+const fit = ref<'meet' | 'slice'>(
+  window.innerWidth / window.innerHeight >= SCENE_RATIO ? 'slice' : 'meet',
+);
+
+watch([stageWidth, stageHeight], ([w, h]) => {
+  // 量到 0 说明还没布局完，保留当前判定，别闪回去
+  if (!w || !h) return;
+  fit.value = w / h >= SCENE_RATIO ? 'slice' : 'meet';
 });
 
 const preserveAspectRatio = computed(() =>
@@ -212,7 +232,7 @@ function stopSwimming() {
 }
 
 /**
- * 点某座小岛 → 小猪飞过去，落地后进入该模块。
+ * 点某座小岛 → 小猪飞过去、钻进小岛，然后进入该模块。
  *
  * 用 GSAP 而非 CSS transition，原因有二：
  * 1. GSAP 操作 SVG 元素时，x/y/scale 直接落在 viewBox 坐标系（无单位），
@@ -220,7 +240,18 @@ function stopSwimming() {
  * 2. 用 `motionPath` 让飞行沿一条「拱形贝塞尔」：从当前位置爬升到高空（高于
  *    所有岛顶），再落到目标岛 —— 平滑地**绕过中间所有菜单**，而不是直线穿岛。
  *
- * 语音在飞行一开始就播（先出声确认「我点到了什么」），落地后再真正跳转。
+ * ## 三段式演出（与树场景 kid-tree.vue 的 `diveInto` 同一套语义）
+ *
+ * 1. **飞行** 1.6s：拱形飞到岛上，缩到岛的基准比例（`spot.scale`）——此时猪
+ *    仍清楚可辨（这是「不能还没到就不见了」的保证）。
+ * 2. **落地回弹** 0.4s：先压一下再弹起，模拟落在沙洲上的缓冲。
+ * 3. **钻进小岛** 0.34s：就地缩到 0.06（近乎一个点）+ 微微下压。
+ *
+ * ⚠️ 第 3 段是后加的：早期是「落地停顿 0.5s → 跳转」，猪停在岛上不动，看起来
+ * 像「卡住了」。现在改为缩进去，与树场景一致 —— **两个场景的点击反馈语义必须
+ * 相同**（用户是按「同一件事」在体验，不是两个产品）。
+ *
+ * 语音在飞行一开始就播（先出声确认「我点到了什么」），钻进岛后才真正跳转。
  */
 function flyTo(target: IslandSpot) {
   if (isFlying.value) return;
@@ -261,24 +292,40 @@ function flyTo(target: IslandSpot) {
         router.push({ name: ROUTE_NAME[target.key] });
       },
     })
-    // 1) 沿饱满拱形飞行：慢速爬到高空、越过所有岛、落到目标岛，同时缩放到目标比例。
-    //    sine.inOut 速度变化柔和，中段不会突兀加速，配合 2.4s 让过程清楚可见。
+    // 1) 拱形飞行 + 落到岛上（缩到岛的基准比例，此时猪还清楚可辨 —— 与树的
+    //    「飞行段保持清楚」是同一个原则）。
     .to(el, {
+      duration: 1.6,
+      ease: 'sine.inOut',
       motionPath: { path: flightPath, autoRotate: false },
       scale: landScale,
-      duration: 2.4,
-      ease: 'sine.inOut',
     })
     // 2) 落地回弹：先压一下再弹起，模拟落在沙洲上的缓冲
     .to(el, {
-      y: landY + 10,
-      scale: landScale * 0.94,
       duration: 0.16,
       ease: 'power2.in',
+      scale: landScale * 0.94,
+      y: landY + 10,
     })
-    .to(el, { y: landY, scale: landScale, duration: 0.24, ease: 'bounce.out' })
-    // 3) 短暂停留，让幼儿确认「小猪落在了这座岛」再进模块
-    .to(el, { duration: 0.5 });
+    .to(el, { duration: 0.24, ease: 'bounce.out', scale: landScale, y: landY })
+
+    /*
+      3) 钻进小岛：就地缩小到近乎一个点。
+
+      ⚠️ **不要在这里停留后直接跳转** —— 早期是「落地停顿 0.5s → 跳转」，
+      猪停在岛上不动，看起来像「卡住了」而不是「进去了」。现在改为**缩进去**，
+      与树场景（kid-tree.vue 的 `diveInto`）同一套语义，两端的点击反馈才一致。
+
+      时长 0.34s + `power2.in`：先慢后快，收尾干脆，读作「一头钻进去」。
+      缩到 0.06 而不是 0：完全消失会让人以为「猪没了」。
+    */
+    .to(el, {
+      duration: 0.34,
+      ease: 'power2.in',
+      scale: 0.06,
+      // 往岛里再怼一点点，强化「钻」的方向感
+      y: landY + 6,
+    });
 }
 
 /**
@@ -346,7 +393,8 @@ onBeforeUnmount(() => {
   -->
   <div
     ref="stageEl"
-    class="island-stage island-enter fixed inset-0 flex flex-col overflow-hidden"
+    class="island-stage fixed inset-0 flex flex-col overflow-hidden"
+    :class="props.shown ? '' : 'island-enter'"
     @pointerleave="onPointerLeave"
   >
     <!--
