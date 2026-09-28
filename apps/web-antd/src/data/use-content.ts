@@ -15,17 +15,8 @@ import { computed } from 'vue';
 
 import { useKidStore } from '#/store';
 
-import {
-  kidCards,
-  kidCategories,
-  kidLetters,
-  kidLevels,
-  kidLogicItems,
-  kidNumbers,
-  kidPinyin,
-  kidPoems,
-  kidSongs,
-} from './content';
+import { kidCategories, kidSongs } from './content';
+import { moduleDefaults, numberDefaults } from './library-source';
 import { splitLines } from './modules';
 import { useCollection } from './use-collection';
 
@@ -52,24 +43,22 @@ export interface CardDraft {
 }
 
 /**
- * 各模块的内置内容。
- * 新增内容型模块时在这里补一行，家长端内容管理即可管理它。
+ * 各模块的基座内容。
+ *
+ * 基座来源由 `data/library-source.ts` 决定：**构建时内联的资料库表格优先**，
+ * 表格里缺该模块时回落内置题库。这里只做「转为家长端可管理列表」的适配。
  */
-/** 英文乐园的条目类型：useCollection 要 id，字母本身天然唯一，直接借用 */
 export type LetterItem = KidLetter & { id: string };
 
-const LETTER_ITEMS: LetterItem[] = kidLetters.map((item) => ({
-  ...item,
-  id: item.letter,
-}));
+const LETTER_ITEMS: LetterItem[] = moduleDefaults('letters') as LetterItem[];
 
 const BUILTIN: Partial<Record<TileKey, { id: string }[]>> = {
-  adventure: kidLevels,
-  cards: kidCards,
+  adventure: moduleDefaults('adventure'),
+  cards: moduleDefaults('cards'),
   letters: LETTER_ITEMS,
-  logic: kidLogicItems,
-  pinyin: kidPinyin,
-  poems: kidPoems,
+  logic: moduleDefaults('logic'),
+  pinyin: moduleDefaults('pinyin'),
+  poems: moduleDefaults('poems'),
 };
 
 /** 取某模块的内置内容；未注册的模块返回空数组（家长端显示空态，不报错） */
@@ -86,17 +75,17 @@ export function useContent() {
   const kidStore = useKidStore();
 
   const cardCollection = useCollection<KidCard>({
-    defaults: kidCards,
+    defaults: moduleDefaults('cards'),
     key: 'cards',
   });
 
   const pinyinCollection = useCollection<KidPinyin>({
-    defaults: kidPinyin,
+    defaults: moduleDefaults('pinyin'),
     key: 'pinyin',
   });
 
   const poemCollection = useCollection<KidPoem>({
-    defaults: kidPoems,
+    defaults: moduleDefaults('poems'),
     key: 'poems',
   });
 
@@ -109,7 +98,7 @@ export function useContent() {
   );
 
   const levelCollection = useCollection<KidLevel>({
-    defaults: kidLevels,
+    defaults: moduleDefaults('adventure'),
     key: 'adventure',
   });
 
@@ -123,7 +112,7 @@ export function useContent() {
   );
 
   const logicCollection = useCollection<KidLogicItem>({
-    defaults: kidLogicItems,
+    defaults: moduleDefaults('logic'),
     key: 'logic',
   });
 
@@ -143,7 +132,6 @@ export function useContent() {
     defaults: LETTER_ITEMS,
     key: 'letters',
   });
-
   /**
    * 英文乐园既是内容型又是参数型：
    * 家长改过的单词/例句走覆盖项合并，数量再受「难度范围」限制（前 N 个）。
@@ -153,9 +141,9 @@ export function useContent() {
     letterCollection.items.value.slice(0, kidStore.moduleRange('letters')),
   );
 
-  /** 数字数量受家长端「难度范围」限制 */
+  /** 数字数量受家长端「难度范围」限制；内容同样来自表格优先的基座 */
   const numbers = computed<KidNumber[]>(() =>
-    kidNumbers.slice(0, kidStore.moduleRange('numbers')),
+    numberDefaults().slice(0, kidStore.moduleRange('numbers')),
   );
 
   const songs = computed<KidSong[]>(() => [...kidSongs]);

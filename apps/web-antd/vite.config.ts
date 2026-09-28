@@ -29,10 +29,13 @@ export default defineConfig(async () => {
     },
     vite: {
       plugins,
-      ...(isSingle
-        ? {
-            base: './',
-            build: {
+      build: {
+        // 框架默认 es2015，会把大量 `?.` / `??` / async 语法降级成 helper，
+        // 单文件产物里这部分是纯开销。es2019 覆盖 Safari 13+ / Chrome 73+
+        // （2019 年机型），对幼儿学习场景的老旧家长手机仍然安全。
+        target: 'es2019',
+        ...(isSingle
+          ? {
               assetsInlineLimit: Number.MAX_SAFE_INTEGER,
               cssCodeSplit: false,
               rolldownOptions: {
@@ -40,9 +43,10 @@ export default defineConfig(async () => {
                   codeSplitting: false,
                 },
               },
-            },
-          }
-        : {}),
+            }
+          : {}),
+      },
+      ...(isSingle ? { base: './' } : {}),
     },
   };
 });

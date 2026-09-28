@@ -24,13 +24,18 @@ import { router } from './router';
 // ⚠️ 必须排在 @vben/styles 之前：样式包的 reset 会覆盖 font-family。
 //
 // 三处容易踩的细节：
-// 1. 本包**没有** `style.css`，入口是 lxgwwenkaiscreen.css（全量）。
-//    另有 lxgwwenkaigbscreen.css，两者 font-family 同名，是二选一的替代品 ——
-//    这里取全量版：古诗里有大量 GB2312 常用集之外的汉字，GB 版会出豆腐块。
+// 1. 霞鹜文楷**走构建期子集化的产物**（`assets/fonts/lxgw-subset.css`），
+//    不再直接引上游包的 `lxgwwenkaiscreen.css`。原因：上游按 unicode-range 切成
+//    97 个分片共 4.87MB，多文件构建下浏览器按需加载没问题，但 `build:singlefile`
+//    会把**全部**分片 base64 内联进单 HTML —— 字体一项就占 6.5MB，是整个产物的 60%。
+//    子集化后按项目实际用字裁剪，降到约 1.2MB。
+//    重新生成：`pnpm run subset:font`（内容改了会自动重建，见 scripts/build-subset-fonts.mjs）。
+//    这里取全量版而非上游的 GB 版：古诗里有大量 GB2312 常用集之外的汉字，GB 版会出豆腐块。
 // 2. Baloo 2 的字重范围是 **400–800，没有 900**。引 700 与 800 两档；
 //    样式里写 font-black(900) 时，浏览器会取最近的 800。
 // 3. 两个包的字族名分别是 'LXGW WenKai Screen' 与 'Baloo 2'，见 layouts/kid.vue 的回退栈。
-import 'lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css';
+//    回退栈里还有系统中文字体：子集外的生僻字会回退到它，不会显示豆腐块。
+import './assets/fonts/lxgw-subset.css';
 import '@fontsource/baloo-2/latin-700.css';
 import '@fontsource/baloo-2/latin-800.css';
 
@@ -79,10 +84,6 @@ async function bootstrap(namespace: string) {
 
   // 配置路由及路由守卫
   app.use(router);
-
-  // 配置Motion插件
-  const { MotionPlugin } = await import('@vben/plugins/motion');
-  app.use(MotionPlugin);
 
   // 动态更新标题
   watchEffect(() => {

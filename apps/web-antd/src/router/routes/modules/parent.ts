@@ -11,7 +11,8 @@ const routes: RouteRecordRaw[] = [
       // 无后端模式：家长中心不再走账号登录，改为家长门禁（见 router/guard.ts）
       ignoreAccess: true,
       order: 10,
-      title: $t('parent.nav.dashboard'),
+      // 仅用于面包屑根节点（家长端菜单是一级扁平，不再有分组项）
+      title: $t('parent.nav.center'),
     },
     name: 'Parent',
     path: '/parent',

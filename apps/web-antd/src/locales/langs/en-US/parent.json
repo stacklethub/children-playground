@@ -1,5 +1,6 @@
 {
   "nav": {
+    "center": "Parent Center",
     "dashboard": "Learning Report",
     "children": "Children",
     "content": "Content",
@@ -107,7 +108,14 @@
     "needTwoOptions": "Provide at least two options",
     "answerNotInOptions": "The answer must exactly match one of the options",
     "needOneModule": "Provide at least one module",
-    "unknownModule": "Unknown module: {keys} (available: cards / letters / pinyin / poems / logic / adventure / numbers / songs)"
+    "unknownModule": "Unknown module: {keys} (available: cards / letters / pinyin / poems / logic / adventure / numbers / songs)",
+    "sourceTitle": "Content source",
+    "sourceLibrary": "Content comes from the library table ({count} rows, fetched {time})",
+    "sourceLibraryModule": "This module is provided by the library table",
+    "sourceBuiltin": "Content comes from the built-in bank",
+    "sourceBuiltinModule": "This module uses the built-in bank",
+    "sourceTip": "The source is decided at build time; rebuild after editing the table.",
+    "sourceTable": "Open library table"
   },
   "plan": {
     "title": "Daily goals",

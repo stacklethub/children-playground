@@ -1,9 +1,12 @@
 /**
- * 全量题库构建：把「内置题库 + 家长覆盖项」合并成一份扁平的全量题目数组，
+ * 全量题库构建：把「当前内容基座 + 家长覆盖项」合并成一份扁平的全量题目数组，
  * 供导出 JSON 使用（与学习记录数组对称，形成两个清晰的数据集）。
  *
  * 导出时用本文件把运行时题库物化成自包含的题目列表；导入时仍以
  * `contentOverrides` 作为精确回写来源（见 data-snapshot.ts / use-data-manager.ts）。
+ *
+ * ⚠️ 基座来自 `library-source`（**资料库表格优先、内置兜底**），与宝宝端
+ * 运行时看到的内容同源 —— 否则导出的题库会与实际学习内容对不上。
  *
  * ⚠️ 本文件是纯函数，不依赖 pinia —— 合并语义复用 use-collection 的
  * `mergeCollection`，与宝宝端 / 家长端运行时看到的内容严格一致。
@@ -12,17 +15,8 @@
 import type { ContentOverrides } from './migrate-content-overrides';
 import type { LearnModule } from './modules';
 
-import {
-  kidCards,
-  kidCategories,
-  kidLetters,
-  kidLevels,
-  kidLogicItems,
-  kidNumbers,
-  kidPinyin,
-  kidPoems,
-  kidSongs,
-} from './content';
+import { kidCategories, kidSongs } from './content';
+import { moduleDefaults, numberDefaults } from './library-source';
 import { mergeCollection } from './use-collection';
 
 /** 一道题目的通用形状：所属模块 + 内容字段 */
@@ -33,10 +27,10 @@ export interface BankQuestion {
 
 /** 英文乐园条目：字母天然唯一，借用 letter 作 id（与 use-content 的 LETTER_ITEMS 一致） */
 function letterItems() {
-  return kidLetters.map((item) => ({ ...item, id: item.letter }));
+  return moduleDefaults('letters');
 }
 
-/** 各模块「内置内容 + 覆盖项」合并后的题目数组 */
+/** 各模块「当前基座 + 覆盖项」合并后的题目数组 */
 export function buildQuestionBank(overrides: ContentOverrides): BankQuestion[] {
   const bank: BankQuestion[] = [];
 
@@ -48,7 +42,7 @@ export function buildQuestionBank(overrides: ContentOverrides): BankQuestion[] {
 
   pushModule(
     'cards',
-    mergeCollection(kidCards, (overrides.cards ?? {}) as never),
+    mergeCollection(moduleDefaults('cards'), (overrides.cards ?? {}) as never),
   );
   pushModule(
     'letters',
@@ -56,23 +50,29 @@ export function buildQuestionBank(overrides: ContentOverrides): BankQuestion[] {
   );
   pushModule(
     'pinyin',
-    mergeCollection(kidPinyin, (overrides.pinyin ?? {}) as never),
+    mergeCollection(
+      moduleDefaults('pinyin'),
+      (overrides.pinyin ?? {}) as never,
+    ),
   );
   pushModule(
     'poems',
-    mergeCollection(kidPoems, (overrides.poems ?? {}) as never),
+    mergeCollection(moduleDefaults('poems'), (overrides.poems ?? {}) as never),
   );
   pushModule(
     'logic',
-    mergeCollection(kidLogicItems, (overrides.logic ?? {}) as never),
+    mergeCollection(moduleDefaults('logic'), (overrides.logic ?? {}) as never),
   );
   pushModule(
     'adventure',
-    mergeCollection(kidLevels, (overrides.adventure ?? {}) as never),
+    mergeCollection(
+      moduleDefaults('adventure'),
+      (overrides.adventure ?? {}) as never,
+    ),
   );
 
-  // 无覆盖项的模块：直接导出内置内容
-  pushModule('numbers', kidNumbers);
+  // 无覆盖项的模块：直接导出当前基座内容
+  pushModule('numbers', numberDefaults());
   pushModule('songs', kidSongs);
 
   return bank;

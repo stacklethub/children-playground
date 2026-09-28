@@ -1,5 +1,6 @@
 {
   "nav": {
+    "center": "家长中心",
     "dashboard": "学习报告",
     "children": "孩子管理",
     "content": "内容管理",
@@ -107,7 +108,14 @@
     "needTwoOptions": "至少要填两个选项",
     "answerNotInOptions": "正确答案要和其中某个选项完全一致",
     "needOneModule": "至少填一个考察模块",
-    "unknownModule": "模块名不存在：{keys}（可用：cards / letters / pinyin / poems / logic / adventure / numbers / songs）"
+    "unknownModule": "模块名不存在：{keys}（可用：cards / letters / pinyin / poems / logic / adventure / numbers / songs）",
+    "sourceTitle": "内容来源",
+    "sourceLibrary": "当前内容来自资料库表格（{count} 行，拉取于 {time}）",
+    "sourceLibraryModule": "本模块由资料库表格提供",
+    "sourceBuiltin": "当前内容来自内置题库",
+    "sourceBuiltinModule": "本模块使用内置题库",
+    "sourceTip": "内容源在构建时确定；家长改完表格后重新构建即生效。",
+    "sourceTable": "打开资料库表格"
   },
   "plan": {
     "title": "每日学习目标",

@@ -18,8 +18,13 @@
   "scripts": {
     "build": "pnpm vite build --mode production",
     "build:analyze": "pnpm vite build --mode analyze",
-    "build:singlefile": "pnpm vite build --mode production",
+    "build:singlefile": "node scripts/fetch-library-content.mjs --allow-stale && node scripts/build-subset-fonts.mjs && pnpm vite build --mode production",
     "dev": "pnpm vite --mode development",
+    "fetch:content": "node scripts/fetch-library-content.mjs",
+    "fetch:content:check": "node scripts/fetch-library-content.mjs --check",
+    "subset:font": "node scripts/build-subset-fonts.mjs",
+    "subset:font:check": "node scripts/build-subset-fonts.mjs --check",
+    "subset:font:force": "node scripts/build-subset-fonts.mjs --force",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit --skipLibCheck",
     "check:i18n": "node scripts/check-i18n.mjs"
@@ -54,6 +59,7 @@
     "vue-router": "catalog:"
   },
   "devDependencies": {
+    "subset-font": "^2.9.0",
     "vite-plugin-singlefile": "^2.3.3"
   }
 }

@@ -6,11 +6,23 @@ import { computed, ref } from 'vue';
 
 import { Button, message, Popconfirm, Select, Table } from 'ant-design-vue';
 
+import { libraryContentMeta } from '#/data/library-source';
 import { hasContentFields, MODULES, TILE_KEYS } from '#/data/modules';
 import { builtinOf, useCollection } from '#/data/use-content';
 import { $t } from '#/locales';
 
 import ContentFormModal from '../components/content-form-modal.vue';
+
+/** 内容基座来自资料库表格还是内置题库（构建时确定，见 data/library-source.ts） */
+const libraryMeta = libraryContentMeta;
+
+const fetchedAtLabel = computed(() => {
+  const raw = libraryMeta.fetchedAt;
+  if (!raw) return '—';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString();
+});
 
 /** 声明了 fields 的模块才在内容管理里出 Tab（英文乐园也算） */
 const contentModules = TILE_KEYS.filter((key) =>
@@ -24,6 +36,18 @@ const contentModules = TILE_KEYS.filter((key) =>
  */
 const activeModule = ref<TileKey>(
   TILE_KEYS.find((key) => hasContentFields(MODULES[key])) ?? 'cards',
+);
+
+/** 当前 Tab 的内容是否由资料库表格提供（表格缺该模块时为 false，即用内置题库） */
+const moduleFromLibrary = computed(
+  () => libraryMeta.sourceOf[activeModule.value] === 'library',
+);
+
+/** 资料库表格的网页地址，方便家长直接去改内容 */
+const tableUrl = computed(() =>
+  libraryMeta.databaseId
+    ? `https://www.workbuddy.cn/space/d/${libraryMeta.databaseId}`
+    : '',
 );
 
 const activeFields = computed(() => MODULES[activeModule.value].fields ?? []);
@@ -138,6 +162,45 @@ function remove(id: string) {
       <p class="text-muted-foreground text-sm">
         {{ $t('parent.content.tip') }}
       </p>
+    </div>
+
+    <!--
+      内容来源说明：本页编辑的是「覆盖项」，真正的基座来自资料库表格或内置题库。
+      不显式告知的话，家长会以为删掉一行就是彻底删掉了——实际只是加了一条覆盖。
+    -->
+    <div
+      class="border-border bg-muted/40 text-muted-foreground mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-xs"
+    >
+      <span class="text-foreground font-medium">
+        {{ $t('parent.content.sourceTitle') }}
+      </span>
+      <span>
+        {{
+          libraryMeta.active
+            ? $t('parent.content.sourceLibrary', {
+                count: libraryMeta.rowCount,
+                time: fetchedAtLabel,
+              })
+            : $t('parent.content.sourceBuiltin')
+        }}
+      </span>
+      <span>
+        {{
+          moduleFromLibrary
+            ? $t('parent.content.sourceLibraryModule')
+            : $t('parent.content.sourceBuiltinModule')
+        }}
+      </span>
+      <span>{{ $t('parent.content.sourceTip') }}</span>
+      <a
+        v-if="tableUrl"
+        class="text-primary hover:underline"
+        :href="tableUrl"
+        rel="noreferrer noopener"
+        target="_blank"
+      >
+        {{ $t('parent.content.sourceTable') }} ↗
+      </a>
     </div>
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">

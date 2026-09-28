@@ -41,38 +41,33 @@ function injectLocalUser() {
 }
 
 function injectAccessMenus() {
+  // 扁平菜单：家长端 5 个页面直接平铺在一级菜单里，不再套一层分组
+  // （无子节点的顶层项会被渲染成可点击的 MenuItem，见 menu-ui/sub-menu.vue）
   accessStore.setAccessMenus([
     {
-      icon: 'lucide:user-cog',
+      icon: 'lucide:bar-chart-3',
       name: $t('parent.nav.dashboard'),
-      path: '/parent',
-      children: [
-        {
-          icon: 'lucide:bar-chart-3',
-          name: $t('parent.nav.dashboard'),
-          path: '/parent/dashboard',
-        },
-        {
-          icon: 'lucide:baby',
-          name: $t('parent.nav.children'),
-          path: '/parent/children',
-        },
-        {
-          icon: 'lucide:images',
-          name: $t('parent.nav.content'),
-          path: '/parent/content',
-        },
-        {
-          icon: 'lucide:calendar-check',
-          name: $t('parent.nav.plan'),
-          path: '/parent/plan',
-        },
-        {
-          icon: 'lucide:settings',
-          name: $t('parent.nav.settings'),
-          path: '/parent/settings',
-        },
-      ],
+      path: '/parent/dashboard',
+    },
+    {
+      icon: 'lucide:baby',
+      name: $t('parent.nav.children'),
+      path: '/parent/children',
+    },
+    {
+      icon: 'lucide:images',
+      name: $t('parent.nav.content'),
+      path: '/parent/content',
+    },
+    {
+      icon: 'lucide:calendar-check',
+      name: $t('parent.nav.plan'),
+      path: '/parent/plan',
+    },
+    {
+      icon: 'lucide:settings',
+      name: $t('parent.nav.settings'),
+      path: '/parent/settings',
     },
   ]);
 }
