@@ -60,6 +60,6 @@
   },
   "devDependencies": {
     "subset-font": "^2.9.0",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.4"
   }
 }
