@@ -52,7 +52,7 @@
     "ant-design-vue": "catalog:",
     "cnchar": "^3.2.6",
     "dayjs": "catalog:",
-    "gsap": "^3.15.0",
+    "gsap": "^3.15.1",
     "lxgw-wenkai-screen-webfont": "^1.7.0",
     "pinia": "catalog:",
     "vue": "catalog:",
@@ -60,6 +60,6 @@
   },
   "devDependencies": {
     "subset-font": "^2.9.0",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.4"
   }
 }
